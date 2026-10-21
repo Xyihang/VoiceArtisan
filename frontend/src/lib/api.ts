@@ -5,6 +5,9 @@ import type {
   EngineHealth,
   EngineInstallStatus,
   EngineList,
+  CloudEngineJob,
+  CloudEngineList,
+  CloudHostProfile,
   EnginePlan,
   ExportTier,
   Health,
@@ -232,6 +235,42 @@ export const api = {
     request<{ ok: boolean; active: string }>(`/api/engines/${encodeURIComponent(id)}/select`, { method: 'POST' }),
   engineHealth: (id: string) => request<EngineHealth>(`/api/engines/${encodeURIComponent(id)}/health`),
   /** 安装预览：后端只 HEAD 探测体积，不下载任何权重（响应是 `{ok,engine_id,plan}`，这里解包成 plan） */
+  /* --------------------------- 云端引擎（远程管理） --------------------------- */
+  /** 云端主机档案（密码永远脱敏，只有 has_password 布尔） */
+  cloudHost: () => request<CloudHostProfile>('/api/cloud/engines/host'),
+  saveCloudHost: (body: Record<string, unknown>) =>
+    request<CloudHostProfile>('/api/cloud/engines/host', { method: 'PUT', body: JSON.stringify(body) }),
+  testCloudHost: () =>
+    request<{
+      ok: boolean;
+      host: string;
+      ssh_port: number;
+      username: string;
+      fingerprint: string;
+      python: string;
+      project_dir: string;
+      project_present: boolean;
+    }>('/api/cloud/engines/host/test', { method: 'POST' }),
+  /** 云端引擎列表（模型在云端主机上，不含本机） */
+  cloudEngines: (kind?: string) =>
+    request<CloudEngineList>(`/api/cloud/engines${kind ? `?kind=${kind}` : ''}`),
+  installCloudEngine: (id: string) =>
+    request<{ job_id: string; engine_id: string }>(
+      `/api/cloud/engines/${encodeURIComponent(id)}/install`,
+      { method: 'POST' },
+    ),
+  cloudEngineJob: (jobId: string) =>
+    request<CloudEngineJob>(`/api/cloud/engines/jobs/${encodeURIComponent(jobId)}`),
+  removeCloudEngine: (id: string) =>
+    request<{ ok: boolean; engine_id: string; message?: string }>(
+      `/api/cloud/engines/${encodeURIComponent(id)}`,
+      { method: 'DELETE' },
+    ),
+  selectCloudEngine: (id: string) =>
+    request<{ ok: boolean; engine_id: string }>(
+      `/api/cloud/engines/${encodeURIComponent(id)}/select`,
+      { method: 'POST' },
+    ),
   enginePlan: (id: string) =>
     request<{ ok: boolean; engine_id: string; plan: EnginePlan }>(
       `/api/engines/${encodeURIComponent(id)}/plan`,

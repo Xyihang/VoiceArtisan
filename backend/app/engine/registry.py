@@ -207,6 +207,22 @@ def all_items(use_cache: bool = True) -> list[dict]:
 _load_cache()
 
 
+def all_items_fresh() -> list[dict]:
+    """强制重算全部引擎信息并回写缓存（CLI / 排障用）。
+
+    `all_items()` 是 stale-while-revalidate：缓存命中就先返回旧值、后台再刷新。
+    一次性进程（`engines_cli list`）等不到后台线程，所以必须用这个入口，
+    否则会一直打印上一次的旧状态（模型已在盘上却显示未安装）。
+    """
+    items = all_items(use_cache=False)
+    now = time.time()
+    for info in items:
+        if isinstance(info, dict) and info.get("id"):
+            _INFO_CACHE[info["id"]] = (now, info)
+    _save_cache()
+    return items
+
+
 def capabilities(engine_id: str) -> list[str]:
     adapter = REGISTRY.get(engine_id or "")
     if adapter is None:

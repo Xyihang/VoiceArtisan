@@ -92,7 +92,8 @@ def _print_table(payload: dict) -> None:
 
 
 def cmd_list(args: argparse.Namespace) -> int:
-    payload = _manager().items()
+    # 一次性进程必须强制刷新：缓存里的旧状态会误导人（模型在盘上却显示未安装）
+    payload = _manager().items_fresh()
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:

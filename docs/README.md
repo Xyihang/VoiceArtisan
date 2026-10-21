@@ -52,6 +52,7 @@
 | 能力 | 说明 | 文档 |
 | --- | --- | --- |
 | 云端说话人区分 | `POST /v1/engine/asr` 支持 `diarize`/`max_speakers`/`min_speakers`，响应回 `diarize_backend`；云端需装 CAM++，由 `GET /v1/health` 的 `asr.diarize` 协商；偏好 `asr.diarize.prefer`（`local`/`cloud`/`auto`） | [API §7](API.md) · [CONFIG §asr](CONFIG.md) · [TROUBLESHOOTING §四之二](TROUBLESHOOTING.md) |
+| 云端引擎远程管理 | 本地后端通过 SSH 管理**云端**引擎：列表（含手工直传的模型）/ 安装 / 删除 / 切换当前；与本机引擎分区完全分开。规格见 `spec/CLOUD-ENGINES-1.md` | [API](API.md) · [spec/CLOUD-ENGINES-1.md](spec/CLOUD-ENGINES-1.md) |
 | 按说话人拆分导出 / 重导出 | `POST /api/tasks/{id}/split-by-speaker` + `GET /api/tasks/{id}/speakers/zip`；`POST /api/tasks/{id}/export` 从无损原件 `source.wav` 换档重导出；`POST /api/tasks/{id}/speakers/merge` 合并说话人 | [API §5](API.md) · [CONFIG §export](CONFIG.md) · [TROUBLESHOOTING §四之二](TROUBLESHOOTING.md) |
 
 ## 运维与交付

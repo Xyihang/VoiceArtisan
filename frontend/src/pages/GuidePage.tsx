@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Cloud,
   ArrowUp,
   ArrowUpRight,
   AudioLines,
@@ -31,6 +32,7 @@ type SectionId =
   | 'diarize'
   | 'warmup'
   | 'engines'
+  | 'cloudEngines'
   | 'local'
   | 'qc'
   | 'text'
@@ -332,6 +334,39 @@ const GUIDE: GuideSection[] = [
       '每个引擎的 venv 互相隔离，VoxCPM 需要 torch 2.5 也只在它自己的 venv 里生效，主环境保持 2.4.1。',
       '引擎不支持的能力（例如非 Qwen 引擎的内置音色、VoxCPM 的音色设计）界面会直接隐藏或灰掉，避免生成出无声文件。',
       '许可证与商用条款写在各引擎卡片里，商用前请点开确认。',
+    ],
+  },
+  {
+    id: 'cloudEngines',
+    label: '云端引擎管理',
+    icon: Cloud,
+    summary: '在本机管理云端主机上的引擎与模型（不占本机磁盘/显存）',
+    settingsAnchor: 'cloudEngines',
+    steps: [
+      '先用「云端连接 → 一键接入云主机」完成部署；成功后会**自动保存**云端主机档案（密码走 DPAPI 加密）。',
+      '也可以直接在 设置 → 云端引擎管理 里手工填主机/端口/用户/密码/项目目录/解释器，点「保存并连接」。',
+      '点「刷新列表」看云端装了哪些模型——**手工直传上去的模型也会被识别**（状态按云端文件系统实时算）。',
+      '要装模型就点该引擎的「安装」，进度与云端日志会实时回显；删除点「删除」，切换云端当前引擎点「设为当前」。',
+    ],
+    fields: [
+      { name: '主机', desc: '云端 SSH 主机名或 IP。', suggest: 'region-42.seetacloud.com' },
+      { name: 'SSH 端口', desc: '平台给的端口，不是 22。', suggest: '26322' },
+      { name: '用户名', desc: '云端登录用户。', suggest: 'root' },
+      { name: '密码', desc: '用 Windows DPAPI 加密存到 data/cloud-host.json，界面不回显；留空表示沿用已保存的密码。', suggest: '—' },
+      { name: '云端项目目录', desc: '云端代码所在目录，engines_cli 从这里跑。', suggest: '/root/autodl-tmp/QWENTTS' },
+      { name: '云端解释器', desc: '云端 Python 路径（AutoDL 镜像常是 /root/miniconda3/bin/python）。', suggest: '/root/miniconda3/bin/python' },
+      { name: '测试连接', desc: '返回 SSH 指纹、云端 Python 版本、项目目录是否存在。', suggest: '先点一次' },
+      { name: '安装 / 删除 / 设为当前', desc: '安装走 SSH 调云端 engines_cli（自动挂 hf-mirror）；删除按云端文件算释放体积。', suggest: '—' },
+    ],
+    tips: [
+      '这里的模型在**云端**，不占本机磁盘与显存；本机的模型仍在上方「引擎与模型」里管，两者完全分开。',
+      '走 SSH 而不是云端 HTTP：服务没起来时也能装模型（正是「先装模型再起服务」的顺序）。',
+      '云端直连 HuggingFace 多半不通，安装时会自动加 HF_ENDPOINT=https://hf-mirror.com；若仍失败，通常是云端 huggingface_hub 版本与镜像不兼容（本次实测 2.2.0 的 httpx 客户端坏掉，降到 0.36.x 正常）。',
+      '「未安装」是按云端目录里有没有 model.bin / .onnx 判断的，所以直传上去的文件只要放对位置就会显示「已安装」。',
+    ],
+    faq: [
+      { q: '提示「还没有云端主机档案」？', a: '先去「云端连接 → 一键接入云主机」跑一次，或在本分区手工填主机信息保存。' },
+      { q: '安装完成但列表还显示未安装？', a: '模型刚落盘时读到的可能是半成品尺寸，点一次「刷新列表」即可（面板也会在完成后自动再刷一次）。' },
     ],
   },
   {

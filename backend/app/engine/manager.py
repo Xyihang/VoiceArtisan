@@ -75,6 +75,10 @@ class EngineManager:
     def items(self) -> dict:
         return {"active": self.active_id(), "items": registry.all_items()}
 
+    def items_fresh(self) -> dict:
+        """不走缓存重算（CLI 用；服务端仍走 items() 的 stale-while-revalidate）。"""
+        return {"active": self.active_id(), "items": registry.all_items_fresh()}
+
     def require(self, engine_id: str):
         return registry.get(engine_id)
 

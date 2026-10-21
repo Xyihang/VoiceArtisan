@@ -30,6 +30,15 @@ ERRORS: dict[str, tuple[str, str]] = {
         "云端鉴权失败",
         "请核对设置页中的云端 API 密钥（X-API-Key）。",
     ),
+    "CLOUD_HOST_MISSING": (
+        "还没有云端主机档案",
+        "先在「云端连接 → 一键接入云主机」完成接入，或在「云端引擎管理」里手工填写主机信息。",
+    ),
+    "CLOUD_ENGINES_FAILED": (
+        "云端引擎操作失败",
+        "看返回的日志尾部：通常是云端网络、磁盘或引擎 id 不存在。",
+    ),
+    "CLOUD_ENGINES_BUSY": ("云端引擎任务正在运行", "等当前安装/删除任务结束再试。"),
     "INVALID_INPUT": ("请求参数不合法", "请检查文本、音色与参数区间。"),
     "TEXT_EMPTY": ("文本为空", "请输入需要合成的文本。"),
     "TEXT_TOO_LONG": ("文本超出长度上限", "请分段合成，或在配置中调高 limits.max_text_chars。"),

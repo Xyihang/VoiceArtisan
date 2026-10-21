@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {Power,
+import {
+  Cloud,Power,
   BadgeCheck,
   Cpu,
   Database,
@@ -16,6 +17,7 @@ import {Power,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useApp } from '../state/AppContext';
+import { CloudEnginesPanel } from '../components/CloudEnginesPanel';
 import type { RunMode } from '../types';
 import { ConfirmDialog, Field, InlineNote, SectionCard, Spinner, StatusDot } from '../components/ui';
 import { EngineSection } from '../components/EngineCard';
@@ -35,6 +37,7 @@ type SectionId =
   | 'asr'
   | 'warmup'
   | 'engines'
+  | 'cloudEngines'
   | 'local'
   | 'qc'
   | 'text'
@@ -110,6 +113,22 @@ const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; labels: string
     ],
   },
   { id: 'engines', label: '引擎与模型', icon: Cpu, labels: ['引擎与模型', '引擎', '模型', '安装', '预览', '切换', '依赖'] },
+  {
+    id: 'cloudEngines',
+    label: '云端引擎管理',
+    icon: Cloud,
+    labels: [
+      '云端引擎管理',
+      '云端主机',
+      'SSH 端口',
+      '云端项目目录',
+      '云端解释器',
+      '测试连接',
+      '安装',
+      '删除',
+      '设为当前',
+    ],
+  },
   {
     id: 'local',
     label: '本地模型',
@@ -1324,6 +1343,16 @@ export function SettingsPage() {
           <div data-visible={isShown('engines') ? 'true' : 'false'} className="settings-engine-slot">
             <EngineSection id={`${ANCHOR_PREFIX}engines`} />
           </div>
+
+          <SectionCard
+            id={`${ANCHOR_PREFIX}cloudEngines`}
+            title={hl('云端引擎管理')}
+            hint="这些模型在云端主机上，不占本机磁盘与显存；通过 SSH 调云端 engines_cli 安装/删除"
+            icon={<Cloud size={15} strokeWidth={1.75} />}
+            style={isShown('cloudEngines') ? undefined : { display: 'none' }}
+          >
+            <CloudEnginesPanel pushToast={pushToast} />
+          </SectionCard>
 
           <SectionCard
             id={`${ANCHOR_PREFIX}local`}

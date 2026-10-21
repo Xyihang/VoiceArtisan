@@ -194,6 +194,13 @@ ASR 相关的两处新增字段（CLOUD-DIARIZE-1）：
 | `POST /api/tasks/batch/{id}/retry-failed` | 把失败项复制成新批次重跑（保留逐项参数） |
 | `GET /api/tasks/batch/{id}/zip` | 成功项打包 + manifest.json |
 | `GET /api/tasks/{id}/download` | 按任务下载结果（wav/mp3/txt） |
+| `GET/PUT /api/cloud/engines/host` | 云端主机档案（主机/端口/用户/项目目录/解释器）；密码 DPAPI 加密，永不回显 |
+| `POST /api/cloud/engines/host/test` | 试连云端 SSH，返回指纹与云端 Python 版本 |
+| `GET /api/cloud/engines` | **云端**引擎列表（远端 engines_cli 实时计算，含手工直传的模型）；`?kind=` 可筛 |
+| `POST /api/cloud/engines/{id}/install` | 在云端安装引擎（202 + job_id，SSH 流式进度） |
+| `GET /api/cloud/engines/jobs/{id}` | 云端安装任务详情（phase/progress/logs/error） |
+| `DELETE /api/cloud/engines/{id}` | 删除云端模型，返回释放体积 |
+| `POST /api/cloud/engines/{id}/select` | 切换云端当前引擎 |
 | `GET /api/tasks/{id}/media-info` | 成品真实规格（读文件头）：sample_rate / channels / bits / codec / bytes / tier |
 | `GET /api/files/{task_id}/{filename}` | 按文件名下载（白名单 + 防路径穿越） |
 

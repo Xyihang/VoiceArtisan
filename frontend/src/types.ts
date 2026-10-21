@@ -491,3 +491,44 @@ export interface SettingsPayload {
   config_file: string;
   mutable: string[];
 }
+
+/* --------------------------- 云端引擎（远程管理） --------------------------- */
+export interface CloudHostProfile {
+  configured: boolean;
+  host?: string;
+  ssh_port?: number;
+  username?: string;
+  project_dir?: string;
+  python?: string;
+  has_password?: boolean;
+  updated_at?: number;
+}
+
+export interface CloudEngineItem {
+  id: string;
+  name: string;
+  status: string;
+  size_mb: number;
+  kind?: 'tts' | 'asr' | 'speaker';
+  kind_tags?: string[];
+  packages_ok?: boolean;
+  venv_exists?: boolean;
+  languages?: string[];
+}
+
+export interface CloudEngineList {
+  active: string;
+  host?: string;
+  source?: string;
+  items: CloudEngineItem[];
+}
+
+export interface CloudEngineJob {
+  job_id: string;
+  engine_id: string;
+  status: 'running' | 'completed' | 'failed';
+  phase?: string;
+  progress: number;
+  logs?: { ts: number; message: string }[];
+  error?: string | null;
+}

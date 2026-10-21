@@ -671,11 +671,38 @@ class CloudAgent:
                 job["status"] = "succeeded"
                 job["result"]["prepare_only"] = True
                 self.store.save(job)
+                self._remember_host(job, payload)
                 self._emit(job, "finished", {"status": "succeeded", "step": "S4B", "result": job["result"]})
                 return
         job["status"] = "succeeded"
         self.store.save(job)
+        self._remember_host(job, payload)
         self._emit(job, "finished", {"status": "succeeded", "step": "S8", "result": job["result"]})
+
+    def _remember_host(self, job: dict, payload: dict) -> None:
+        """接入成功后把 SSH 档案存下来，供「云端引擎管理」复用（密码走 DPAPI）。"""
+        try:
+            from . import cloud_hosts
+
+            target = job.get("target") or {}
+            cred = self._cred.get(job["job_id"]) or {}
+            options = job.get("options") or {}
+            project_dir = str(options.get("remote_dir") or "~/qwentts").rstrip("/")
+            env = job.get("env") or {}
+            cloud_hosts.save(
+                Path(self.cfg_manager.app.data_dir),
+                {
+                    "host": target.get("host", ""),
+                    "ssh_port": int(target.get("ssh_port") or 22),
+                    "username": target.get("username", ""),
+                    "password": cred.get("password") or (payload.get("auth") or {}).get("password", ""),
+                    "project_dir": project_dir or cloud_hosts.DEFAULT_PROJECT_DIR,
+                    "python": str(env.get("python") or cloud_hosts.DEFAULT_PYTHON),
+                },
+            )
+            self._log(job, "已保存云端主机档案：云端引擎管理可直接使用（" + project_dir + "）")
+        except Exception as exc:  # noqa: BLE001 - 档案保存失败不影响接入结果
+            logger.warning("保存云端主机档案失败：%s", exc)
 
     # ---- 单步实现 ----
     def _s0_validate(self, job, payload, ssh, ctx) -> None:
