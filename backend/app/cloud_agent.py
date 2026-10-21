@@ -670,6 +670,7 @@ class CloudAgent:
                         rest["detail"] = "无卡模式：暂不启动服务（开机后点「续做」继续）"
                 job["status"] = "succeeded"
                 job["result"]["prepare_only"] = True
+                self._sync_tunnel_port(job)
                 self.store.save(job)
                 self._remember_host(job, payload)
                 self._emit(job, "finished", {"status": "succeeded", "step": "S4B", "result": job["result"]})
@@ -678,6 +679,29 @@ class CloudAgent:
         self.store.save(job)
         self._remember_host(job, payload)
         self._emit(job, "finished", {"status": "succeeded", "step": "S8", "result": job["result"]})
+
+    def _sync_tunnel_port(self, job: dict) -> None:
+        """把「云端服务实际端口」同步到本地隧道配置。
+
+        否则本地隧道可能还指着上次的 8443，而这次服务跑在 18444 —— 表现就是
+        「隧道是运行中，但云端一律不可达」。无卡准备模式（不跑 S5）也会同步。
+        """
+        try:
+            port = int((job.get("options") or {}).get("remote_port") or 0)
+            if port <= 0:
+                return
+            current = getattr(self.cfg_manager.app.cloud, "tunnel", None)
+            if current is None or int(getattr(current, "remote_port", 0) or 0) == port:
+                return
+            self.cfg_manager.update_runtime({"cloud": {"tunnel": {"remote_port": port}}})
+            self._log(job, "已把本地隧道远端端口同步为 " + str(port))
+            if callable(self.on_applied):
+                try:
+                    self.on_applied()
+                except Exception:  # noqa: BLE001
+                    pass
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("同步隧道端口失败：%s", exc)
 
     def _remember_host(self, job: dict, payload: dict) -> None:
         """接入成功后把 SSH 档案存下来，供「云端引擎管理」复用（密码走 DPAPI）。"""

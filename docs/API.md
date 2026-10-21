@@ -201,6 +201,7 @@ ASR 相关的两处新增字段（CLOUD-DIARIZE-1）：
 | `GET /api/cloud/engines/jobs/{id}` | 云端安装任务详情（phase/progress/logs/error） |
 | `DELETE /api/cloud/engines/{id}` | 删除云端模型，返回释放体积 |
 | `POST /api/cloud/engines/{id}/select` | 切换云端当前引擎 |
+| `POST /api/cloud/probe` | **后端侧**探测云端（自动尝试隧道/直连、http/https，忽略自签证书）；返回 via/latency/ready/model，失败时给端口不一致等提示 |
 | `GET /api/tasks/{id}/media-info` | 成品真实规格（读文件头）：sample_rate / channels / bits / codec / bytes / tier |
 | `GET /api/files/{task_id}/{filename}` | 按文件名下载（白名单 + 防路径穿越） |
 

@@ -26,6 +26,7 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 from .api import engines as engines_api  # noqa: E402
 from .api import openai as openai_api  # noqa: E402
 from .api import remote, system, tasks, voices, ws  # noqa: E402
+from .api.cloud import router as cloud_router
 from .api.cloud_agent import router as cloud_agent_router
 from .api.cloud_engines import router as cloud_engines_router
 from .certs import ensure_certificate, help_text  # noqa: E402
@@ -163,6 +164,7 @@ def create_app() -> FastAPI:
     app.include_router(openai_api.router)
     app.include_router(ws.router)
     app.include_router(cloud_agent_router)
+    app.include_router(cloud_router)
     app.include_router(cloud_engines_router)
 
     @app.exception_handler(AppError)

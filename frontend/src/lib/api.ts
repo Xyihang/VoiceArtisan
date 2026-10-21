@@ -185,6 +185,17 @@ export const api = {
       body: JSON.stringify({ mode }),
     }),
   resetSettings: () => request<SettingsPayload>('/api/settings/reset', { method: 'POST' }),
+  /** 后端侧探测云端（自动尝试隧道/直连、http/https）——浏览器在隧道/自签证书下探不了 */
+  cloudProbe: () =>
+    request<{
+      ok: boolean;
+      via: string;
+      url: string;
+      latency_ms: number;
+      status: number;
+      ready?: boolean;
+      model?: string;
+    }>('/api/cloud/probe', { method: 'POST' }),
   stopCloud: (body: { stop_tunnel?: boolean; action?: 'stop_service' | 'shutdown' } = {}) =>
     request<{
       ok: boolean;

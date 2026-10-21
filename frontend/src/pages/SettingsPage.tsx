@@ -573,8 +573,29 @@ export function SettingsPage() {
     }
   };
 
-  /** 纯前端只读探测：直接打 cloud.base_url + /v1/health（不改后端，不带证书覆盖） */
+  /** 探测云端：交给后端做（隧道/自签证书场景浏览器自己探不了） */
   const testConnection = async () => {
+    const base = String(draft.cloud.base_url || '').trim().replace(/\/+$/, '');
+    const urlError = urlIssue(base, draft.run.mode);
+    if (urlError) return;
+    setProbe({ state: 'running' });
+    try {
+      const res = await api.cloudProbe();
+      setProbe({
+        state: 'ok',
+        latency: res.latency_ms,
+        message: `经${res.via} ${res.url} 连通 · ready=${res.ready ? '是' : '否'}${res.model ? ' · ' + res.model : ''}`,
+      });
+      pushToast({ level: 'success', title: '云端连通', description: `${res.via} · ${res.latency_ms}ms` });
+    } catch (error) {
+      const msg = (error as Error)?.message || '探测失败';
+      const hint = (error as { hint?: string })?.hint;
+      setProbe({ state: 'fail', message: hint ? `${msg}（${hint}）` : msg });
+    }
+  };
+
+  /** 旧的浏览器直连探测（保留但不再被按钮调用） */
+  const testConnectionBrowser = async () => {
     const base = String(draft.cloud.base_url || '').trim().replace(/\/+$/, '');
     const urlError = urlIssue(base, draft.run.mode);
     if (urlError) {
