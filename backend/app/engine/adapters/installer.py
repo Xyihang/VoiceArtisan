@@ -13,7 +13,7 @@ pip 安装的四道 torch 防线（对应真实事故：在主环境裸装 `voxc
    （`<venv>/constraints.txt`，pip 遇到冲突只会报错退出，不会替换）；
 3. 安装前后各 `torchguard.snapshot()` 一次（主环境），`assert_unchanged()` 发现变化立即抛 TORCH_CHANGED；
    venv 内的 torch 另用 `torchguard.snapshot_venv()` 记录，仅供参考、不参与断言。
-另外统一追加 `--no-cache-dir`（避免本地 wheel 缓存绕过约束）。
+pip 缓存统一重定向到项目 `.cache/pip`（`PIP_CACHE_DIR`：不写 C 盘，且失败重试能复用已下载的 wheel）。
 """
 from __future__ import annotations
 

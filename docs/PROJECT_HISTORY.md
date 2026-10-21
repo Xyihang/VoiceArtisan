@@ -1,4 +1,4 @@
-﻿# 项目开发轨迹与决策记录（人类可读的“项目记忆”）
+# 项目开发轨迹与决策记录（人类可读的“项目记忆”）
 
 > 用途：压缩上下文/换会话后，读这一篇即可恢复全部关键背景、决策与踩坑结论。
 > 最后更新：2026-10-18 · 版权：© 2026 xiyihang（保留所有权利，见 [LICENSE](../LICENSE)）
@@ -210,13 +210,14 @@ cloud.idle_shutdown_enabled: false # 空闲停机默认关
 - [ ] 便携版发布包（含 `frontend/dist`，用户无需 Node）
 - [x] 文本规范化 / OpenAI 兼容接口 / 字幕导出（P0 已完成，2026-10-18）
 - [x] 多引擎框架 + VoxCPM1.5 注册（2026-10-19）
-- [ ] CosyVoice3 / CosyVoice2 / CosyVoice-300M / IndexTTS-2 适配器已实现但**未注册**（需要代码仓库镜像或商用授权后在 `registry.py` 加一行）
+- [x] CosyVoice3 / CosyVoice2 / CosyVoice-300M / IndexTTS-2 适配器**已在 `registry.py` 注册**（2026-10-19 起；真机未跑通见下一项）
 - [ ] 引擎卡片的「安装预览」按钮（后端已有 `/api/engines/{id}/plan`，前端待接）
 - [x] 版本钉死 + 引擎 venv 隔离（2026-10-19，详见 docs/VERSION_POLICY.md 与 docs/ENGINE_ISOLATION.md）
 - [x] 引擎卡片「安装预览」按钮（2026-10-19 完成：内联面板展示文件/体积/代码仓库/pip 依赖，只 HEAD 探测不下载）
 - [ ] 模型下载 UI 化
 - [ ] 真机跑通 CosyVoice 系（需装 5GB 权重；成功路径未实测）
-- [ ] 清理残留 torch-*.dist-info（历史事故遗留，当前无影响）（后端下载接口 + 前端进度，白名单 URL + 断点续传）
+- [ ] 清理残留 torch-*.dist-info（历史事故遗留，当前无影响）
+- [ ] 模型下载 UI 化（后端下载接口 + 前端进度，白名单 URL + 断点续传）
 - [ ] 按厂商细分的云部署附录（恒源云/阿里云安全组截图级）
 - [ ] 英文版 README（对外交付）
 - [ ] 源文件头部版权注释批量注入

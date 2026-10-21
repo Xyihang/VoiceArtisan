@@ -42,17 +42,31 @@ class InvalidateInfoTests(unittest.TestCase):
 
 class EngineCapabilityTests(unittest.TestCase):
     def test_each_engine_exposes_capabilities(self) -> None:
-        for engine_id in registry.ids():
+        """TTS 引擎都必须声明 tts 能力。
+
+        ASR / 声纹引擎（kind != "tts"）随 ASR-ENGINE-1 注册进同一个 registry，
+        它们的 capabilities 不含 tts 是正确行为，不能混在这条断言里。
+        """
+        tts_ids = registry.ids_of_kind("tts")
+        self.assertGreaterEqual(len(tts_ids), 7, f"TTS 引擎数异常：{tts_ids}")
+        for engine_id in tts_ids:
             adapter = registry.get(engine_id)
             caps = adapter.capabilities()
             self.assertIn("tts", caps, f"{engine_id} 至少应支持语音生成")
+
+    def test_non_tts_engines_are_not_tts(self) -> None:
+        """反过来守住：ASR / 声纹引擎不得声称支持 tts（否则会被路由误用）。"""
+        for engine_id in registry.ids():
+            if engine_id in registry.ids_of_kind("tts"):
+                continue
+            self.assertNotIn("tts", registry.get(engine_id).capabilities(), f"{engine_id} 不应声称支持 tts")
 
     def test_06b_lacks_design(self) -> None:
         self.assertNotIn("design", registry.get("qwen3-tts-0.6b").capabilities())
 
     def test_non_qwen_engines_have_no_design(self) -> None:
         """音色设计目前只有 Qwen3-TTS 1.7B 支持，其它引擎不该声称支持。"""
-        for engine_id in registry.ids():
+        for engine_id in registry.ids_of_kind("tts"):
             if engine_id == "qwen3-tts-1.7b":
                 continue
             self.assertNotIn(

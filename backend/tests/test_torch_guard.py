@@ -1,4 +1,4 @@
-﻿"""torch 守卫与依赖探测的离线自检（不联网、不装包、不改环境）。
+"""torch 守卫与依赖探测的离线自检（不联网、不装包、不改环境）。
 
 直接运行：`python backend/tests/test_torch_guard.py`
 覆盖三件事：
@@ -12,6 +12,8 @@ from __future__ import annotations
 import sys
 import tempfile
 from pathlib import Path
+
+import pytest
 
 BACKEND = Path(__file__).resolve().parent.parent
 if str(BACKEND) not in sys.path:
@@ -89,6 +91,7 @@ class FakePopen:
     def __init__(self, cmd, *args, **kwargs):
         self.cmd = list(cmd)
         FakePopen.last_cmd = self.cmd
+        FakePopen.last_env = dict(kwargs.get("env") or {})
         FakePopen.calls.append(self.cmd)
         constraint = None
         for index, token in enumerate(self.cmd):
@@ -105,8 +108,10 @@ class FakePopen:
     calls: list[list[str]] = []
     constraint_text = ""
     constraint_path: Path | None = None
+    last_env: dict[str, str] = {}
 
 
+@pytest.mark.parametrize("no_deps", [True, False])
 def test_pip_install_guard(no_deps: bool) -> None:
     label = "主包 --no-deps" if no_deps else "精选依赖"
     print(f"[3] pip_install 打桩（{label}）：命令行带守卫参数，安装后快照变化即中止")
@@ -126,7 +131,13 @@ def test_pip_install_guard(no_deps: bool) -> None:
     except AppError as exc:
         check(f"{label}：抛 TORCH_CHANGED", exc.code == "TORCH_CHANGED", exc.code)
         cmd = FakePopen.last_cmd
-        check(f"{label}：带 --no-cache-dir", "--no-cache-dir" in cmd)
+        cache_dir = FakePopen.last_env.get("PIP_CACHE_DIR", "")
+        check(
+            f"{label}：pip 缓存重定向到项目 .cache",
+            bool(cache_dir) and Path(cache_dir).is_absolute() and Path(cache_dir).name == "pip"
+            and ".cache" in Path(cache_dir).parts,
+            cache_dir,
+        )
         check(f"{label}：带 -c 约束文件", "-c" in cmd and "constraints" in str(FakePopen.constraint_path))
         real_torch = torchguard.effective_version("torch")
         check(

@@ -239,7 +239,7 @@ engine:
 - `allow_parallel` 为 `false` 时切换引擎会先 `unload()` 旧引擎并 `torch.cuda.empty_cache()`，避免两个引擎抢显存；
 - 引擎的模型统一落在 `<storage.models_dir>/<engine_id>/`（Qwen 三件套沿用 `local.models` 既有路径）；
 - 环境变量优先级最高：QWENTTS__ENGINE__ACTIVE=voxcpm1.5 会覆盖界面/运行期设置。
-- 6 个引擎全部已注册；未安装的会在卡片上显示体积与依赖，点「安装」才会真正下载。选型依据见 [ENGINE_RESEARCH.md](ENGINE_RESEARCH.md)。
+- 注册表共 13 个引擎（7 个 TTS + 5 个 ASR + 1 个声纹）全部已注册；未安装的会在卡片上显示体积与依赖，点「安装」才会真正下载。选型依据见 [ENGINE_RESEARCH.md](ENGINE_RESEARCH.md)。
 
 ---
 

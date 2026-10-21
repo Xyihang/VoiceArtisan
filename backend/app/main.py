@@ -12,6 +12,7 @@ import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from . import __version__
 from .bootstrap import bootstrap, PROJECT_ROOT
 
 # 缓存重定向必须在 torch/transformers 之前
@@ -140,9 +141,9 @@ def create_app() -> FastAPI:
 
     _soxfree.apply()
     app = FastAPI(
-        title="Qwen3-TTS 语音生成系统",
+        title="声匠 · VoiceSmith —— 多引擎语音工作台",
         description="本地 + 云 GPU 双后端语音生成服务（生成 / 克隆 / 音色设计 / 转写）",
-        version="1.0.0",
+        version=__version__,
         lifespan=lifespan,
     )
     app.add_middleware(

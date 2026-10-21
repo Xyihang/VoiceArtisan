@@ -96,7 +96,7 @@ cd backend && python -m app.main --selfcheck
 | F10 | 文本规范化 | 数字/单位/型号/日期 → 中文读法（`tts.normalize`，可开关、幂等；任务级 `params.normalize` 覆盖，见 [CONFIG §tts](docs/CONFIG.md)） |
 | T1-T8 | 任务中心 | 列表/详情/状态流转/下载/删除/批量删除/重试 + SQLite 持久化 + 每次生成后回收显存 |
 | T9 | 字幕导出 | `GET /api/tasks/{id}/subtitles?format=srt\|vtt\|ass`，按分块时间轴生成（毫秒精度、`chunks.json` 落盘），任务详情内可下载 |
-| F11 | 多引擎/模型管理（安装器或设置页增删） | `GET/POST/DELETE /api/engines*`（列表/后台安装+事件推送/删除/切换/健康）+ `python -m app.engines_cli`；内置 6 个引擎：qwen3-tts-1.7b（默认）/ Fun-CosyVoice3-0.5B / CosyVoice2-0.5B / CosyVoice-300M-SFT / VoxCPM1.5 / IndexTTS-2，见 [API §10](docs/API.md)、[CONFIG §engine](docs/CONFIG.md) |
+| F11 | 多引擎/模型管理（安装器或设置页增删） | `GET/POST/DELETE /api/engines*`（列表/后台安装+事件推送/删除/切换/健康）+ `python -m app.engines_cli`；注册表共 **13 个引擎**：**7 个 TTS**（`qwen3-tts-1.7b` 默认 / `qwen3-tts-0.6b` / `cosyvoice3-0.5b` / `cosyvoice2-0.5b` / `cosyvoice-300m-sft` / `voxcpm1.5` / `indextts2`）+ **5 个 ASR**（faster-whisper `tiny`~`large-v3`）+ **1 个声纹**（CAM++，供说话人区分），见 [API §10](docs/API.md)、[CONFIG §engine](docs/CONFIG.md) |
 | F12 | 引擎依赖隔离（每引擎独立 venv） | 除默认引擎走主环境就地推理（`isolation=inprocess`），其余引擎依赖与 torch 全部装在 `<models_dir>/<engine_id>/.venv`，合成走 `runner.py` 子进程；**主环境 torch 2.4.1+cu121 不会被任何安装动作替换**，见 [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) |
 | N1-N7 | 双后端 | 直连配置、SSH 隧道、三模式切换、混合路由、空闲停机、就绪探测+重试、状态可见 |
 | D1-D6 | 部署 | 自签 HTTPS、一键启动、加载提示与复用、单独推理脚本、镜像下载、启动自检 |
@@ -164,6 +164,7 @@ python -m app.engines_cli verify voxcpm1.5        # 只按锁文件校验版本�
 - [云 GPU 接入教程](docs/CLOUD_SETUP.md)
 - [云平台推荐](docs/CLOUD_PROVIDERS.md)
 - [项目开发轨迹（记忆）](docs/PROJECT_HISTORY.md)
+- [健康度治理规格（HEALTH-1）](docs/spec/HEALTH-1.md)
 - [接口文档](docs/API.md)
 - [部署与运维](docs/DEPLOY.md)
 - [前端设计说明](docs/DESIGN.md)
@@ -187,7 +188,7 @@ python -m app.engines_cli verify voxcpm1.5        # 只按锁文件校验版本�
 - 所有运行期数据（数据库、上传、输出、日志、证书、缓存）默认落在项目目录，不写系统盘。
 - 商用前请确认 Qwen3-TTS 模型许可证与所用音色的授权。
 
-## 近期变更（2026-10-21 · v1.1.8）
+## 近期变更（2026-10-21 · v1.1.11）
 
 | 类别 | 变化 |
 | --- | --- |
