@@ -77,6 +77,14 @@ class RetryContractTests(unittest.TestCase):
             self.assertIn(f'"{key}"', source, f"重试时没有清理上次的运行结果字段 {key}")
 
 
+class SplitSourceTests(unittest.TestCase):
+    def test_asr_split_uses_uploaded_asset(self) -> None:
+        """ASR 任务没有 source.wav，拆分必须回落到上传资产（真机回归抓到的缺陷）。"""
+        source = inspect.getsource(tasks_api.split_by_speaker)
+        self.assertIn('getattr(row, "type", "") == "asr"', source)
+        self.assertIn("get_asset", source, "ASR 任务应按 voice_id（asset_id）取上传音频")
+
+
 class RouteTests(unittest.TestCase):
     def test_new_endpoints_registered(self) -> None:
         paths = {route.path for route in tasks_api.router.routes}

@@ -964,6 +964,11 @@ def split_by_speaker(task_id: str, state: AppState = Depends(get_state)):
         )
     base = (state.paths.outputs / task_id).resolve()
     source = base / export_mod.SOURCE_NAME
+    if not source.exists() and getattr(row, "type", "") == "asr":
+        # ASR 任务没有 source.wav：待转写音频是上传资产（voice_id 字段存的是 asset_id）
+        asset = state.db.get_asset(row.voice_id) if row.voice_id else None
+        if asset is not None and Path(asset.path).exists():
+            source = Path(asset.path)
     if not source.exists():
         # 旧任务没有原件时退回成品文件（wav/mp3 都能解码）
         candidate = (base / row.output_file).resolve() if row.output_file else None
