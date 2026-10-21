@@ -59,6 +59,7 @@
 | 文档 | 适合场景 |
 | --- | --- |
 | [DEPLOY.md](DEPLOY.md) | 环境要求、venv 安装、systemd / Windows 服务、Nginx 反代、备份升级、端口清单 |
+| [DELIVERY-AND-CLOUD-VERIFY.md](DELIVERY-AND-CLOUD-VERIFY.md) | **发版与云端实证手册**：exe/源码包/便携包怎么打、打包必排项、云端模型直传、diarize 实证命令与踩坑（av.open / 配置覆盖） |
 | [BENCHMARK.md](BENCHMARK.md) | 实测数据：1.7B 在 4GB 卡、流式 vs 非流式、云端链路、验收结论 |
 | [API.md](API.md) | 接口文档：请求/响应示例、WebSocket 事件、`/v1` 云端接口、错误码 |
 | [COMPETITIVE_VOICESTUDIO.md](COMPETITIVE_VOICESTUDIO.md) | 竞品与功能差距：GitHub VOICESTUDIO 调研、24 项功能对比、缺失功能排序与路线建议 |
