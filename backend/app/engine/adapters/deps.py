@@ -339,3 +339,76 @@ def lock_install_command(lock_file, python: str = "", constraints: str = "") -> 
         parts += ["-c", _quote(constraints)]
     parts += ["-r", _quote(str(lock_file))]
     return " ".join(parts)
+
+
+PIP_MIRROR = "https://pypi.tuna.tsinghua.edu.cn/simple"
+
+
+def _torch_constraints() -> str | None:
+    """把 requirements-torch.txt 里的 torch 三件套写成 pip 约束文件。
+
+    这样即便要装的包间接依赖 torch，pip 也不会把我们锁定的 cu121 换掉。
+    """
+    import tempfile
+    from pathlib import Path as _P
+
+    req = None
+    for parent in _P(__file__).resolve().parents:
+        candidate = parent / "requirements-torch.txt"
+        if candidate.is_file():
+            req = candidate
+            break
+    if req is None:
+        return None
+    pins = [
+        line.strip() for line in req.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#") and "==" in line
+    ]
+    if not pins:
+        return None
+    fd, path = tempfile.mkstemp(prefix="qwentts-torch-", suffix=".txt")
+    with __import__("os").fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(pins) + "\n")
+    return path
+
+
+def install_main_packages(
+    requirements: list[str],
+    on_progress=None,
+) -> dict:
+    """把缺失的声明依赖装进**当前解释器环境**（主环境引擎用）。
+
+    设计取舍：只装引擎自己声明的包（如 sherpa-onnx / scikit-learn），并带 torch 约束，
+    绝不裸 `pip install` 不带约束 —— 那会把主环境 cu121 的 torch 换成 CPU 版（真实事故）。
+    """
+    import subprocess
+    import sys
+
+    statuses = probe_packages(requirements)
+    missing = [
+        req for req, st in zip(requirements, statuses)
+        if not st.get("installed")
+    ]
+    if not missing:
+        return {"ok": True, "installed": [], "skipped": True, "missing": []}
+
+    if on_progress is not None:
+        try:
+            on_progress("pip", 0.02, "自动安装依赖：" + "、".join(missing))
+        except Exception:  # noqa: BLE001
+            pass
+
+    constraint = _torch_constraints()
+    base = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U"]
+    if constraint:
+        base += ["-c", constraint]
+    last = ""
+    for index in (PIP_MIRROR, None):
+        cmd = list(base) + list(missing) + (["-i", index] if index else [])
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1500)
+        last = (proc.stdout + proc.stderr)[-600:]
+        if proc.returncode == 0:
+            invalidate()
+            return {"ok": True, "installed": missing, "skipped": False,
+                    "mirror": index or "default", "tail": last[-200:]}
+    raise RuntimeError("依赖自动安装失败：" + last[-400:])

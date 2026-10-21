@@ -198,6 +198,23 @@ class EngineManager:
         logger.info("开始安装引擎 %s", engine_id)
         progress("pip" if getattr(adapter, "package", None) else "download", 0.01, "准备安装")
         try:
+            # 主环境引擎（isolation=inprocess）缺依赖时，程序自己装好，别让用户去敲 pip
+            try:
+                isolated = getattr(adapter, "isolated", False)
+                if callable(isolated):
+                    isolated = isolated()
+                if not isolated and getattr(adapter, "package", None):
+                    from .adapters import deps as _deps
+
+                    result = _deps.install_main_packages(
+                        adapter.package_requirements(),
+                        on_progress=lambda phase, pct, msg="": progress(phase, pct, msg),
+                    )
+                    if not result.get("skipped"):
+                        progress("pip", 0.15, "依赖已装好：" + "、".join(result.get("installed") or []))
+            except Exception as exc:  # noqa: BLE001 - 自动装依赖失败时仍尝试安装（模型可能不需要它）
+                logger.warning("引擎 %s 自动安装依赖失败：%s", engine_id, exc)
+                progress("pip", 0.12, "依赖自动安装失败，继续尝试：" + str(exc)[:120])
             adapter.install(progress)
         except AppError as exc:
             detail = exc.detail or exc.message

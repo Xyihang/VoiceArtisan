@@ -92,7 +92,7 @@ class CAMPlusPlusAdapter(BaseAdapter):
                 progress("done", 1.0, "模型已存在")
             return plan
         if not self.package_installed():
-            raise AppError("PACKAGE_MISSING", "缺少 sherpa-onnx / scikit-learn，请先按引擎安装依赖")
+            raise AppError("PACKAGE_MISSING", "缺少 sherpa-onnx / scikit-learn 且自动安装未成功；请检查网络后重试，或手动执行 python -m pip install sherpa-onnx scikit-learn")
 
         target = self.models_root
         target.mkdir(parents=True, exist_ok=True)
