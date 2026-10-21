@@ -80,8 +80,15 @@ PY
 if [ -n "${MISSING// /}" ]; then
   warn "缺少依赖：$MISSING，开始安装"
   $PY -m pip install --upgrade pip >/dev/null || true
+  # 两段式：普通依赖走清华源；只有 torch 三件套走 pytorch 源
   $PY -m pip install -r "$ROOT/requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple \
     || $PY -m pip install -r "$ROOT/requirements.txt"
+  if [ -f "$ROOT/requirements-torch.txt" ]; then
+    $PY -m pip install -r "$ROOT/requirements-torch.txt" \
+        --index-url https://download.pytorch.org/whl/cu121 \
+      || $PY -m pip install -r "$ROOT/requirements-torch.txt" \
+        --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cu121
+  fi
 else
   echo "    依赖齐全"
 fi

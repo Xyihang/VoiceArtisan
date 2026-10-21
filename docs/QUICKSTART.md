@@ -199,3 +199,16 @@ curl -k https://localhost:8443/api/settings | grep -o '"size":"[^"]*"'
 | 装了 0.6B 但「音色设计」报错 | 0.6B 没有 VoiceDesign | 要么装 1.7B 的 VoiceDesign，要么改用内置音色/克隆 |
 | 显存不足报错 | 1.7B 需要 ≥6GB | 换 0.6B（点卡片「使用」）或切云端 |
 | 下载很慢 / 中断 | 单线程 + 国内镜像 | 重跑同一命令会续传；不建议同时开多个下载 |
+
+## 依赖安装（两段式）
+
+`torch` 三件套单独放在 `requirements-torch.txt`，**只有它们需要 pytorch 源**：
+
+```bash
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install -r requirements-torch.txt --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cu121
+# 镜像不通再换官方：--index-url https://download.pytorch.org/whl/cu121
+```
+
+原先 `requirements.txt` 第一行是全局 `--extra-index-url`，会让每个包都去 pytorch.org 找一遍，国内经常卡住；
+现在只对 torch 生效。**无卡机器也照装 cu121 版**：装好放那儿，实例开卡后直接可用。

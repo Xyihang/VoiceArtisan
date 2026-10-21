@@ -91,10 +91,32 @@ class TorchIsolationTests(unittest.TestCase):
     """引擎要新版 torch 时只能装进它自己的 venv，主环境版本不得变化。"""
 
     def test_main_env_pins_stay_cu121(self) -> None:
-        text = PINS.read_text(encoding="utf-8")
-        self.assertIn("torch==2.4.1+cu121", text)
-        self.assertIn("torchaudio==2.4.1+cu121", text)
-        self.assertNotIn("torch==2.5", text)
+        """torch 三件套已从 pins 拆到 requirements-torch.txt（只有它们需要 pytorch 源）。
+
+        pins 里不能再出现 torch，否则 `pip install -r requirements.pins.txt -i 国内镜像`
+        会因为找不到 `+cu121` 轮子而失败；cu121 版本本身仍被锁死在 torch 清单里。
+        """
+        pins_text = PINS.read_text(encoding="utf-8")
+        self.assertNotIn("torch==", pins_text.replace("torchvision==", ""))
+        self.assertNotIn("torchaudio==", pins_text)
+
+        torch_req = PINS.parent / "requirements-torch.txt"
+        self.assertTrue(torch_req.is_file(), "缺少 requirements-torch.txt")
+        torch_text = torch_req.read_text(encoding="utf-8")
+        self.assertIn("torch==2.4.1+cu121", torch_text)
+        self.assertIn("torchaudio==2.4.1+cu121", torch_text)
+        self.assertIn("torchvision==0.19.1+cu121", torch_text)
+        # 生效行里不能有全局索引（注释里说明"不要用它"是允许的）
+        for name in ("requirements.txt", "requirements.pins.txt", "requirements-torch.txt"):
+            body = (PINS.parent / name).read_text(encoding="utf-8")
+            effective = [
+                line.strip() for line in body.splitlines()
+                if line.strip() and not line.strip().startswith("#")
+            ]
+            self.assertFalse(
+                any(line.startswith("--extra-index-url") for line in effective),
+                name + " 的不含注释行里不应出现全局 --extra-index-url",
+            )
 
     def test_voxcpm_lock_pins_own_torch(self) -> None:
         text = (LOCKS / "voxcpm1.5.txt").read_text(encoding="ascii")

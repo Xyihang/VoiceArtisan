@@ -71,10 +71,19 @@ $missing = ($depCheck | & $python -)
 if ($missing -and $missing.Trim()) {
     Write-Warn "缺少依赖：$missing，开始安装（使用国内镜像）"
     & $python -m pip install --upgrade pip --quiet
+    # 两段式：普通依赖走清华源；只有 torch 三件套走 pytorch 源（全局 --extra-index-url 会让每个包都去 pytorch.org 找一遍）
     & $python -m pip install -r (Join-Path $root 'requirements.txt') -i https://pypi.tuna.tsinghua.edu.cn/simple
     if ($LASTEXITCODE -ne 0) {
         Write-Warn '国内镜像安装失败，尝试官方源'
         & $python -m pip install -r (Join-Path $root 'requirements.txt')
+    }
+    $torchReq = Join-Path $root 'requirements-torch.txt'
+    if (Test-Path $torchReq) {
+        & $python -m pip install -r $torchReq --index-url https://download.pytorch.org/whl/cu121
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warn 'pytorch 官方源不通，改用上交镜像'
+            & $python -m pip install -r $torchReq --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cu121
+        }
     }
 } else {
     Write-Host '    依赖齐全'

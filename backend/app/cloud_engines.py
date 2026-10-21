@@ -67,10 +67,29 @@ class CloudEngines:
         ssh.connect(15.0)
         return ssh, p
 
-    def _base_cmd(self, p: dict, args: str) -> str:
+    def _python_for(self, ssh, p: dict) -> str:
+        """优先用部署自带的 venv 解释器：一键接入会把依赖装进 <project>/.venv，
+        而系统 python 可能缺 pydantic-settings 等包，用错解释器会直接 import 失败。"""
+        project = p["project_dir"]
+        try:
+            rc, out = ssh.run(
+                f"if [ -x {project}/.venv/bin/python ]; then echo VENV; "
+                f"elif [ -x {project}/.venv/bin/python3 ]; then echo VENV3; else echo SYS; fi",
+                timeout=20,
+            )
+        except Exception:  # noqa: BLE001
+            return p["python"]
+        tag = (out.strip().splitlines() or ["SYS"])[-1]
+        if tag == "VENV":
+            return f"{project}/.venv/bin/python"
+        if tag == "VENV3":
+            return f"{project}/.venv/bin/python3"
+        return p["python"]
+
+    def _base_cmd(self, p: dict, args: str, python: str | None = None) -> str:
         return (
             f"cd {p['project_dir']}/backend && PYTHONPATH={p['project_dir']}/backend "
-            f"{_ENV_PREFIX} {p['python']} -m app.engines_cli {args}"
+            f"{_ENV_PREFIX} {python or p['python']} -m app.engines_cli {args}"
         )
 
     # ---------------- 只读 ----------------
@@ -95,7 +114,8 @@ class CloudEngines:
     def list(self) -> dict:
         ssh, p = self._open()
         try:
-            rc, out = ssh.run(self._base_cmd(p, "list --json"), 120)
+            python = self._python_for(ssh, p)
+            rc, out = ssh.run(self._base_cmd(p, "list --json", python), 120)
         finally:
             ssh.close()
         if rc != 0:
@@ -116,7 +136,8 @@ class CloudEngines:
     def remove(self, engine_id: str) -> dict:
         ssh, p = self._open()
         try:
-            rc, out = ssh.run(self._base_cmd(p, f"remove {engine_id}"), 300)
+            python = self._python_for(ssh, p)
+            rc, out = ssh.run(self._base_cmd(p, f"remove {engine_id}", python), 300)
         finally:
             ssh.close()
         if rc != 0:
@@ -127,7 +148,8 @@ class CloudEngines:
     def select(self, engine_id: str) -> dict:
         ssh, p = self._open()
         try:
-            rc, out = ssh.run(self._base_cmd(p, f"select {engine_id}"), 120)
+            python = self._python_for(ssh, p)
+            rc, out = ssh.run(self._base_cmd(p, f"select {engine_id}", python), 120)
         finally:
             ssh.close()
         if rc != 0:
@@ -184,7 +206,8 @@ class CloudEngines:
             ssh, p = self._open()
             job["host"] = p["host"]
             self._append(job, f"在 {p['host']} 上安装 {engine_id}（hf-mirror）")
-            cmd = self._base_cmd(p, f"install {engine_id}")
+            python = self._python_for(ssh, p)
+            cmd = self._base_cmd(p, f"install {engine_id}", python)
             stdin, stdout, stderr = ssh._client.exec_command(cmd, timeout=7200)  # noqa: SLF001
             for raw in iter(stdout.readline, ""):
                 self._append(job, raw)

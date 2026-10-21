@@ -2,9 +2,7 @@
 # 生成时间: 2026-10-19 11:07
 # 规则: 一律 ==，禁止 >= / 无版本 / -U
 
-torch==2.4.1+cu121
-torchaudio==2.4.1+cu121
-torchvision==0.19.1+cu121
+# torch / torchaudio / torchvision 不在本清单：见 requirements-torch.txt（需 --index-url pytorch 源，无卡也要装，开卡即可用）
 transformers==4.57.3
 numpy==2.2.6
 fastapi==0.136.3

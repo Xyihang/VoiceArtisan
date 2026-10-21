@@ -53,7 +53,7 @@ MIN_VRAM_MB = 6144  # 1.7B 三件套的显存下限（MB，6GB）
 
 
 PYPI_MIRROR = "https://pypi.tuna.tsinghua.edu.cn/simple"
-TORCH_INDEX = "https://download.pytorch.org/whl/cu121"
+TORCH_INDEX = "https://mirror.sjtu.edu.cn/pytorch-wheels/cu121"
 
 # 版本锁定：所有命令一律精确版本，优先读 requirements.pins.txt（缺失时用下面兜底值）
 PINS_FILE = "requirements.pins.txt"
@@ -1778,6 +1778,7 @@ class LauncherApp:
         root = self.root_var.get().strip() or r"<项目根>"
         py = self._python_display()
         base = (
+            f'{py} -m pip install --no-cache-dir -r requirements-torch.txt --index-url {TORCH_INDEX}\n'
             f'{py} -m pip install --no-cache-dir -r requirements.pins.txt -i {PYPI_MIRROR}\n'
             f'{py} scripts/download_models.py --size 1.7B --out "{root}\\models"\n'
             f'cd backend && set PYTHONPATH={root}\\backend && {py} -m app.main'
@@ -1791,16 +1792,24 @@ class LauncherApp:
             python = self._python_or_die()
             lock = root / "requirements.pins.txt"
             req = lock if lock.is_file() else (root / "requirements.txt")
-            self.log("说明：先检查 torch；缺失则从 PyTorch cu121 源安装（GPU 需要），再装锁定依赖。")
+            self.log("说明：分两段装——先 torch 三件套（pytorch 源），再装其余锁定依赖（国内镜像）。")
             rc, _ = run_capture([python, "-c", "import torch"], timeout=90)
+            torch_req = root / "requirements-torch.txt"
             if rc != 0:
-                self.log("检测到 import torch 失败：先安装 torch + torchaudio（cu121，约 2.5GB，较慢请耐心）。")
-                self.log("原因：requirements.lock.txt 中 torch/torchaudio 被注释，需按显卡 CUDA 版本单独安装。")
-                self._run_stream(
-                    [python, "-m", "pip", "install", "torch", "torchaudio",
-                     "--index-url", TORCH_INDEX],
-                    cwd=root,
-                )
+                if torch_req.is_file():
+                    self.log("安装 GPU 版 torch/torchaudio/torchvision（cu121，约 2.5GB，较慢请耐心）。")
+                    self._run_stream(
+                        [python, "-m", "pip", "install", "-r", str(torch_req),
+                         "--index-url", TORCH_INDEX],
+                        cwd=root,
+                    )
+                else:
+                    self.log("未找到 requirements-torch.txt，回退到直接装 torch + torchaudio。")
+                    self._run_stream(
+                        [python, "-m", "pip", "install", "torch", "torchaudio",
+                         "--index-url", TORCH_INDEX],
+                        cwd=root,
+                    )
             else:
                 self.log("torch 已可导入，跳过单独安装。")
             code = self._run_stream(

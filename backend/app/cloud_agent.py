@@ -817,10 +817,13 @@ class CloudAgent:
         opts = job.get("options") or {}
         remote_dir = job["remote"].get("path") or "~/qwentts"
         index = opts.get("pip_index") or "https://pypi.tuna.tsinghua.edu.cn/simple"
-        # 依赖自检必须包含 CUDA：只有 CPU 版 torch 时不能算“已就绪”
+        # 无卡模式（仅准备环境）允许 torch 没有 CUDA，否则 S2 放行了 S4 又会卡死
+        no_gpu = bool(opts.get("allow_no_gpu") or opts.get("prepare_only"))
+        cuda_assert = "" if no_gpu else "; assert torch.cuda.is_available()"
+        # 依赖自检默认必须包含 CUDA：只有 CPU 版 torch 时不能算“已就绪”
         rc, out = ssh.run(
             "cd " + remote_dir + " && [ -x .venv/bin/python ] && .venv/bin/python -c "
-            "\"import fastapi,uvicorn,soundfile,torch; assert torch.cuda.is_available()\" 2>/dev/null "
+            "\"import fastapi,uvicorn,soundfile,torch" + cuda_assert + "\" 2>/dev/null "
             "&& echo deps_ok || echo deps_missing",
             timeout=300,
         )
@@ -828,15 +831,47 @@ class CloudAgent:
             self._ok(job, "S4", "依赖已就绪，跳过安装")
             return
         py = (job.get("env") or {}).get("python_bin") or "python3"
-        self._log(job, "开始安装依赖（" + index + "），首次约 5-15 分钟…")
+        self._log(job, "开始安装依赖，首次约 5-15 分钟…")
+        # 两段式，且**先装 torch**：qwen-tts 等包会声明 torch 依赖，
+        # 若先装普通依赖，pip 会从国内镜像拉一份 CPU 版 torch（几百 MB 白装），
+        # 所以先按 pytorch 源把 cu121 版装好，后面普通依赖看到 torch 已满足就不会再动它。
         rc, out = ssh.run(
             "cd " + remote_dir + " && " + py + " -m venv .venv && "
-            ".venv/bin/pip install -q -U pip -i " + index + " && "
-            ".venv/bin/pip install -q -r requirements.txt -i " + index + " && echo deps_ok",
+            ".venv/bin/pip install -q -U pip -i " + index,
+            timeout=600,
+        )
+
+        torch_ok = False
+        # 国内优先走上交镜像（官方源经常几十 KB/s 甚至超时），官方源只作兜底
+        for idx in (
+            "https://mirror.sjtu.edu.cn/pytorch-wheels/cu121",
+            "https://download.pytorch.org/whl/cu121",
+        ):
+            self._log(job, "① 安装 GPU 版 torch（" + idx.split("/")[2] + "，约 2.5GB；国内优先镜像）…")
+            rc, tout = ssh.run(
+                "cd " + remote_dir + " && .venv/bin/pip install -q --no-cache-dir "
+                "-r requirements-torch.txt --index-url " + idx + " && echo torch_ok",
+                timeout=2400,
+            )
+            if "torch_ok" in tout:
+                torch_ok = True
+                break
+            self._log(job, "该源安装失败：" + tout[-200:])
+        if not torch_ok:
+            raise AppError(
+                "REMOTE_DEPS_FAILED",
+                "GPU 版 torch 安装失败（pytorch 官方源与上交镜像都不通）。"
+                "请手动执行：.venv/bin/pip install -r requirements-torch.txt "
+                "--index-url https://download.pytorch.org/whl/cu121",
+            )
+
+        self._log(job, "② 安装其余依赖（" + index + "）…")
+        rc, out = ssh.run(
+            "cd " + remote_dir + " && .venv/bin/pip install -q -r requirements.txt -i " + index + " && echo base_ok",
             timeout=1800,
         )
-        if "deps_ok" not in out:
-            raise AppError("REMOTE_DEPS_FAILED", "依赖安装失败：" + out[-400:])
+        if "base_ok" not in out:
+            raise AppError("REMOTE_DEPS_FAILED", "普通依赖安装失败：" + out[-400:])
 
         # 关键：pip 默认装的是 CPU 版 torch，云端必须换成 CUDA 版，否则模型加载必失败
         rc, cuda_out = ssh.run(
@@ -845,11 +880,15 @@ class CloudAgent:
             timeout=300,
         )
         self._log(job, "CUDA 自检：" + cuda_out.strip()[:120])
+        if "cuda True" not in cuda_out and no_gpu:
+            self._log(job, "无卡模式：torch 已是 cu121 版，当前看不到 GPU 属预期；开卡后直接可用")
+            self._ok(job, "S4", "依赖就绪（cu121 torch 已装，无卡模式）")
+            return
         if "cuda True" not in cuda_out:
             self._log(job, "torch 未启用 CUDA，正在安装 cu121 版本（约 2.5GB，3-8 分钟）…")
             for idx in (
-                "https://download.pytorch.org/whl/cu121",
                 "https://mirror.sjtu.edu.cn/pytorch-wheels/cu121",
+                "https://download.pytorch.org/whl/cu121",
             ):
                 rc, fix_out = ssh.run(
                     "cd " + remote_dir + " && .venv/bin/pip install -q --no-cache-dir "
@@ -877,13 +916,16 @@ class CloudAgent:
         opts = job.get("options") or {}
         remote_dir = job["remote"].get("path") or "~/qwentts"
         size = str(opts.get("model_size") or "1.7B")
-        if opts.get("download_models") is False:
-            self._ok(job, "S4B", "已按设置跳过模型下载")
-            return
         env = job.get("env") or {}
         data_root = env.get("data_dir") or ""
         models_dir = (data_root + "/qwentts-models") if data_root else (remote_dir + "/models")
+        # 即使跳过下载也要记下 models_dir：S5 写云端配置时要指向数据盘，复用已有模型
         job["remote"]["models_dir"] = models_dir
+        if opts.get("download_models") is False:
+            rc, exist = ssh.run("ls -d " + models_dir + "/Qwen3-TTS-* 2>/dev/null | wc -l", timeout=30)
+            count = (exist.strip().splitlines() or ["0"])[-1]
+            self._ok(job, "S4B", "已跳过下载；数据盘 " + models_dir + " 现有 " + str(count) + " 个模型目录")
+            return
         names = ["Base", "CustomVoice", "VoiceDesign"] if size == "1.7B" else ["Base", "CustomVoice"]
         check = " && ".join(
             "[ -d " + models_dir + "/Qwen3-TTS-12Hz-" + size + "-" + n + " ]" for n in names

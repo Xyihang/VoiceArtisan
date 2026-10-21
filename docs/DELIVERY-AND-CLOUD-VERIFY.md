@@ -168,3 +168,51 @@ python -u .cache\cloud_asr_test.py                         # 双人音频 diariz
 ```
 
 > `.cache/` 不随包分发；这些脚本属于一次性工具，需要长期留存的内容以本文为准。
+
+---
+
+## 四、依赖安装：两段式 + 镜像优先（2026-10-21 补充）
+
+### 4.1 为什么拆
+
+原先 `requirements.txt` 第一行是 `--extra-index-url https://download.pytorch.org/whl/cu121`，**对所有包生效**：
+装 fastapi/numpy 时 pip 也会去 pytorch.org 找一遍，国内经常几十 KB/s 甚至超时，看起来像"依赖装不完"。
+真正需要它的只有 torch / torchaudio / torchvision。
+
+### 4.2 现在的做法
+
+| 文件 | 内容 |
+| --- | --- |
+| `requirements.txt` | 普通依赖（无 torch、无全局索引行） |
+| `requirements-torch.txt` | 只有 torch/torchaudio/torchvision 的精确 pin（cu121） |
+| `requirements.pins.txt` | 锁定清单，已移除 torch 三行（避免 `-i 国内镜像` 找不到 `+cu121`） |
+
+安装顺序（`start.ps1` / `start.sh` / 安装器 / 云端 Agent S4 全部一致）：
+
+1. **先装 torch**：`pip install -r requirements-torch.txt --index-url <镜像>`
+   —— 先装是因为 `qwen-tts` 声明了 torch 依赖；若先装普通依赖，pip 会从国内镜像白拉一份 CPU 版 torch（约 900MB），随后又被 cu121 覆盖。
+2. **再装普通依赖**：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`
+
+索引优先级：**上交镜像 → pytorch 官方**（实测上交索引 0.28s、官方 2.19s，官方常卡）。
+
+### 4.3 无卡机器
+
+- 照样装 cu121 版，不降级成 CPU 版 —— 实例开卡后直接可用
+- S4 的 CUDA 断言在 `allow_no_gpu` / `prepare_only` 下只提示不失败
+- **注意**：无卡机器跑到 S6 仍会失败（云端服务真的用不了 GPU，返回 `未检测到可用的 CUDA 设备`）。
+  无卡准备环境的正确用法是勾 **「仅准备环境」**，跑到 S4B 即成功，S5–S8 标 skipped，开卡后点「续做」。
+
+### 4.4 实测（region-42，无卡）
+
+| 场景 | 结果 |
+| --- | --- |
+| 完整流程（prepare_only=false） | S0–S5 全绿（S4 用时约 16 分钟：torch 2.5GB 走上交镜像 + 其余依赖走清华）；S6 失败——无 GPU，属预期 |
+| 仅准备环境（prepare_only=true） | **S0–S4B 全绿，succeeded**；并自动写入云端主机档案 `project_dir=~/qwentts` |
+| 安装后自检 | `.venv/bin/python -c "import torch;print(torch.__version__)"` → `2.4.1+cu121` |
+
+### 4.5 顺带修的两个问题
+
+1. `cloud_engines` 调云端 `engines_cli` 时原来固定用系统 python；一键接入把依赖装在 `<project>/.venv`，
+   系统 python 缺 `pydantic-settings` 会直接 import 失败 → 改为**优先用部署自带的 venv 解释器**。
+2. `pkill -f 'app.main --host …'` 会匹配到执行它的那条 ssh 命令自身（命令行里含同样文字）→
+   脚本里改用 `app[.]main` 字符类规避（排障时踩过）。
