@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.12：ASR 改为自解码音频（numpy 输入）绕开 PyAV 版本不兼容；云端说话人区分真机实证通过；交付物（exe + 源码包 + 便携包）重建",
     "v1.1.11：补做 PHASE-3 3.4 导出档位（Original / Standard 44.1k MP3 192k / For editing 48k 24bit WAV）+ GET /tasks/{id}/media-info 读真实文件头 + 教程页与文档同步",
     "v1.1.10：教程页新增「区分说话人 / 后期处理链 / 目标时长 / 批量队列 / MCP Server」5 个分区（共 18 个）",
     "v1.1.9：复查缺口修复——批次重试保留逐项参数、取消落 canceled（含转写阶段取消点）、local.py 相对导入越界、MCP ParseError/UTF-8、文档与 example 配置补齐",

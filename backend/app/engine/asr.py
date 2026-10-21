@@ -163,8 +163,16 @@ class LocalASREngine:
         cfg = self._get_app()
         started = time.perf_counter()
         try:
+            # 自己解码成 16k 单声道 float32 再交给 faster-whisper：
+            # 走 numpy 输入就不会用到它的 PyAV 解码（PyAV 各版本对 av.open 的
+            # metadata_errors 参数不兼容，云端 19.x 会直接 TypeError）。
+            from ..audio import read_audio, resample
+
+            pcm, sr = read_audio(audio_path)
+            if sr != 16000:
+                pcm = resample(pcm, sr, 16000)
             segments, info = model.transcribe(
-                audio_path,
+                pcm,
                 language=normalize_language(language),
                 beam_size=int(cfg.asr.local.beam_size),
                 vad_filter=True,
