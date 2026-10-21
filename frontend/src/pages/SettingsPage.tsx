@@ -851,15 +851,53 @@ export function SettingsPage() {
             style={isShown('cloud') ? undefined : { display: 'none' }}
           >
             <div className="field-row">
-              <Field label={hl('服务地址')} hint="支持 https://host:port">
-                <input
-                  className="input"
-                  value={draft.cloud.base_url}
-                  onChange={(e) => patch('cloud', 'base_url', e.target.value)}
-                  placeholder="https://your-cloud-gpu-host:8443"
-                  aria-invalid={issues['cloud.base_url'] ? true : undefined}
-                  aria-describedby="cloud-base-url-error"
-                />
+              <Field
+                label={hl('服务地址')}
+                hint={
+                  draft.cloud.tunnel.enabled
+                    ? '隧道开启：地址自动跟随「本地映射端口」，这里只需选协议'
+                    : '后端访问云端的真实地址（关隧道时才用它）'
+                }
+              >
+                {(() => {
+                  const tunnelOn = !!draft.cloud.tunnel.enabled;
+                  const scheme = /^http:\/\//i.test(String(draft.cloud.base_url || '')) ? 'http' : 'https';
+                  const localPort = String(draft.cloud.tunnel.local_port || 18443);
+                  const autoValue = `${scheme}://127.0.0.1:${localPort}`;
+                  return (
+                    <div className="toolbar" style={{ alignItems: 'stretch' }}>
+                      <input
+                        className="input"
+                        value={tunnelOn ? autoValue : draft.cloud.base_url}
+                        readOnly={tunnelOn}
+                        disabled={tunnelOn}
+                        title={
+                          tunnelOn
+                            ? '隧道模式下实际请求走本地映射端口，这个地址自动生成'
+                            : '例：https://1.2.3.4:8443（云端公网地址）'
+                        }
+                        onChange={(e) => patch('cloud', 'base_url', e.target.value)}
+                        placeholder="https://your-cloud-gpu-host:8443"
+                        aria-invalid={issues['cloud.base_url'] ? true : undefined}
+                        aria-describedby="cloud-base-url-error"
+                      />
+                      {tunnelOn ? (
+                        <select
+                          className="select"
+                          style={{ maxWidth: 96 }}
+                          value={scheme}
+                          title="云端服务是 http 还是 https（自签证书也用 https）"
+                          onChange={(e) =>
+                            patch('cloud', 'base_url', `${e.target.value}://127.0.0.1:${localPort}`)
+                          }
+                        >
+                          <option value="https">https</option>
+                          <option value="http">http</option>
+                        </select>
+                      ) : null}
+                    </div>
+                  );
+                })()}
                 {issues['cloud.base_url'] ? (
                   <p className="field-error" id="cloud-base-url-error">
                     {issues['cloud.base_url']}
@@ -881,8 +919,9 @@ export function SettingsPage() {
 
             {draft.cloud.tunnel.enabled && draft.cloud.tunnel.ssh_host ? (
               <p className="hint" style={{ marginTop: 4 }}>
-                隧道已启用：实际请求走 <code className="num">https://127.0.0.1:{String(draft.cloud.tunnel.local_port || 18443)}</code>
-                ，上面这个「服务地址」只用来决定 http/https 协议
+                隧道已启用：上面的地址已<strong>自动跟随本地端口</strong>
+                <code className="num">127.0.0.1:{String(draft.cloud.tunnel.local_port || 18443)}</code>
+                ，你只需要选 http/https；要改端口请去 03「本地映射端口」
               </p>
             ) : null}
 
@@ -892,7 +931,7 @@ export function SettingsPage() {
                 className="btn btn--sm"
                 onClick={() => void testConnection()}
                 disabled={probe.state === 'running'}
-                title="浏览器直接请求 {服务地址}/v1/health，只读探测，不修改任何配置"
+                title="由后端探测云端（自动尝试隧道/直连、http/https），只读，不修改任何配置"
               >
                 <PlugZap size={14} strokeWidth={1.75} /> {probe.state === 'running' ? '探测中…' : '测试连接'}
               </button>
@@ -925,7 +964,7 @@ export function SettingsPage() {
                     <StatusDot tone="danger" /> {probe.message}
                   </>
                 ) : (
-                  <span className="hint">点「测试连接」会用浏览器直连 /v1/health（跳过代理，不影响正在运行的任务）</span>
+                  <span className="hint">点「测试连接」由后端探活（走隧道/http(s) 自动选择，只读，不影响正在运行的任务）</span>
                 )}
               </span>
             </div>
@@ -1064,10 +1103,10 @@ export function SettingsPage() {
               会自动填成：本地 <code className="num">{String(draft.cloud.tunnel.local_port || 18443)}</code> →
               云端 <code className="num">{String(draft.cloud.tunnel.remote_host || '127.0.0.1')}:{String(draft.cloud.tunnel.remote_port || 8443)}</code>
               （经 <code>{draft.cloud.tunnel.username || 'user'}@{draft.cloud.tunnel.ssh_host || '主机'}:{String(draft.cloud.tunnel.ssh_port || 22)}</code>）；
-              02 的服务地址 <code>{String(draft.cloud.base_url || '未填')}</code> 只用来决定 http/https，实际请求走本地映射端口。
+              02 的「服务地址」在隧道开启时只决定 http/https（地址会自动显示成本地端口），实际请求走本地映射端口。
             </p>
             <div className="field-row">
-              <Field label={hl('启用隧道')}>
+              <Field label={hl('启用隧道')} hint="开启后，云端地址变成 127.0.0.1:本地映射端口，实际请求由 SSH 隧道转发">
                 <select
                   className="select"
                   value={String(draft.cloud.tunnel.enabled)}
@@ -1077,14 +1116,14 @@ export function SettingsPage() {
                   <option value="true">开启</option>
                 </select>
               </Field>
-              <Field label={hl('SSH 主机')}>
+              <Field label={hl('SSH 主机')} hint="云主机的地址（AutoDL 是 region-xx.seetacloud.com 这种）">
                 <input
                   className="input"
                   value={draft.cloud.tunnel.ssh_host}
                   onChange={(e) => patchDeep('cloud', 'tunnel', 'ssh_host', e.target.value)}
                 />
               </Field>
-              <Field label={hl('SSH 端口')}>
+              <Field label={hl('SSH 端口')} hint="平台给的 SSH 端口，通常不是 22（如 26322）">
                 <input
                   className="input num"
                   type="number"
@@ -1092,7 +1131,7 @@ export function SettingsPage() {
                   onChange={(e) => patchDeep('cloud', 'tunnel', 'ssh_port', Number(e.target.value))}
                 />
               </Field>
-              <Field label={hl('用户名')}>
+              <Field label={hl('用户名')} hint="云端登录用户，AutoDL/大多数镜像都是 root">
                 <input
                   className="input"
                   value={draft.cloud.tunnel.username}
@@ -1101,14 +1140,14 @@ export function SettingsPage() {
               </Field>
             </div>
             <div className="field-row">
-              <Field label={hl('私钥路径')} hint="留空则用密码登录">
+              <Field label={hl('私钥路径')} hint="有 .pem/.ppk 私钥就填路径；留空则用下面的密码登录">
                 <input
                   className="input"
                   value={draft.cloud.tunnel.key_path}
                   onChange={(e) => patchDeep('cloud', 'tunnel', 'key_path', e.target.value)}
                 />
               </Field>
-              <Field label={hl('密码')} hint="DPAPI 加密后保存（runtime.json 里是密文）">
+              <Field label={hl('密码')} hint="SSH 登录密码；DPAPI 加密后保存（runtime.json 里是密文）">
                 <input
                   className="input"
                   type="password"
@@ -1116,7 +1155,7 @@ export function SettingsPage() {
                   onChange={(e) => patchDeep('cloud', 'tunnel', 'password', e.target.value)}
                 />
               </Field>
-              <Field label={hl('本地映射端口')}>
+              <Field label={hl('本地映射端口')} hint="本机监听端口，随便选一个没被占用的（默认 18443，不能和 8443 冲突）">
                 <input
                   className="input num"
                   type="number"
@@ -1124,7 +1163,7 @@ export function SettingsPage() {
                   onChange={(e) => patchDeep('cloud', 'tunnel', 'local_port', Number(e.target.value))}
                 />
               </Field>
-              <Field label={hl('远端地址 / 端口')}>
+              <Field label={hl('远端地址 / 端口')} hint="左边填云端服务监听的地址（一般 127.0.0.1），右边填它的端口——必须和云端服务实际端口一致，否则「隧道在跑但连不上」">
                 <div className="toolbar">
                   <input
                     className="input"
