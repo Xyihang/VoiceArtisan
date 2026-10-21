@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.14：云端引擎管理体验修复——设为当前三路（TTS/ASR/声纹）绿色对勾及时反馈、去掉重复进度提示、主机/目录/解释器预填并与云端连接联动",
     "v1.1.13：新增「云端引擎管理」（本地后端经 SSH 远程查看/安装/删除云端引擎、切换云端当前引擎），修复 engines_cli 列表读到过期缓存导致「模型在盘上却显示未安装」",
     "v1.1.12：ASR 改为自解码音频（numpy 输入）绕开 PyAV 版本不兼容；云端说话人区分真机实证通过；交付物（exe + 源码包 + 便携包）重建",
     "v1.1.11：补做 PHASE-3 3.4 导出档位（Original / Standard 44.1k MP3 192k / For editing 48k 24bit WAV）+ GET /tasks/{id}/media-info 读真实文件头 + 教程页与文档同步",

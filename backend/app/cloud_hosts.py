@@ -115,3 +115,58 @@ def clear(data_dir: Path | str) -> None:
         path.unlink(missing_ok=True)
     except OSError:
         pass
+
+
+def looks_like_python_path(value) -> bool:
+    """一键接入的 env.python 可能是「Python 3.12.3」这种版本输出，只有当路径用。"""
+    text = str(value or "").strip()
+    return bool(text) and text.startswith("/") and "python" in text.lower()
+
+
+def derive_defaults(cfg, agent_job: dict | None) -> tuple[dict, dict]:
+    """从「云端连接」配置与最近一次成功的一键接入任务，推导本页应预填的值。
+
+    返回 (profile, sources)；sources 记录每个字段来自哪里（界面据此提示联动来源）。
+    """
+    profile: dict = {}
+    sources: dict = {}
+
+    tunnel = getattr(getattr(cfg, "cloud", None), "tunnel", None)
+    if tunnel is not None:
+        if getattr(tunnel, "ssh_host", ""):
+            profile["host"] = tunnel.ssh_host
+            sources["host"] = "tunnel"
+        if getattr(tunnel, "ssh_port", None):
+            profile["ssh_port"] = int(tunnel.ssh_port)
+            sources["ssh_port"] = "tunnel"
+        if getattr(tunnel, "username", ""):
+            profile["username"] = tunnel.username
+            sources["username"] = "tunnel"
+
+    if agent_job:
+        target = agent_job.get("target") or {}
+        options = agent_job.get("options") or {}
+        env = agent_job.get("env") or {}
+        if target.get("host"):
+            profile["host"] = target["host"]
+            sources["host"] = "agent"
+        if target.get("ssh_port"):
+            profile["ssh_port"] = int(target["ssh_port"])
+            sources["ssh_port"] = "agent"
+        if target.get("username"):
+            profile["username"] = target["username"]
+            sources["username"] = "agent"
+        if options.get("remote_dir"):
+            profile["project_dir"] = str(options["remote_dir"]).rstrip("/")
+            sources["project_dir"] = "agent"
+        if looks_like_python_path(env.get("python")):
+            profile["python"] = str(env["python"]).strip()
+            sources["python"] = "agent"
+
+    profile.setdefault("ssh_port", 22)
+    profile.setdefault("username", "root")
+    profile.setdefault("project_dir", DEFAULT_PROJECT_DIR)
+    profile.setdefault("python", DEFAULT_PYTHON)
+    for key in ("ssh_port", "username", "project_dir", "python"):
+        sources.setdefault(key, "default")
+    return profile, sources

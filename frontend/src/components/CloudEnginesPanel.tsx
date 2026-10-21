@@ -51,19 +51,17 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
     try {
       const data = await api.cloudHost();
       setHost(data);
-      if (data.configured) {
-        setForm((prev) => ({
-          ...prev,
-          host: data.host || '',
-          ssh_port: data.ssh_port || 22,
-          username: data.username || 'root',
-          project_dir: data.project_dir || prev.project_dir,
-          python: data.python || prev.python,
-          password: '',
-        }));
-      } else {
-        setEditing(true);
-      }
+      // 不论是否已保存，都用后端给的值预填：未部署时它来自「一键接入」/「SSH 隧道」配置
+      setForm((prev) => ({
+        ...prev,
+        host: data.host || prev.host,
+        ssh_port: data.ssh_port || prev.ssh_port,
+        username: data.username || prev.username,
+        project_dir: data.project_dir || prev.project_dir,
+        python: data.python || prev.python,
+        password: '',
+      }));
+      if (!data.configured) setEditing(true);
     } catch (exc) {
       setError(exc instanceof Error ? exc.message : String(exc));
     }
@@ -161,7 +159,6 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
         phase: '准备',
         logs: [],
       });
-      toast('info', `已开始在云端安装 ${engineId}`, '进度看下方日志');
     } catch (exc) {
       setError(exc instanceof Error ? exc.message : String(exc));
     }
@@ -186,6 +183,15 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
     setError('');
     try {
       await api.selectCloudEngine(engineId);
+      // 乐观反馈：先把本地列表里的「当前」改过去，再拉一次权威值
+      setList((prev) => {
+        if (!prev) return prev;
+        const item = (prev.items || []).find((it) => it.id === engineId);
+        const kind = item?.kind || (item?.kind_tags?.includes('speaker') ? 'speaker' : item?.kind_tags?.includes('asr') ? 'asr' : 'tts');
+        if (kind === 'asr') return { ...prev, active_asr: engineId };
+        if (kind === 'speaker') return { ...prev, active_speaker: engineId };
+        return { ...prev, active: engineId };
+      });
       toast('success', `云端当前引擎已切到 ${engineId}`);
       await loadEngines();
     } catch (exc) {
@@ -244,6 +250,19 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
 
         {editing || !configured ? (
           <>
+            {(() => {
+              const src = host?.sources || {};
+              const fromAgent = Object.values(src).some((v) => v === 'agent');
+              const fromTunnel = Object.values(src).some((v) => v === 'tunnel');
+              if (!fromAgent && !fromTunnel) return null;
+              return (
+                <p className="hint">
+                  已自动填入：
+                  {fromAgent ? '「一键接入云主机」上次成功的部署参数' : '「云端连接 → SSH 隧道」里的主机信息'}
+                  ，确认无误后点「保存并连接」。
+                </p>
+              );
+            })()}
             <div className="field-row">
               <div className="field">
                 <label className="label" htmlFor="cloud-host">主机</label>
@@ -369,7 +388,11 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
                 <strong style={{ fontSize: 'var(--fs-13)' }}>{KIND_LABEL[kind]}</strong>
                 {(groups[kind] || []).map((item) => {
                   const tone = statusTone(item.status);
-                  const active = list.active === item.id;
+                  // 当前引擎分三路：TTS 看 active，ASR 看 active_asr，声纹看 active_speaker
+                  const active =
+                    list.active === item.id ||
+                    list.active_asr === item.id ||
+                    list.active_speaker === item.id;
                   return (
                     <div
                       key={item.id}

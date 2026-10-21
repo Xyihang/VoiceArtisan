@@ -73,11 +73,21 @@ class EngineManager:
         return registry.active_id()
 
     def items(self) -> dict:
-        return {"active": self.active_id(), "items": registry.all_items()}
+        return {**self._active_ids(), "items": registry.all_items()}
 
     def items_fresh(self) -> dict:
         """不走缓存重算（CLI 用；服务端仍走 items() 的 stale-while-revalidate）。"""
-        return {"active": self.active_id(), "items": registry.all_items_fresh()}
+        return {**self._active_ids(), "items": registry.all_items_fresh()}
+
+    def _active_ids(self) -> dict:
+        """三个「当前引擎」口径：TTS / ASR / 声纹，前端据此画绿色对勾。"""
+        asr_cfg = getattr(self.cfg_manager.app, "asr", None)
+        diarize_cfg = getattr(asr_cfg, "diarize", None)
+        return {
+            "active": self.active_id(),
+            "active_asr": getattr(getattr(asr_cfg, "local", None), "engine_id", "") or "",
+            "active_speaker": getattr(diarize_cfg, "engine_id", "") or "",
+        }
 
     def require(self, engine_id: str):
         return registry.get(engine_id)

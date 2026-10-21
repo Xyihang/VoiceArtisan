@@ -495,6 +495,10 @@ export interface SettingsPayload {
 /* --------------------------- 云端引擎（远程管理） --------------------------- */
 export interface CloudHostProfile {
   configured: boolean;
+  /** 未保存时的预填值（来自「一键接入」或「SSH 隧道」配置） */
+  prefill?: { host?: string; ssh_port?: number; username?: string; project_dir?: string; python?: string };
+  /** 每个预填字段的来源：saved / agent / tunnel / default */
+  sources?: Record<string, string>;
   host?: string;
   ssh_port?: number;
   username?: string;
@@ -518,6 +522,9 @@ export interface CloudEngineItem {
 
 export interface CloudEngineList {
   active: string;
+  /** 云端当前 ASR 引擎 / 声纹引擎（与 TTS 的 active 分开） */
+  active_asr?: string;
+  active_speaker?: string;
   host?: string;
   source?: string;
   items: CloudEngineItem[];

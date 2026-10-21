@@ -42,10 +42,45 @@ def _engines(state: AppState) -> CloudEngines:
         return _engines_singleton
 
 
-@router.get("/host", summary="读云端主机档案（密码脱敏）")
+def _latest_agent_job(state: AppState) -> dict | None:
+    """最近一次「一键接入」成功的任务（用它来预填主机/项目目录/解释器）。"""
+    import json
+    from pathlib import Path as _Path
+
+    job_dir = _Path(state.paths.root) / "cloud-agent" / "jobs"
+    best: dict | None = None
+    try:
+        for path in job_dir.glob("*.json"):
+            try:
+                job = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if job.get("status") != "succeeded" or not (job.get("target") or {}).get("host"):
+                continue
+            if best is None or float(job.get("updated_at") or 0) > float(best.get("updated_at") or 0):
+                best = job
+    except OSError:
+        return None
+    return best
+
+
+@router.get("/host", summary="读云端主机档案（密码脱敏；未保存时用云端连接/一键接入的值预填）")
 def get_host(state: AppState = Depends(get_state)):
-    data = cloud_hosts.load(state.paths.root, decrypt=False)
-    return cloud_hosts.masked(data)
+    saved = cloud_hosts.load(state.paths.root, decrypt=False)
+    data = cloud_hosts.masked(saved)
+    defaults, sources = cloud_hosts.derive_defaults(state.cfg, _latest_agent_job(state))
+    # 已保存的值优先，其次用推导值（来自云端的「一键接入」或「SSH 隧道」配置）
+    prefill = dict(defaults)
+    for key in ("host", "ssh_port", "username", "project_dir", "python"):
+        if saved and saved.get(key):
+            prefill[key] = saved[key]
+            sources[key] = "saved"
+    return {
+        **data,
+        **{k: prefill[k] for k in ("host", "ssh_port", "username", "project_dir", "python")},
+        "prefill": prefill,
+        "sources": sources,
+    }
 
 
 @router.put("/host", summary="写云端主机档案（password 留空表示沿用旧值）")

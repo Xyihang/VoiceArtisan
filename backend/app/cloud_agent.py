@@ -697,7 +697,9 @@ class CloudAgent:
                     "username": target.get("username", ""),
                     "password": cred.get("password") or (payload.get("auth") or {}).get("password", ""),
                     "project_dir": project_dir or cloud_hosts.DEFAULT_PROJECT_DIR,
-                    "python": str(env.get("python") or cloud_hosts.DEFAULT_PYTHON),
+                    "python": str(env.get("python"))
+                    if cloud_hosts.looks_like_python_path(env.get("python"))
+                    else cloud_hosts.DEFAULT_PYTHON,
                 },
             )
             self._log(job, "已保存云端主机档案：云端引擎管理可直接使用（" + project_dir + "）")
