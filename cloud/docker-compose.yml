@@ -1,0 +1,43 @@
+# 云端 GPU 推理服务（与本地同一套接口定义）
+#
+#   export QWENTTS_API_KEY=$(openssl rand -hex 16)
+#   docker compose -f cloud/docker-compose.yml --env-file cloud/.env up -d
+#
+# 说明：
+# - 模型目录与数据目录挂载自宿主机，避免数据写入容器层；
+# - 对外只暴露 8443（HTTPS + /v1 密钥鉴权）；生产建议再加 Nginx/Caddy 提供有效证书；
+# - 若在云厂商上需要空闲停机，可配置 QWENTTS__CLOUD__IDLE_SHUTDOWN_URL 指向厂商停机 API。
+
+services:
+  qwentts-cloud:
+    build:
+      context: ..
+      dockerfile: cloud/Dockerfile
+    image: qwentts-cloud:1.0
+    container_name: qwentts-cloud
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    environment:
+      QWENTTS__RUN__MODE: local              # 云端自身使用本地 GPU 推理
+      QWENTTS__SERVER__PORT: "8443"
+      QWENTTS__SERVER__OPEN_BROWSER: "false"
+      QWENTTS__CLOUD__API_KEY: ${QWENTTS_API_KEY:?请设置 QWENTTS_API_KEY}
+      QWENTTS__LOCAL__DEVICE: cuda:0
+      QWENTTS__LOCAL__DTYPE: bfloat16
+      QWENTTS__CLOUD__IDLE_SHUTDOWN_ENABLED: "true"
+      QWENTTS__CLOUD__IDLE_SHUTDOWN_MINUTES: "15"
+      QWENTTS__STORAGE__DATA_DIR: /app/data
+      QWENTTS__STORAGE__MODELS_DIR: /app/models
+    volumes:
+      - ../models:/app/models
+      - ../data:/app/data
+      - ../.cache:/app/.cache
+      - ../config/config.yaml:/app/config/config.yaml:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

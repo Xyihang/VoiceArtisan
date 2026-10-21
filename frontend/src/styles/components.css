@@ -1,0 +1,3220 @@
+/* =========================== 鍗＄墖涓庡垎鍖?=========================== */
+.card {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+
+/* 浠呪€滈€氭爮鍗＄墖鈥濊鍒囧唴瀹癸紱鏅€氬崱鐗囦笉瑁佸垏锛岄伩鍏嶇牬鍧忚〃鏍?sticky 琛ㄥご涓庢诞灞?*/
+.card--flush {
+  overflow: hidden;
+}
+
+
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+/* 绔犺妭缂栧彿锛氫粎椤跺眰鍗＄墖鑷姩缂栧彿锛?1 / 02 / 03鈥︼級锛岄浂渚靛叆鍦板甫鏉モ€滆鏄庝功鈥濈З搴忔劅 */
+.page > .card {
+  counter-increment: section;
+}
+
+.page > .card .card__head::before {
+  content: counter(section, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-muted);
+  padding: 2px var(--space-2) 2px 0;
+  border-right: var(--border-width) solid var(--color-hairline);
+  margin-right: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.page {
+  counter-reset: section;
+}
+
+.card__title {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  letter-spacing: var(--tracking-tight);
+}
+
+.card__hint {
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+.card__body {
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.card__actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.nested {
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.divider {
+  height: var(--border-width);
+  background: var(--color-border);
+  border: none;
+  margin: 0;
+}
+
+/* =========================== 鎸夐挳 =========================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-surface-nested);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--fw-semibold);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-surface-nested);
+  color: var(--color-text);
+}
+
+.btn--danger {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 40%, transparent);
+  background: transparent;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--color-error-soft);
+}
+
+.btn--sm {
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  font-size: var(--fs-12);
+}
+
+.btn--icon {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--cta {
+  min-height: 48px;
+  font-size: var(--fs-16);
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-md);
+}
+
+/* 涓昏鍔ㄧ偣锛氬伐浣滃彴鐢熸垚鎸夐挳 */
+.primary-action {
+  position: relative;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .primary-action--sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    padding: var(--space-3) var(--space-4);
+    background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: var(--border-width) solid var(--color-border);
+    z-index: 25;
+  }
+}
+
+/* =========================== 琛ㄥ崟 =========================== */
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.label__hint {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-regular);
+  color: var(--color-text-muted);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--fs-14);
+  transition: border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.textarea {
+  resize: none;
+  line-height: var(--lh-base);
+  min-height: 132px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.textarea--compact {
+  min-height: 72px;
+}
+
+.field-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.field-row > .field {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+
+.counter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+
+.counter-row .num {
+  color: var(--color-text);
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-13);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--color-primary);
+  height: 20px;
+}
+
+.range-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+}
+
+.range-row .num {
+  font-size: var(--fs-13);
+  color: var(--color-text);
+  min-width: 44px;
+  text-align: right;
+}
+
+.hint {
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+/* =========================== 鏍囩 / 寰芥爣 =========================== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+
+.chip--button {
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+
+.chip--button:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--color-primary-soft);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--color-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  border: var(--border-width) solid transparent;
+  white-space: nowrap;
+}
+
+.badge--success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.badge--warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.badge--error {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+
+.badge--info {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.badge--muted {
+  background: var(--color-surface-nested);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.badge--neutral {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* 鍚庣鐘舵€佺偣锛氶鑹?+ 鏂囧瓧鍙岀紪鐮?*/
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex: none;
+  background: var(--color-text-muted);
+}
+
+.status-dot--ok {
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px var(--color-success-soft);
+}
+
+.status-dot--warn {
+  background: var(--color-warning);
+  box-shadow: 0 0 0 3px var(--color-warning-soft);
+}
+
+.status-dot--error {
+  background: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-soft);
+}
+
+.status-dot--busy {
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+  animation: pulse 1.6s var(--ease-out) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* =========================== 閫夐」鍗?=========================== */
+.segmented {
+  display: inline-flex;
+  padding: var(--space-1);
+  gap: var(--space-1);
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.segmented__item {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  padding: var(--space-2) var(--space-3);
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.segmented__item:hover {
+  color: var(--color-text);
+}
+
+.segmented__item[aria-selected='true'] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-1);
+}
+
+/* =========================== 闊宠壊鍗＄墖 =========================== */
+.voice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-3);
+}
+
+/* 宸ヤ綔鍙板唴鐨勯煶鑹茬綉鏍奸檺楂樻粴鍔紝閬垮厤鎶婁富鎸夐挳鎸ゅ嚭棣栧睆 */
+.workbench .voice-grid {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.voice-card {
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  text-align: left;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.voice-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-1);
+}
+
+.voice-card[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.voice-card[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+
+.voice-card__name {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  padding-right: var(--space-4);
+}
+
+.voice-card__desc {
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 32px;
+}
+
+.voice-card__tags {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.voice-card__spark {
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-nested);
+  overflow: hidden;
+}
+
+/* =========================== 娉㈠舰 =========================== */
+.waveform {
+  position: relative;
+  width: 100%;
+  height: 72px;
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.waveform canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.waveform__hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+/* =========================== 鎾斁鍣?=========================== */
+.player {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.player__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.player__play {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-full);
+  padding: 0;
+}
+
+.player__time {
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+}
+
+.player__meta {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.player__truncated {
+  color: var(--color-warning);
+}
+
+/* =========================== 杩涘害 =========================== */
+.progress {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-nested);
+  overflow: hidden;
+}
+
+.progress__bar {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-base) var(--ease-out);
+}
+
+.progress__bar--indeterminate {
+  width: 33% !important;
+  animation: slide 1.4s var(--ease-out) infinite;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.stream-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-12);
+  color: var(--color-primary);
+}
+
+.stream-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.stream-bars i {
+  display: block;
+  width: 2px;
+  background: currentColor;
+  border-radius: var(--radius-full);
+  animation: bounce 1s var(--ease-out) infinite;
+}
+
+.stream-bars i:nth-child(1) {
+  height: 50%;
+  animation-delay: 0ms;
+}
+
+.stream-bars i:nth-child(2) {
+  height: 100%;
+  animation-delay: 120ms;
+}
+
+.stream-bars i:nth-child(3) {
+  height: 70%;
+  animation-delay: 240ms;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* =========================== 琛ㄦ牸 =========================== */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-13);
+}
+
+.table th {
+  text-align: left;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-12);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  white-space: nowrap;
+  background: var(--color-surface);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table td {
+  padding: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.table tbody tr:hover {
+  background: var(--color-surface-nested);
+}
+
+.table tbody tr[data-expanded='true'] {
+  background: var(--color-surface-nested);
+}
+
+.table__text {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.table__row-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+}
+
+.table__row-btn:hover {
+  color: var(--color-text);
+  background: var(--color-border);
+}
+
+.table__expand {
+  padding: var(--space-4);
+  background: var(--color-surface-nested);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.log-list {
+  display: grid;
+  gap: var(--space-1);
+  max-height: 220px;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+}
+
+.log-line {
+  display: grid;
+  grid-template-columns: 72px 60px 1fr;
+  gap: var(--space-2);
+}
+
+.log-line__level {
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.log-line__level--error {
+  color: var(--color-error);
+}
+
+.log-line__level--warning,
+.log-line__level--warn {
+  color: var(--color-warning);
+}
+
+.log-line__level--info {
+  color: var(--color-text-muted);
+}
+
+/* =========================== 鎻愮ず / 楠ㄦ灦 / 绌虹姸鎬?=========================== */
+.toast-stack {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 60;
+  display: grid;
+  gap: var(--space-2);
+  max-width: 360px;
+}
+
+@media (max-width: 767px) {
+  .toast-stack {
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+}
+
+.toast {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-13);
+  animation: toast-in var(--duration-slow) var(--ease-out);
+}
+
+.toast--success {
+  border-left-color: var(--color-success);
+}
+
+.toast--error {
+  border-left-color: var(--color-error);
+}
+
+.toast--warning {
+  border-left-color: var(--color-warning);
+}
+
+.toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast__title {
+  font-weight: var(--fw-medium);
+}
+
+.toast__desc {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-12);
+  margin-top: 2px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-nested) 25%,
+    var(--color-border) 37%,
+    var(--color-surface-nested) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-4);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.empty-state__icon {
+  color: var(--color-text-muted);
+}
+
+.empty-state__title {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.empty-state__desc {
+  font-size: var(--fs-13);
+  max-width: 380px;
+}
+
+/* =========================== 闈㈡澘 / 鎶藉眽 / 寮瑰眰 =========================== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: 50;
+  animation: fade-in var(--duration-base) var(--ease-out);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, calc(100vw - var(--space-6)));
+  max-height: 82vh;
+  overflow: auto;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  z-index: 51;
+  animation: modal-in var(--duration-base) var(--ease-out);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.modal__body {
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+/* =========================== 閿€煎睍绀?=========================== */
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.kv__item {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  background: var(--color-surface-nested);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border);
+}
+
+.kv__label {
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+.kv__value {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-medium);
+}
+
+.kv__value .unit {
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+  font-weight: var(--fw-regular);
+  margin-left: 2px;
+}
+
+.meter {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-nested);
+  overflow: hidden;
+}
+
+.meter__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.meter__fill--warn {
+  background: var(--color-warning);
+}
+
+.meter__fill--error {
+  background: var(--color-error);
+}
+
+/* =========================== 涓婁紶鍖?=========================== */
+.dropzone {
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  text-align: center;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-nested);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.dropzone:hover,
+.dropzone[data-dragging='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+}
+
+.dropzone__title {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.inline-note {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  color: var(--color-text);
+  font-size: var(--fs-12);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+}
+
+.inline-note--info {
+  background: var(--color-primary-soft);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.inline-note--error {
+  background: var(--color-error-soft);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+.inline-note__icon {
+  color: var(--color-warning);
+  flex: none;
+  margin-top: 1px;
+}
+
+.inline-note--info .inline-note__icon {
+  color: var(--color-primary);
+}
+
+.inline-note--error .inline-note__icon {
+  color: var(--color-error);
+}
+
+/* =========================== 閫氱煡 / 寰芥爣琛?=========================== */
+.toolbar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toolbar__spacer {
+  flex: 1;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-12);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================================
+   瑙嗚绮句慨锛氭帶鍒跺彴璇劅锛堝井鎺掔増 / 浠〃鐩樻暟瀛?/ 缁嗙嚎锛?
+   ========================================================================= */
+
+/* 瀵艰埅锛氬簭鍙风敤绛夊灏忓瓧锛屽彸渚х暀鍑哄簭鍙蜂綅 */
+.nav-item {
+  position: relative;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 0;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transform: translateY(-50%);
+  transition: height var(--duration-base) var(--ease-out);
+}
+
+.nav-item[aria-current='page']::after {
+  height: 16px;
+}
+
+.nav-item[aria-current='page'] svg {
+  color: var(--color-primary);
+}
+
+/* 椤舵爮锛氬簳閮ㄧ粏绾?+ 鍙充晶鍏冧俊鎭敤绛夊灏忓瓧 */
+.topbar {
+  border-bottom: var(--border-width) solid var(--color-hairline);
+}
+
+.topbar__title {
+  letter-spacing: -0.015em;
+}
+
+.chip {
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+}
+
+.chip .num,
+.chip strong {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-medium);
+}
+
+/* 鍗＄墖锛氱粏鎻忚竟 + 椤堕儴 1px 楂樺厜锛堟祬鑹诧級/ 鍐呮弿杈癸紙娣辫壊锛?*/
+.card {
+  position: relative;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-hairline) 30%, var(--color-hairline) 70%, transparent);
+  pointer-events: none;
+}
+
+.card__hint {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+  letter-spacing: 0;
+  padding: 1px var(--space-2);
+  border: var(--border-width) solid var(--color-hairline);
+  border-radius: var(--radius-full);
+}
+
+/* 涓绘寜閽細鍔犱竴灞傞《閮ㄥ唴楂樺厜锛屾寜涓嬪幓鏇粹€滃疄鈥?*/
+.btn--primary {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+:root[data-theme='dark'] .btn--primary {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn--cta {
+  letter-spacing: 0.01em;
+}
+
+/* 杈撳叆鎺т欢锛氬唴鍑规劅 */
+.input,
+.textarea,
+.select {
+  box-shadow: inset 0 1px 2px var(--color-hairline);
+}
+
+/* 琛ㄦ牸澶达細绛夊灏忓瀷澶у啓 */
+.table th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  backdrop-filter: blur(6px);
+}
+
+.table tbody tr:hover td:first-child {
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+/* 鎾斁鍣細鏃堕棿璇绘暟鏀惧ぇ銆佺瓑瀹斤紝甯﹀埢搴︾嚎 */
+.player__time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.player__controls > div > .num {
+  font-size: var(--fs-20) !important;
+  letter-spacing: -0.01em;
+}
+
+.waveform {
+  position: relative;
+}
+
+.waveform::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 6px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-border-strong) 0 1px,
+    transparent 1px 12px
+  );
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* 闊宠壊鍗★細閫変腑鎬佸乏渚у己璋冩潯 */
+.voice-card {
+  border-left-width: 2px;
+  border-left-color: transparent;
+}
+
+.voice-card[aria-pressed='true'] {
+  border-left-color: var(--color-primary);
+}
+
+.voice-card__name {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* 绌虹姸鎬侊細绛夊灏忔爣 + 鏇村厠鍒剁殑鍥惧舰 */
+.empty-state__title {
+  letter-spacing: -0.01em;
+}
+
+.empty-state__desc {
+  line-height: var(--lh-base);
+}
+
+/* 閿€煎潡锛氭爣绛剧敤绛夊灏忓瓧锛屾暟鍊肩敤浠〃鐩樻暟瀛?*/
+.kv__label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.kv__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* 鏃ュ織锛氱瓑瀹借楂樻洿绱?*/
+.log-line {
+  line-height: 1.45;
+}
+
+/* Toast锛氬乏渚?2px 寮鸿皟鏉?+ 缁嗘弿杈?*/
+.toast {
+  border-left-width: 2px;
+}
+
+/* 宸ヤ綔鍙颁袱鍒楀唴鐨勫崱鐗囧悓鏍疯鍏ョ珷鑺傜紪鍙?*/
+.workbench__column {
+  counter-reset: section;
+}
+
+.workbench__column > .card {
+  counter-increment: section;
+}
+
+.workbench__column > .card .card__head::before {
+  content: counter(section, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-muted);
+  padding: 2px var(--space-2) 2px 0;
+  border-right: var(--border-width) solid var(--color-hairline);
+  margin-right: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 琛ㄥ崟椤规崲琛屾洿浠庡锛岄伩鍏嶆爣绛捐鎸ゆ垚绔栨帓 */
+.field-row > .field {
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.field-row {
+  row-gap: var(--space-4);
+}
+
+/* 缃戞牸搴曠汗鐣ユ彁鍙搴?*/
+:root {
+  --color-grid: rgba(19, 24, 32, 0.05);
+}
+
+/* =========================== 寮曟搸鍗＄墖 =========================== */
+.engine-specs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  font-size: var(--fs-12);
+}
+
+.engine-specs > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-bottom: 2px;
+  border-bottom: var(--border-width) solid var(--color-hairline);
+}
+
+.engine-specs dt {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.engine-specs dd {
+  margin: 0;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.engine-detail {
+  margin: 0;
+  font-size: var(--fs-12);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.engine-card__name {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* =========================== 瀵洘鎼搁崡锛勫閿涙艾鐣ㄧ憗鍛搭暕鐟欏牓娼伴弶?=========================== */
+.engine-plan {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.engine-plan__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.engine-plan__head > .hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engine-plan__head > .btn {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.engine-plan__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+.engine-plan__total {
+  font-size: var(--fs-12);
+  color: var(--color-text);
+}
+
+.engine-plan__table {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  max-height: 184px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.engine-plan__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px 34px;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-bottom: 2px;
+  border-bottom: var(--border-width) solid var(--color-hairline);
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  line-height: 1.5;
+}
+
+.engine-plan__dest {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.engine-plan__size {
+  text-align: right;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.engine-plan__src {
+  text-align: right;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.engine-plan__block {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.engine-plan__label {
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.engine-plan__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--color-text-secondary);
+}
+
+.engine-plan__list > li {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   閿洏浼樺厛 / 鍛戒护闈㈡澘 / 绛涢€?chips / 琛屽唴鎿嶄綔锛坲i-craft dense dashboard锛?
+   浠呰拷鍔狅紝涓嶆敼鏃㈡湁绫?
+   ========================================================================= */
+
+/* --- kbd锛氱瓑瀹藉皬閿附锛屽缁堝彲瑙侊紙蹇嵎閿笉闅愯棌锛?--- */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-nested);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.kbd--on-primary {
+  border-color: color-mix(in srgb, var(--color-on-primary) 42%, transparent);
+  background: color-mix(in srgb, var(--color-on-primary) 16%, transparent);
+  color: var(--color-on-primary);
+}
+
+/* --- 椤舵爮鍛戒护鍏ュ彛 --- */
+.cmd-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-13);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.cmd-trigger:hover {
+  background: var(--color-surface-nested);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.cmd-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cmd-trigger__kbd {
+  margin-left: var(--space-1);
+}
+
+@media (max-width: 1080px) {
+  .cmd-trigger__label {
+    display: none;
+  }
+}
+
+/* --- 鍛戒护闈㈡澘 --- */
+.cmdk__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12vh var(--space-4) var(--space-4);
+  background: var(--color-overlay);
+  animation: fade-in var(--duration-fast) var(--ease-out) both;
+}
+
+.cmdk {
+  width: 100%;
+  max-width: 620px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+  animation: cmdk-in var(--duration-base) var(--ease-out) both;
+}
+
+@keyframes cmdk-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cmdk__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.cmdk__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: var(--fs-14);
+  color: var(--color-text);
+}
+
+.cmdk__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.cmdk__list {
+  overflow-y: auto;
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+.cmdk__group {
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.cmdk__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: var(--space-1) var(--space-4);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border-left: 2px solid transparent;
+}
+
+.cmdk__item[aria-selected='true'] {
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  border-left-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.cmdk__label {
+  font-size: var(--fs-13);
+  color: inherit;
+  white-space: nowrap;
+}
+
+.cmdk__hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmdk__empty {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  font-size: var(--fs-13);
+  color: var(--color-text-secondary);
+}
+
+.cmdk__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-nested);
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+}
+
+.cmdk__foot > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* --- 绛涢€?chips锛氭弿杈?+ 鍙Щ闄?脳锛屾棤濉厖鑳跺泭 --- */
+.chip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 24px;
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-12);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.filter-chip:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
+}
+
+.filter-chip svg {
+  opacity: 0.6;
+}
+
+.filter-chip:hover svg {
+  opacity: 1;
+}
+
+/* --- 琛ㄦ牸锛氶€変腑琛?/ 澶辫触琛?/ 琛屽唴鎿嶄綔 / 楠ㄦ灦琛?--- */
+.table tbody tr[data-active='true'] {
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.table tbody tr[data-status='failed'] {
+  box-shadow: inset 2px 0 0 var(--color-error);
+}
+
+.table tbody tr[data-status='failed'][data-active='true'] {
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.table tbody tr[data-active='true']:hover {
+  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+}
+
+.table__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.table__ellipsis {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.error-code {
+  display: inline-block;
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-11);
+  padding: 1px var(--space-1);
+  border: var(--border-width) solid var(--color-error-soft);
+  border-radius: var(--radius-sm);
+  color: var(--color-error);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+/* 浠诲姟琛ㄦ洿瀵嗭細妯悜 padding 鏀跺埌 8px锛?0 鍒楀悎璁＄渷鍑?80px锛岄伩鍏嶆搷浣滃垪琚尋鍑哄彲瑙嗗尯 */
+.table--tasks th,
+.table--tasks td {
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+}
+
+/* 鎿嶄綔鍒楀繀椤诲寰椾笅 5 涓浘鏍囷紙hover 鎵嶆樉褰紝浣嗕笉鑳借鎸ゅ嚭鍘伙級 */
+.table__actions {
+  width: 156px;
+  min-width: 152px;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover .row-actions,
+.table tbody tr:focus-within .row-actions {
+  opacity: 1;
+}
+
+/* 閿洏鐢ㄦ埛锛氬浘鏍囨寜閽仛鐒︽椂蹇呴』鏈夊彲瑙佺幆 */
+.table__row-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.table__row-btn--danger:hover {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.table__skeleton td {
+  padding: var(--space-3);
+}
+
+.table__expand-row {
+  background: transparent;
+}
+
+/* --- 鎵归噺鎿嶄綔鏉?--- */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  font-size: var(--fs-13);
+  color: var(--color-text);
+}
+
+/* --- 鍒嗛〉 --- */
+.pagination__text {
+  font-size: var(--fs-13);
+  color: var(--color-text-secondary);
+}
+
+.pagination__hint {
+  margin-left: auto;
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+/* --- 宸ヤ綔鍙帮細绂佺敤鍘熷洜 / 闀挎枃鏈彁绀?/ 鎾斁鍣ㄩ鏋?--- */
+.submit-reason {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-size: var(--fs-12);
+  color: var(--color-warning);
+}
+
+.submit-reason--muted {
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.long-text-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 2px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+}
+
+.long-text-hint .btn {
+  margin-left: auto;
+}
+
+.player--skeleton {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* --- 绐勫睆锛氭寜閽枃妗堜笉鎹㈣锛屾搷浣滃尯鎶樺彔椤哄簭 --- */
+@media (max-width: 900px) {
+  /* 浠诲姟琛ㄥ湪绐勫睆鎶樺彔娆¤鍒楋紙绫诲瀷/闊宠壊/棣栧寘/鑰楁椂/鍒涘缓鏃堕棿锛夛紝淇濈暀 ID/鎽樿/鐘舵€?鎿嶄綔 */
+  .table--tasks {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .table--tasks td {
+    overflow: hidden;
+  }
+
+  .table--tasks th:nth-child(3),
+  .table--tasks td:nth-child(3),
+  .table--tasks th:nth-child(5),
+  .table--tasks td:nth-child(5),
+  .table--tasks th:nth-child(7),
+  .table--tasks td:nth-child(7),
+  .table--tasks th:nth-child(8),
+  .table--tasks td:nth-child(8),
+  .table--tasks th:nth-child(9),
+  .table--tasks td:nth-child(9) {
+    display: none;
+  }
+
+  .table--tasks .table__text {
+    max-width: none;
+  }
+
+  /* 绐勫睆鐘舵€佸垪鏀剁獎鍚庯紝閿欒鐮佹崲琛屽埌绗簩琛岋紙涓嶈鍒囥€佷笉璺ㄥ垪锛?*/
+  .table--tasks .table__status {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+}
+
+@media (max-width: 760px) {
+  .cmd-trigger {
+    padding: 0 var(--space-2);
+  }
+
+  .kbd {
+    font-size: 10px;
+  }
+
+  .cmd-trigger__kbd,
+  .kbd--on-primary,
+  .submit-reason .kbd {
+    display: none;
+  }
+
+  .bulk-bar {
+    padding: var(--space-2);
+  }
+
+  .pagination__hint {
+    display: none;
+  }
+
+  .cmdk__overlay {
+    padding-top: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmdk,
+  .cmdk__overlay,
+  .row-actions,
+  .filter-chip,
+  .cmd-trigger {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* =========================================================================
+   璁剧疆椤碉細宸︿晶閿氱偣瀵艰埅 + 鍒嗗尯鎼滅储 + 瀛楁绾ф牎楠?
+   ========================================================================= */
+.settings-body {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.settings-nav {
+  position: sticky;
+  top: calc(var(--shell-topbar) + var(--space-4));
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.settings-nav__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.settings-nav__search svg {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.settings-nav__search .input {
+  min-height: 32px;
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  font-size: var(--fs-13);
+}
+
+.settings-nav__clear,
+.voice-search__clear {
+  position: absolute;
+  right: var(--space-1);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.settings-nav__clear:hover,
+.voice-search__clear:hover {
+  color: var(--color-text);
+  background: var(--color-surface-nested);
+}
+
+.settings-nav__status {
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+  padding: 0 var(--space-1);
+}
+
+.settings-nav__issues {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-warning);
+}
+
+.settings-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  max-height: 58vh;
+  overflow: auto;
+}
+
+.settings-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 30px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-13);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.settings-nav__item:hover {
+  background: var(--color-surface-nested);
+  color: var(--color-text);
+}
+
+.settings-nav__item[aria-current='true'] {
+  background: var(--color-primary-soft);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: var(--fw-medium);
+}
+
+.settings-nav__select {
+  display: none;
+}
+
+.settings-content {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* 鍗＄墖浠嶆槸銆岀紪鍙烽」銆嶏細绛変环浜?.page > .card 鐨勫簭鍙蜂笌鍏ュ満锛堣〃鏍?鍒楄〃鍖轰笉鍋氶敊宄帮級 */
+.settings-content > .card {
+  counter-increment: section;
+  animation: card-enter var(--duration-slow) var(--ease-out) both;
+}
+
+.settings-content > .card .card__head::before {
+  content: counter(section, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-muted);
+  padding: 2px var(--space-2) 2px 0;
+  border-right: var(--border-width) solid var(--color-hairline);
+  margin-right: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-content > .card[id],
+.settings-engine-slot {
+  scroll-margin-top: calc(var(--shell-topbar) + var(--space-4));
+}
+
+.settings-engine-slot[data-visible='false'] {
+  display: none;
+}
+
+/* 鎼滅储鍛戒腑鐨勯珮浜細鍙敤 warning 娴呭簳锛屼笉寮曞叆鏂伴鑹?*/
+mark.hl {
+  background: var(--color-warning-soft);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-12);
+  color: var(--color-error);
+}
+
+.field-note {
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+.field-note--warn {
+  color: var(--color-warning);
+}
+
+.input[aria-invalid='true'],
+.select[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 4%, var(--color-surface));
+}
+
+.probe-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-nested);
+}
+
+.probe-result {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+}
+
+.probe-result[data-state='ok'] {
+  color: var(--color-success);
+}
+
+.probe-result[data-state='fail'] {
+  color: var(--color-error);
+}
+
+.settings-empty {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--fs-13);
+  color: var(--color-text-secondary);
+}
+
+.license-list,
+.metric-list,
+.confirm-body ul {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--fs-13);
+  color: var(--color-text-secondary);
+}
+
+.confirm-body {
+  display: grid;
+  gap: var(--space-3);
+  font-size: var(--fs-13);
+}
+
+/* 鏂囧瓧鎸夐挳锛氬彧鐢ㄤ簬銆屽幓璁剧疆 / 鍘讳换鍔′腑蹇冦€嶈繖绫昏交閲忚烦杞?*/
+.link-btn {
+  justify-self: start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: var(--fs-12);
+  cursor: pointer;
+  text-align: left;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 960px) {
+  .settings-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-nav {
+    position: static;
+    top: auto;
+  }
+
+  .settings-nav__list {
+    display: none;
+    max-height: none;
+  }
+
+  .settings-nav__select {
+    display: block;
+  }
+}
+
+/* =========================================================================
+   鐘舵€侀〉锛氬仴搴峰崱鐗?/ 鑷琛?/ 鏃ュ織 chips
+   ========================================================================= */
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+  gap: var(--space-3);
+}
+
+.health-card {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-nested);
+}
+
+.health-card[data-tone='warn'] {
+  border-color: color-mix(in srgb, var(--color-warning) 42%, var(--color-border));
+}
+
+.health-card[data-tone='danger'] {
+  border-color: color-mix(in srgb, var(--color-error) 46%, var(--color-border));
+}
+
+.health-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+  min-height: 20px;
+}
+
+.health-card__head .status-dot {
+  margin-left: auto;
+}
+
+.health-card__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: var(--fs-16);
+  color: var(--color-text);
+}
+
+.health-card__value--text {
+  font-family: var(--font-ui);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+}
+
+.health-card__value .unit {
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+}
+
+.health-card__meta {
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.health-card__foot {
+  padding-top: var(--space-1);
+}
+
+.health-card__error {
+  font-size: var(--fs-11);
+  color: var(--color-error);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auto-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.check-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.check-row {
+  display: grid;
+  grid-template-columns: 12px minmax(96px, 140px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-12);
+  padding: var(--space-1) 0;
+}
+
+.check-row__name {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check-row__msg {
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.check-row__fix {
+  grid-column: 2 / -1;
+  color: var(--color-text-muted);
+}
+
+.filter-chip[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.filter-chip__count {
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+}
+
+.filter-chip[aria-pressed='true'] .filter-chip__count {
+  color: var(--color-primary);
+}
+
+/* =========================================================================
+   闊宠壊搴擄細涓€灞忓厠闅?/ 鍗＄墖 hover 鎿嶄綔 / 鏂板崱鐗囬珮浜?
+   ========================================================================= */
+.clone-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(180px, auto);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.clone-step {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+}
+
+.clone-step--save {
+  padding: var(--space-3);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.clone-step__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+}
+
+.clone-step__no {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border-strong);
+  font-size: var(--fs-11);
+  color: var(--color-text-secondary);
+}
+
+.clone-step__hint {
+  font-size: var(--fs-12);
+}
+
+.voice-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.voice-search svg {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.voice-search .input {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+}
+
+.voice-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.voice-card__kind {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.voice-card__kind--custom {
+  color: var(--color-accent);
+}
+
+.voice-card__tag {
+  font-size: var(--fs-11);
+  color: var(--color-text-secondary);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-1);
+  line-height: 18px;
+}
+
+.voice-card__playing {
+  font-size: var(--fs-11);
+  color: var(--color-success);
+  margin-left: auto;
+}
+
+.voice-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.voice-card:hover .voice-card__actions,
+.voice-card:focus-within .voice-card__actions,
+.voice-card--new .voice-card__actions {
+  opacity: 1;
+}
+
+/* 瑙﹀睆娌℃湁 hover锛氭搷浣滃父鏄撅紝閬垮厤銆岀湅涓嶈灏辩偣涓嶅埌銆?*/
+@media (hover: none) {
+  .voice-card__actions {
+    opacity: 1;
+  }
+}
+
+.voice-card--new {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+
+.voice-card .btn {
+  min-height: 26px;
+  height: 26px;
+  padding: 0 var(--space-2);
+  font-size: var(--fs-12);
+  white-space: nowrap;
+}
+
+.btn--danger-ghost:hover:not(:disabled) {
+  color: var(--color-error);
+  border-color: var(--color-error-soft);
+  background: var(--color-error-soft);
+}
+
+/* 鎸夐挳鏂囨鍗曡涓嶆崲琛岋細绐勫睆闈犳姌鍙犳瑕佸姩浣滐紝鑰屼笉鏄鏂囧瓧鎶樻垚涓よ */
+.btn {
+  white-space: nowrap;
+}
+
+/* 瀛楁鏍囩涓嶆妸涓枃璇嶆媶寮€鎹㈣锛堛€岀┖闂茶嚜鍔ㄥ仠鏈恒€嶄笉璁告柇鎴愩€岀┖闂茶嚜鍔?/ 鍋滄満銆嶏級 */
+.label {
+  flex-wrap: wrap;
+  word-break: keep-all;
+}
+
+.label__hint {
+  word-break: normal;
+}
+
+@media (max-width: 900px) {
+  .clone-flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .check-row {
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+  }
+
+  .check-row__msg {
+    grid-column: 2 / -1;
+    white-space: normal;
+  }
+
+  .health-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .settings-nav__search .input,
+  .voice-search {
+    min-width: 0;
+  }
+
+  .page__head .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .probe-result {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-nav__item,
+  .voice-card__actions,
+  .settings-content > .card,
+  .health-card,
+  .link-btn {
+    animation: none;
+    transition: none;
+  }
+}
+
+
+/* =========================== 瀵归綈涓庣暀鐧戒綋鏁达紙UI-POLISH-1锛?=========================== */
+
+/* 1) 琛ㄥ崟琛岋細椤堕儴瀵归綈 + 鎺т欢绛夐珮锛堝師鏉?flex-end 浼氳甯﹁鏄庣殑瀛楁椤跺埌涓婇潰锛?*/
+.field-row {
+  align-items: flex-start;
+}
+
+.field-row > .field {
+  align-self: flex-start;
+}
+
+.field > .label,
+.field > label {
+  min-height: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.input,
+.select {
+  height: 38px;
+  min-height: 38px;
+  padding-block: 0;
+}
+
+.textarea {
+  min-height: 96px;
+}
+
+/* 2) 鍗＄墖绛夐珮锛氱綉鏍兼媺浼?+ 璇存槑鍥哄畾涓よ + 鏍囩璐村簳 */
+.voice-card {
+  height: 100%;
+  align-content: start;
+  grid-template-rows: auto auto 1fr auto;
+}
+
+.voice-card__desc {
+  -webkit-line-clamp: 2;
+  min-height: calc(2 * 1.5em);
+}
+
+.voice-card__tags,
+.voice-card__foot {
+  margin-top: auto;
+}
+
+.engine-card__name,
+.card {
+  min-width: 0;
+}
+
+/* 3) 寮瑰眰锛氬浐瀹氳鍙ｅ眳涓紝鑳屾櫙宸茬敱 Modal 閿佹粴鍔?*/
+.modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.modal-layer .overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.modal-layer .modal {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  max-width: min(560px, 100%);
+}
+
+/* 4) 绐勫睆涓嶅啀妯悜婧㈠嚭 */
+.settings-shell,
+.settings-body,
+.workbench,
+.workbench__column,
+.card,
+.field-row,
+.toolbar {
+  min-width: 0;
+}
+
+@media (max-width: 420px) {
+  .page {
+    padding: var(--space-3);
+  }
+
+  .settings-nav {
+    padding: var(--space-2);
+  }
+
+  .btn {
+    padding-inline: var(--space-2);
+  }
+}
+
+/* 鏈€杩戜换鍔?*/
+.recent-list {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.recent-list__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.recent-list__row:hover {
+  background: var(--color-surface-nested);
+}
+
+.recent-list__type {
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.recent-list__text {
+  font-size: var(--fs-12);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.recent-list__meta {
+  font-size: var(--fs-11);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.recent-list__more {
+  display: inline-block;
+  font-size: var(--fs-12);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* 蹇嵎閿〃 */
+.shortcut-list {
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.shortcut-list > div {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.shortcut-list dt {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.shortcut-list dd {
+  margin: 0;
+  font-size: var(--fs-12);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 760px) {
+  .shortcut-list > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+/* 闊宠壊缃戞牸锛氳法琛岀瓑楂橈紙鍚屼竴缃戞牸鍐呮墍鏈夊崱鐗囦竴鑷达級 */
+.voice-grid {
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+}
+
+.voice-grid > * {
+  height: 100%;
+}
+
+/* 闊宠壊鍗★細鍥哄畾琛岄珮锛岃法琛屽畬鍏ㄧ瓑楂橈紙鍐呭瓒呭嚭鏃跺唴閮ㄦ埅鏂級 */
+/* 鍗＄墖楂樺害鐢卞唴瀹瑰喅瀹氾紙鍥哄畾琛岄珮浼氳鍐呭灏戠殑鑷畾涔夐煶鑹插嚭鐜板ぇ鐗囩┖鐧斤級 */
+.voice-grid {
+  grid-auto-rows: auto;
+  align-items: stretch;
+}
+
+.voice-card {
+  min-height: 132px;
+  overflow: hidden;
+}
+
+/* =========================== 鑷€傚簲楂樺害锛圲I-POLISH-2锛?=========================== */
+
+/* 璁剧疆椤碉細宸﹀鑸笌鍐呭绛夐珮锛堝師鏉ユ槸 align-items: start锛屽鑸彧鏈夎嚜韬唴瀹归珮锛?*/
+.settings-body {
+  align-items: stretch;
+}
+
+.settings-nav {
+  align-self: stretch;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-content: normal;
+}
+
+.settings-nav__list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 浠诲姟涓績锛氭暣椤垫濂藉崰婊＄獥鍙ｏ紝琛ㄦ牸鍖哄唴閮ㄦ粴鍔紝鍒嗛〉鍥哄畾鍦ㄥ崱鐗囧簳閮?*/
+.page--fill {
+  height: calc(100vh - var(--shell-topbar) - var(--space-5) * 2);
+  max-height: calc(100vh - var(--shell-topbar) - var(--space-5) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow: hidden;
+}
+
+.page--fill > .page__head,
+.page--fill > .card:not(.card--fill) {
+  flex: 0 0 auto;
+}
+
+.card--fill {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card--fill > .table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.card--fill > .pagination {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  border-top: var(--border-width) solid var(--color-hairline);
+}
+
+@media (max-width: 760px) {
+  .page--fill {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .card--fill > .table-wrap {
+    max-height: 60vh;
+  }
+}
+
+/* 淇锛歋ectionCard 鍐呴儴澶氫簡涓€灞?.card__body锛宖lex 瑙勫垯瑕佷笅閽?*/
+.card--fill > .card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.card--fill .table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.card--fill .pagination {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  border-top: var(--border-width) solid var(--color-hairline);
+}
+
+/* 鍙湁銆屽～鍏呭瀷椤甸潰銆嶆墠鎶婁富鍖洪攣鎴愪竴灞忛珮锛屽叾瀹冮〉闈㈢収甯告粴鍔?*/
+.main:has(.page--fill) {
+  height: calc(100vh - var(--shell-topbar));
+  overflow: hidden;
+}
+
+.main:has(.page--fill) > .page--fill {
+  flex: 1 1 auto;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+}
+
+.main:has(.page--fill) > .app-footer {
+  flex: 0 0 auto;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+@media (max-width: 760px) {
+  .main:has(.page--fill) {
+    height: auto;
+    overflow: visible;
+  }
+
+  .card--fill .table-wrap {
+    max-height: 60vh;
+  }
+}
+
+/* =========================== 淇锛氳缃鑸仮澶嶆偓娴紱浠诲姟椤靛簳閮ㄥ啀澶?15px =========================== */
+
+/* 璁剧疆椤靛乏瀵艰埅锛氭偓娴紙sticky锛? 瑙嗗彛楂橈紝涓€灞忓唴濮嬬粓鍙鍙偣锛屽垪琛ㄥ唴閮ㄦ粴鍔?*/
+.settings-body {
+  align-items: start;
+}
+
+.settings-nav {
+  position: sticky;
+  top: calc(var(--shell-topbar) + var(--space-4));
+  align-self: start;
+  height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2);
+  max-height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2);
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.settings-nav__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 浠诲姟涓績锛氬簳閮ㄥ啀澶?15px锛堝垎椤垫潯鏇磋创杩戠獥鍙ｅ簳杈癸級 */
+.page--fill {
+  padding-bottom: calc(var(--space-5) - 15px);
+}
+
+@media (max-width: 960px) {
+  .settings-nav {
+    position: static;
+    height: auto;
+    max-height: none;
+  }
+
+  .settings-nav__list {
+    overflow: visible;
+  }
+}
+
+/* 浠诲姟涓績锛氱户缁创搴曪紙鍘绘帀椤甸潰涓嬪唴杈硅窛 + 椤佃剼鍘嬬缉鎴愪竴鏉＄粏绾匡級 */
+.page--fill {
+  padding-bottom: 0;
+}
+
+.main:has(.page--fill) > .app-footer {
+  padding-top: 2px;
+  padding-bottom: 6px;
+  font-size: var(--fs-11);
+  opacity: 0.75;
+}
+
+/* 浠诲姟涓績璐村簳锛堢粓鐗堬級锛氶殣钘忛〉鑴?+ 椤堕儴鍐呰竟璺濇敹绱э紝璁╄〃鏍煎崱鐗囧敖閲忚创鍒扮獥鍙ｅ簳杈?*/
+.main:has(.page--fill) > .app-footer {
+  display: none;
+}
+
+.page--fill {
+  padding-top: var(--space-3);
+  gap: var(--space-3);
+}
+
+/* 浠诲姟涓績锛氱敤鏄惧紡楂樺害绮剧‘璐村簳锛堣窛绐楀彛搴?8px锛夛紝涓嶄緷璧?shell 鐨勫墿浣欒绠?*/
+.main:has(.page--fill) > .page--fill {
+  flex: 0 0 auto;
+  height: calc(100vh - var(--shell-topbar) - 8px);
+  max-height: calc(100vh - var(--shell-topbar) - 8px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 浠诲姟涓績璐村簳锛堜慨姝ｉ€夋嫨鍣細.page 鐨勭埗绾ф槸 <main>锛屼笉鏄?.main锛?*/
+.main .page--fill {
+  height: calc(100vh - var(--shell-topbar) - 8px);
+  max-height: calc(100vh - var(--shell-topbar) - 8px);
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.main:has(.page--fill) > main {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 鍒嗛〉鏉℃敼涓烘櫘閫氭祦锛堣〃鏍煎凡鍐呴儴婊氬姩锛屼笉闇€瑕?sticky锛涢伩鍏?sticky+overflow 鐨勫悎鎴愬紓甯革級 */
+.card--fill .pagination {
+  position: static;
+  bottom: auto;
+  z-index: auto;
+  background: transparent;
+  border-top: var(--border-width) solid var(--color-hairline);
+}
+
+/* 浠诲姟涓績璐村簳锛堢粓鐗?锛夛細鎶?.main 鎾戝埌绐楀彛楂樺害锛岄〉闈㈢敤 100% 濉弧鍏跺唴瀹圭洅锛岄伩鍏嶈瀛愮骇瑁佸壀 */
+.main:has(.page--fill) {
+  height: calc(100vh - 8px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main .page--fill {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+
+/* 銆岀函鏂囨湰鍚堟垚銆嶄吉闊宠壊锛氭暣琛屽尯鍧楋紝涓嶅弬涓?voice-grid 鐨勭瓑楂樺竷灞€ */
+.voice-plain {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-nested);
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.voice-plain:hover {
+  border-color: var(--color-primary);
+}
+
+.voice-plain[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  border-style: solid;
+  background: var(--color-primary-soft);
+}
+
+.voice-plain strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* =========================================================================
+   鏁欑▼椤碉細鍒嗗尯姝ｆ枃锛堟楠?/ 瀛楁琛?/ FAQ / 鎻愮ず锛?   ========================================================================= */
+.guide-steps {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+  font-size: var(--fs-13);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.guide-steps li::marker {
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+}
+
+.guide-fields {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.guide-fields__row {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-2) 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.guide-fields__row:first-child {
+  border-top: none;
+}
+
+.guide-fields dt {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.guide-fields dt code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  letter-spacing: -0.02em;
+}
+
+.guide-fields dd {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: var(--fs-13);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.guide-fields__suggest {
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+}
+
+.guide-fields__suggest code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-nested);
+  color: var(--color-text);
+}
+
+.guide-faq {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+
+.guide-faq details {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-nested);
+  padding: var(--space-2) var(--space-3);
+}
+
+.guide-faq summary {
+  cursor: pointer;
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.guide-faq p {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-13);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.guide-tips {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--fs-13);
+  line-height: 1.65;
+}
+
+.guide-page .card__body > .inline-note:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .guide-fields__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}

@@ -1,0 +1,157 @@
+# =============================================================================
+# Qwen3-TTS 语音生成系统 · 配置模板
+# 复制为 config/config.yaml 后修改；所有路径支持相对（相对项目根目录）与绝对路径。
+# 环境变量可覆盖任意项：QWENTTS__RUN__MODE=cloud / QWENTTS__SERVER__PORT=9443
+# =============================================================================
+
+server:
+  host: 0.0.0.0
+  port: 8443
+  https: true                 # 首次启动自动生成自签证书（data/certs）
+  open_browser: true
+  log_level: INFO
+
+storage:
+  # 全部运行期产物（数据库、上传、输出、日志、证书）都落在这里，默认在项目盘（非 C 盘）
+  data_dir: data
+  models_dir: models
+  cache_dir: .cache           # HF / ModelScope / Torch 缓存重定向目录
+
+run:
+  mode: hybrid                # local | cloud | hybrid —— 改这里即可切换，不改代码
+  hybrid_long_text_chars: 300 # 混合模式下超过该长度的克隆任务优先尝试云端
+  asr_prefer: local           # 混合模式下 ASR 优先位置 local | cloud
+
+local:
+  device: cuda:0
+  dtype: float16             # 4GB 显存跑 1.7B 请用 float16（实测可用）；数值不稳定时改 bfloat16
+  attn_implementation: eager # 与参考项目一致；sdpa 在部分环境反而更慢
+  keep_loaded: true           # 加载后复用模型（避免重复冷启动）
+  warmup_on_start: true       # 启动时是否预热
+  warmup_kinds: [custom_voice]  # 启动预热哪些模型：custom_voice / base / voice_design
+  unload_after_idle_seconds: 600
+  vram_reserve_gb: 0.1        # 加载前保留的空闲显存（4GB 卡请设小）
+  allow_vram_overcommit: true # 允许小幅超额分配（Windows/WDDM 可回落到共享内存，4GB 卡跑 1.7B 需要）
+  allow_small_fallback: false # 默认不降级；置 true 才允许 1.7B 不可用时回退 0.6B（界面会显式标注）
+  max_new_tokens: 2048
+  # 实验特性：显存不足时用 CPU/磁盘 offload 加载 1.7B。
+  # 注意：qwen-tts 0.1.1 的生成循环访问 offload 后的 meta 张量会报错，目前只能加载、无法生成；
+  # 4-8GB 显存请使用云端模式（run.mode: cloud / hybrid）。
+  low_vram:
+    enabled: false
+    gpu_reserve_gb: 0.9       # offload 模式下留给 GPU 的余量
+    cpu_memory_gb: 32         # 允许卸载到内存的上限
+    offload_dir: ""           # 留空 = <data_dir>/offload
+  # 本地模型路径（1.7B 三件套，覆盖 语音生成 / 声音克隆 / 音色设计）
+  models:
+    base: models/Qwen3-TTS-12Hz-1.7B-Base
+    custom_voice: models/Qwen3-TTS-12Hz-1.7B-CustomVoice
+    voice_design: models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+  # 可选的 0.6B 回退（仅当 allow_small_fallback=true 时生效）
+  fallback_models:
+    base: models/Qwen3-TTS-12Hz-0.6B-Base
+    custom_voice: models/Qwen3-TTS-12Hz-0.6B-CustomVoice
+    voice_design: models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+
+cloud:
+  base_url: https://your-cloud-gpu-host:8443
+  api_key: ""                 # 云端强制密钥鉴权
+  verify_tls: true
+  request_timeout_s: 30
+  chunk_timeout_s: 180
+  retries: 3
+  retry_backoff_s: 2
+  # 云端模型标识（与本地同一套接口定义）
+  models:
+    base: Qwen3-TTS-12Hz-1.7B-Base
+    custom_voice: Qwen3-TTS-12Hz-1.7B-CustomVoice
+    voice_design: Qwen3-TTS-12Hz-1.7B-VoiceDesign
+  tunnel:                     # SSH 端口转发：把云端服务映射到本地，客户端无感知
+    enabled: false
+    ssh_host: ""
+    ssh_port: 22
+    username: ""
+    key_path: ""
+    password: ""
+    local_port: 18443
+    remote_host: 127.0.0.1
+    remote_port: 8443
+  # 云端成本控制：空闲自动停机（默认关闭，可在「设置 → 云端连接」里开启）
+  idle_shutdown_enabled: false
+  idle_shutdown_minutes: 15   # 开启后：空闲多久自动停机（0 表示不停机）
+  idle_shutdown_url: ""       # 可选：外部停机回调（如厂商 API），空则调用云端 /v1/system/shutdown
+  readiness_timeout_s: 900    # 云端模型加载完成前的等待上限
+  fallback_to_checkpoint: ""  # 预留：模型加载失败时允许重试的备用标识
+
+asr:
+  engine: local               # local | cloud（混合模式下由 run.asr_prefer 决定优先级）
+  local:
+    model_size: small
+    device: auto
+    compute_type: int8
+    beam_size: 5
+  cloud:
+    base_url: ""              # 留空则复用 cloud.base_url
+    api_key: ""
+    model: whisper-1
+  # 说话人区分（需安装「CAM++ 声纹」引擎）；工作台可单次覆盖全局开关
+  diarize:
+    enabled: false
+    max_speakers: 4           # 2-8；超过上限时合并最相似的簇
+    threshold: 0.75           # 余弦距离阈值，越大越倾向于合成更少的人
+    engine_id: asr-speaker-campplus
+
+limits:
+  max_upload_mb: 50
+  max_ref_audio_seconds: 30
+  max_asr_audio_seconds: 1800
+  max_text_chars: 5000
+  allowed_audio_formats: [wav, mp3, flac, m4a, ogg, webm, aac]
+  allowed_output_formats: [wav, mp3]
+
+defaults:
+  speed: 1.0
+  pitch: 0
+  temperature: 0.9
+  top_p: 0.8
+  top_k: 50
+  repetition_penalty: 1.05
+  steps: 2048
+  output_format: wav
+  language: Auto
+  streaming: false            # 默认非流式（整段生成，语气最连贯）；需要首包即播时在界面打开
+  chunk_chars: 28             # 流式分块字数（越小首包越快、拼接越多）
+  target_duration_s: null     # 目标时长（秒）：null/0 = 不控制，优先级高于 speed
+
+# 后期处理链：低切 → 高架 → 压缩 → 峰值归一化；enabled=false 时零开销
+post:
+  enabled: false
+  low_cut_hz: 80.0
+  high_shelf_db: 0.0
+  compress: true
+  threshold_db: -18.0
+  ratio: 2.5
+  attack_ms: 8.0
+  release_ms: 120.0
+  normalize_peak_db: -1.0     # null = 不归一化（仍会硬限幅到 ±1.0 防削波）
+
+# 导出档位：original=模型原生 WAV / standard=44.1k MP3 192k / editing=48k 24bit WAV
+# 单次任务可用 params.export_tier 覆盖；档位会覆盖 output_format
+export:
+  tier: original
+
+# 任务完成后的自动质检：用 ASR 把生成音频回译，与原文比对相似度，发现内容缺失/错读
+qc:
+  enabled: false              # 默认关闭；开启后每个 TTS/克隆/设计任务会多跑一次本地转写
+  min_similarity: 0.75        # 低于该相似度会在任务日志与界面提示"质检未通过"
+
+# 仅用于无模型/无 GPU 的联调：显式开启后使用占位引擎（界面会显示“模拟引擎”）
+mock:
+  enabled: false
+
+# 多引擎/模型：qwen3-tts-1.7b（默认）| voxcpm1.5（可选，需先安装）
+# 安装/删除走设置页或 python -m app.engines_cli {list,install,remove,select,health}
+engine:
+  active: qwen3-tts-1.7b      # 当前使用的引擎（热改；切换时自动卸载旧引擎并清显存）
+  allow_parallel: false       # 4GB 卡保持 false：一次只驻留一个引擎（热改）
+

@@ -1,0 +1,17 @@
+# engine: qwen3-tts-1.7b
+# generated: 2026-10-19 11:26
+# source: local environment (importlib.metadata) / pip dry-run resolve
+#
+# note: this engine runs isolated in its own venv
+# (comment removed: non-ASCII for pip)
+# (comment removed: non-ASCII for pip)
+torch==2.4.1+cu121
+torchaudio==2.4.1+cu121
+torchvision==0.19.1+cu121
+transformers==4.57.3
+numpy==2.2.6
+qwen-tts==0.1.1
+tokenizers==0.22.2
+accelerate==1.12.0
+huggingface-hub==0.36.2
+soundfile==0.13.1

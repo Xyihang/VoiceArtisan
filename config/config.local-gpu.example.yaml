@@ -1,0 +1,94 @@
+# 预设：单机本地 GPU（不用云端）
+# 用法：复制到 config/config.yaml 后按你的显卡改 dtype / 是否允许超额
+#   Windows: copy config\config.local-gpu.example.yaml config\config.yaml
+#   Linux  : cp config/config.local-gpu.example.yaml config/config.yaml
+#
+# 显存建议：
+#   ≥12GB：dtype bfloat16，allow_vram_overcommit false
+#   8-12GB：dtype float16
+#   4-8GB ：dtype float16 + allow_vram_overcommit true（实测 4GB 可跑 1.7B）
+#   无 GPU ：device cpu（float32 自动生效，慢 3-5 倍）
+
+server:
+  host: 0.0.0.0
+  port: 8443
+  https: true
+  open_browser: true
+  log_level: INFO
+
+storage:
+  data_dir: data
+  models_dir: models
+  cache_dir: .cache
+
+run:
+  mode: local
+  hybrid_long_text_chars: 300
+  asr_prefer: local
+
+local:
+  device: cuda:0
+  dtype: float16
+  attn_implementation: eager
+  keep_loaded: true
+  warmup_on_start: true
+  warmup_kinds: [custom_voice]
+  unload_after_idle_seconds: 600
+  vram_reserve_gb: 0.1
+  allow_vram_overcommit: true
+  allow_small_fallback: false
+  max_new_tokens: 2048
+  low_vram:
+    enabled: false
+  models:
+    base: models/Qwen3-TTS-12Hz-1.7B-Base
+    custom_voice: models/Qwen3-TTS-12Hz-1.7B-CustomVoice
+    voice_design: models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+  fallback_models:
+    base: models/Qwen3-TTS-12Hz-0.6B-Base
+    custom_voice: models/Qwen3-TTS-12Hz-0.6B-CustomVoice
+    voice_design: models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+
+# 仅本地模式不需要云端，以下留空即可
+cloud:
+  base_url: ""
+  api_key: ""
+  verify_tls: false
+  idle_shutdown_enabled: false
+  idle_shutdown_minutes: 15
+
+asr:
+  engine: local
+  local:
+    model_size: small
+    device: auto
+    compute_type: int8
+    beam_size: 5
+
+limits:
+  max_upload_mb: 50
+  max_ref_audio_seconds: 30
+  max_asr_audio_seconds: 1800
+  max_text_chars: 5000
+  allowed_audio_formats: [wav, mp3, flac, m4a, ogg, webm, aac]
+  allowed_output_formats: [wav, mp3]
+
+defaults:
+  speed: 1.0
+  pitch: 0
+  temperature: 0.9
+  top_p: 0.8
+  top_k: 50
+  repetition_penalty: 1.05
+  steps: 2048
+  output_format: wav
+  language: Auto
+  streaming: false
+  chunk_chars: 28
+
+qc:
+  enabled: false
+  min_similarity: 0.75
+
+mock:
+  enabled: false

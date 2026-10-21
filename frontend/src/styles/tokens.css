@@ -1,0 +1,272 @@
+/* =========================================================================
+   设计令牌 · 唯一数值来源（页面与组件不得出现散落的颜色/间距/圆角数值）
+   ========================================================================= */
+:root {
+  /* --- 颜色角色（浅色） --- */
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-nested: #f1f3f6;
+  --color-border: #e2e6ec;
+  --color-border-strong: #cfd6df;
+  --color-text: #131820;
+  --color-text-secondary: #5a6672;
+  --color-text-muted: #8b96a3;
+  --color-primary: #1f6feb;
+  --color-primary-hover: #1859c4;
+  --color-accent: #0d9488;
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-error: #c62828;
+  --color-on-primary: #ffffff;
+  --color-overlay: rgba(19, 24, 32, 0.45);
+
+  /* 语义化浅底（标签/提示） */
+  --color-primary-soft: rgba(31, 111, 235, 0.1);
+  --color-success-soft: rgba(21, 128, 61, 0.1);
+  --color-warning-soft: rgba(180, 83, 9, 0.12);
+  --color-error-soft: rgba(198, 40, 40, 0.1);
+  --color-accent-soft: rgba(13, 148, 136, 0.12);
+
+  /* --- 排版 --- */
+  /* 标题用带光学尺寸的显示字体栈，正文用中性无衬线，数字/时长统一等宽（仪表盘感） */
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI', 'PingFang SC', 'HarmonyOS Sans SC',
+    'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-ui: 'Segoe UI Variable Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Cascadia Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo,
+    Consolas, 'Noto Sans Mono', monospace;
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-28: 28px;
+  --lh-base: 1.5;
+  --lh-tight: 1.25;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  /* 微排版：小型大写标签 */
+  --tracking-eyebrow: 0.14em;
+  --tracking-tight: -0.011em;
+  --fs-eyebrow: 10.5px;
+
+  /* --- 间距（仅 4/8/12/16/24/32/48） --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* --- 形状 --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-full: 999px;
+  --border-width: 1px;
+
+  /* --- 阴影（仅两级） --- */
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --shadow-2: 0 8px 24px rgba(16, 24, 40, 0.12);
+
+  /* --- 动效 --- */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* --- 氛围：细网格 + 极淡径向光，营造“仪表盘台面” --- */
+  --color-grid: rgba(19, 24, 32, 0.035);
+  --color-grid-size: 28px;
+  --color-ambient: rgba(31, 111, 235, 0.06);
+  --color-ambient-2: rgba(13, 148, 136, 0.05);
+  --color-hairline: rgba(19, 24, 32, 0.06);
+
+  /* --- 结构 --- */
+  --shell-rail: 216px;
+  --shell-topbar: 60px;
+  --content-max: 1480px;
+  --tap-target: 40px;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0c1017;
+  --color-surface: #141a22;
+  --color-surface-nested: #1a222c;
+  --color-border: #242e3a;
+  --color-border-strong: #35414f;
+  --color-text: #e6edf3;
+  --color-text-secondary: #96a3b2;
+  --color-text-muted: #6f7c8a;
+  --color-primary: #4c8dff;
+  --color-primary-hover: #6ba0ff;
+  --color-accent: #2dd4bf;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-error: #f2555a;
+  --color-on-primary: #07121f;
+  --color-overlay: rgba(2, 6, 12, 0.6);
+
+  --color-primary-soft: rgba(76, 141, 255, 0.16);
+  --color-success-soft: rgba(63, 185, 80, 0.16);
+  --color-warning-soft: rgba(210, 153, 34, 0.18);
+  --color-error-soft: rgba(242, 85, 90, 0.16);
+  --color-accent-soft: rgba(45, 212, 191, 0.16);
+
+  /* 深色主题用描边替代阴影 */
+  --shadow-1: none;
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+  --color-grid: rgba(230, 237, 243, 0.045);
+  --color-ambient: rgba(76, 141, 255, 0.1);
+  --color-ambient-2: rgba(45, 212, 191, 0.08);
+  --color-hairline: rgba(230, 237, 243, 0.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  letter-spacing: var(--tracking-tight);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* 台面氛围：极淡网格 + 两团径向光，不使用渐变炫光 */
+  background-image:
+    radial-gradient(1200px 520px at 12% -8%, var(--color-ambient), transparent 62%),
+    radial-gradient(900px 480px at 92% 4%, var(--color-ambient-2), transparent 58%),
+    linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+  background-size: auto, auto, var(--color-grid-size) var(--color-grid-size),
+    var(--color-grid-size) var(--color-grid-size);
+  background-attachment: fixed;
+}
+
+/* 小型大写标签：控制台/说明书语感 */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: var(--fw-medium);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: var(--lh-tight);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+}
+
+h2 {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+}
+
+h3 {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* 数字/时长/延迟统一等宽 + tabular-nums，避免跳字 */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--color-primary-soft);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

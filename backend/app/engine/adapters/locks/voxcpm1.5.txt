@@ -1,0 +1,26 @@
+# engine: voxcpm1.5
+# generated: 2026-10-19 11:26
+# source: local environment (importlib.metadata) / pip dry-run resolve
+#
+# note: torch family is pinned in <venv>/constraints.txt, not here
+# note: torch family is pinned in <venv>/constraints.txt, not here
+# note: voxcpm requires torch>=2.5; pinned here for THIS engine venv only.
+#       the main environment stays on torch 2.4.1+cu121 and is never touched.
+torch==2.5.1+cu121
+torchaudio==2.5.1+cu121
+voxcpm==2.0.3
+wetext==0.1.8
+kaldifst==1.8.1
+transformers==4.57.3
+einops==0.8.2
+inflect==7.5.0
+addict==2.4.0
+modelscope==1.40.2
+huggingface-hub==0.36.2
+pydantic==2.13.4
+soundfile==0.13.1
+librosa==0.11.0
+funasr==1.4.16
+safetensors==0.7.0
+simplejson==4.2.0
+tqdm==4.67.3

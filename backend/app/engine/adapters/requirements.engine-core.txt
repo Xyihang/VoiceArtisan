@@ -1,0 +1,22 @@
+# Minimal core deps for an engine venv (installed right after "python -m venv").
+# NOTE: this file is read by pip on Windows with the *locale* codec (GBK), so it must stay
+#       pure ASCII - put all Chinese explanations in venv.py / docs/ENGINE_ISOLATION.md.
+#
+# Why exactly these (real import chain of the adapters):
+#   app.errors                 -> stdlib only
+#   app.engine.base (AudioChunk.pcm) -> numpy
+#   app.audio / app.dsp        -> numpy (soundfile is imported lazily inside wav helpers)
+#   app.config (adapter cfg)   -> pydantic + PyYAML
+#   adapters.installer         -> httpx
+#   adapters/runner.py         -> numpy + soundfile (writes the wav chunk)
+#
+# EXACT pins only (==), same versions as the main environment (requirements.pins.txt):
+# version drift here would show up as VERSION_MISMATCH when the engine lock file is checked.
+# This list must NEVER contain torch / torchaudio / torchvision - those come from
+# <venv>/constraints.txt so an engine can use its own build without touching the main env.
+pydantic==2.13.4
+pydantic-settings==2.15.0
+PyYAML==6.0.3
+numpy==2.2.6
+soundfile==0.13.1
+httpx==0.28.1

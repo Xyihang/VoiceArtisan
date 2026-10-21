@@ -1,0 +1,113 @@
+# 预设：仅云端（本机不跑推理，适合没有独显/显存不足的机器）
+# 用法：
+#   copy config\config.cloud-only.example.yaml config\config.yaml
+#   然后填好 cloud.base_url 与 cloud.api_key（也可启动后在「设置」页填）
+#
+# 云端部署见 docs/CLOUD_SETUP.md；云端把 api_key 设成同一个值。
+
+server:
+  host: 0.0.0.0
+  port: 8443
+  https: true
+  open_browser: true
+  log_level: INFO
+
+storage:
+  data_dir: data
+  models_dir: models        # 仅云端模式下本机不需要模型
+  cache_dir: .cache
+
+run:
+  mode: cloud
+  hybrid_long_text_chars: 300
+  asr_prefer: cloud
+
+local:
+  device: cuda:0
+  dtype: float16
+  attn_implementation: eager
+  keep_loaded: true
+  warmup_on_start: false    # 仅云端模式不需要预热本地模型
+  warmup_kinds: []
+  unload_after_idle_seconds: 600
+  vram_reserve_gb: 0.1
+  allow_vram_overcommit: true
+  allow_small_fallback: false
+  max_new_tokens: 2048
+  low_vram:
+    enabled: false
+  models:
+    base: models/Qwen3-TTS-12Hz-1.7B-Base
+    custom_voice: models/Qwen3-TTS-12Hz-1.7B-CustomVoice
+    voice_design: models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+  fallback_models:
+    base: models/Qwen3-TTS-12Hz-0.6B-Base
+    custom_voice: models/Qwen3-TTS-12Hz-0.6B-CustomVoice
+    voice_design: models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+
+cloud:
+  base_url: https://<你的云端IP或域名>:8443
+  api_key: "<与云端一致的密钥>"
+  verify_tls: false          # 自签证书用 false；正式证书改 true
+  request_timeout_s: 30
+  chunk_timeout_s: 180
+  retries: 3
+  retry_backoff_s: 2
+  readiness_timeout_s: 900
+  models:
+    base: Qwen3-TTS-12Hz-1.7B-Base
+    custom_voice: Qwen3-TTS-12Hz-1.7B-CustomVoice
+    voice_design: Qwen3-TTS-12Hz-1.7B-VoiceDesign
+  tunnel:
+    enabled: false           # 用 SSH 隧道时改 true 并填下面各项
+    ssh_host: ""
+    ssh_port: 22
+    username: ""
+    key_path: ""
+    password: ""
+    local_port: 18443
+    remote_host: 127.0.0.1
+    remote_port: 8443
+  idle_shutdown_enabled: false
+  idle_shutdown_minutes: 15
+  idle_shutdown_url: ""
+
+asr:
+  engine: cloud
+  local:
+    model_size: small
+    device: auto
+    compute_type: int8
+    beam_size: 5
+  cloud:
+    base_url: ""             # 留空复用 cloud.base_url
+    api_key: ""
+    model: whisper-1
+
+limits:
+  max_upload_mb: 50
+  max_ref_audio_seconds: 30
+  max_asr_audio_seconds: 1800
+  max_text_chars: 5000
+  allowed_audio_formats: [wav, mp3, flac, m4a, ogg, webm, aac]
+  allowed_output_formats: [wav, mp3]
+
+defaults:
+  speed: 1.0
+  pitch: 0
+  temperature: 0.9
+  top_p: 0.8
+  top_k: 50
+  repetition_penalty: 1.05
+  steps: 2048
+  output_format: wav
+  language: Auto
+  streaming: false
+  chunk_chars: 28
+
+qc:
+  enabled: false
+  min_similarity: 0.75
+
+mock:
+  enabled: false

@@ -1,0 +1,26 @@
+# engine: indextts2
+# generated: 2026-10-19 11:26
+# source: local environment (importlib.metadata) / pip dry-run resolve
+#
+# note: torch family is pinned in <venv>/constraints.txt, not here
+# note: torch family is pinned in <venv>/constraints.txt, not here
+accelerate==1.12.0
+cn2an==0.5.24
+einops==0.8.2
+ffmpeg-python==0.2.0
+fugashi==1.5.2
+g2p-en==2.1.0
+jieba==0.42.1
+json5==0.17.3
+librosa==0.11.0
+modelscope==1.40.2
+munch==4.0.0
+numba==0.65.1
+omegaconf==2.3.1
+safetensors==0.7.0
+sentencepiece==0.2.2
+textstat==0.7.13
+tokenizers==0.22.2
+tqdm==4.67.3
+transformers==4.57.3
+unidic-lite==1.0.8

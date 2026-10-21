@@ -1,0 +1,59 @@
+{
+  "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
+  "version": "1.1.11",
+  "release_date": "2026-10-21",
+  "author": "xiyihang",
+  "contact": "xiyihang360@163.com",
+  "copyright": "© 2026 xiyihang. All rights reserved. 保留所有权利。",
+  "license": "Proprietary (see LICENSE)",
+  "verified_environment": {
+    "os": "Windows 11",
+    "python": "3.10.8",
+    "cuda": "12.1 (cu121)",
+    "torch": "2.4.1+cu121",
+    "transformers": "4.57.3",
+    "qwen-tts": "0.1.1",
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop 4GB",
+    "verified_models": [
+      "Qwen3-TTS-12Hz-1.7B-Base",
+      "Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+    ]
+  },
+  "entrypoints": {
+    "windows_double_click": "start.bat",
+    "windows_shell": "scripts\\start.ps1",
+    "linux": "scripts/start.sh",
+    "cloud_role": "scripts/start.sh --cloud",
+    "backend_direct": "cd backend && python -m app.main",
+    "selfcheck": "cd backend && python -m app.main --selfcheck",
+    "mcp_server": "cd backend && python -m app.mcp_server"
+  },
+  "defaults": {
+    "url": "https://localhost:8443",
+    "mode": "hybrid",
+    "run_mode_streaming": false,
+    "idle_shutdown": false,
+    "asr_local_model": "small",
+    "quality_check": false
+  },
+  "sizes": {
+    "source_mb": 0.25,
+    "models_1_7b_gb": 12.6,
+    "frontend_dist_kb": 280
+  },
+  "notes": [
+    "v1.1.11：补做 PHASE-3 3.4 导出档位（Original / Standard 44.1k MP3 192k / For editing 48k 24bit WAV）+ GET /tasks/{id}/media-info 读真实文件头 + 教程页与文档同步",
+    "v1.1.10：教程页新增「区分说话人 / 后期处理链 / 目标时长 / 批量队列 / MCP Server」5 个分区（共 18 个）",
+    "v1.1.9：复查缺口修复——批次重试保留逐项参数、取消落 canceled（含转写阶段取消点）、local.py 相对导入越界、MCP ParseError/UTF-8、文档与 example 配置补齐",
+    "v1.1.8：max_speakers 真正参与聚类、重试可覆盖开关、云端回退不静默丢说话人；批量进度/取消/重试失败项；后期处理链 + target_duration_s；MCP Server",
+    "v1.1.7：工作台「音频转文字」加「区分说话人」开关（任务级覆盖全局设置）+ 修复 ASR 引擎相对导入越界、whisper 模型目录解析、本地模式误回退云端卡死",
+    "v1.1.6：P1 批次（说话人区分/批量队列/补全生成参数）+ ASR 字幕 chunks.json 缺陷修复",
+    "v1.1.5：云主机一键接入 Agent 全流程实测通过（10 步、含自动下载模型/CUDA 自检/隧道回退/可续做/AI 排障），ASR 纳入引擎管理，SoX 免依赖",
+    "v1.1.4：侧栏新增「教程」页（覆盖设置全部 11 个分区 + 常见错误速查），修 engine-info 缓存并发竞态",
+    "多引擎（6 个）+ 每引擎 venv 隔离 + 版本钉死（locks/*.txt）",
+    "模型不随源码分发，需按 docs/MODELS.md 自行下载",
+    "config/config.yaml 由启动脚本从 config/config.example.yaml 自动生成",
+    "frontend/dist 为构建产物，未包含在源码备份中（首次启动有 npm 时自动构建）"
+  ]
+}

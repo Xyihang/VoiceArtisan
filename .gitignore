@@ -1,0 +1,39 @@
+# 运行期数据与产物
+data/
+models/
+.cache/
+out/
+
+# 用户私有素材（音频等，不是代码，勿入库）
+webui/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / 前端构建
+node_modules/
+frontend/dist/
+npm-debug.log*
+
+# 本地配置（含密钥，不入库）
+config/config.yaml
+data/runtime.json
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+
+# launcher（运行期记忆与打包中间产物）
+launcher/launcher.json
+launcher/build/
+launcher/*.spec
+launcher/dist/

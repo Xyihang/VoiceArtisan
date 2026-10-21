@@ -1,0 +1,25 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+# 后端运行依赖（Python 3.10+）
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+pydantic-settings>=2.2
+PyYAML>=6.0
+httpx>=0.27
+SQLAlchemy>=2.0
+websockets>=12.0
+paramiko>=3.4
+python-multipart>=0.0.9
+soundfile>=0.12
+numpy>=1.26
+cryptography>=42.0
+
+# 模型与推理（本地 GPU；CPU 环境可装 CPU 版 torch）
+qwen-tts>=0.1.1
+torch==2.4.1+cu121
+torchaudio==2.4.1+cu121
+transformers>=4.51
+accelerate>=0.30
+
+# 可选：音频转文字（本地 faster-whisper）
+faster-whisper>=1.0

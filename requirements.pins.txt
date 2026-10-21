@@ -1,0 +1,26 @@
+﻿# 主环境锁定清单（精确版本，程序生成的所有命令都应引用本文件）
+# 生成时间: 2026-10-19 11:07
+# 规则: 一律 ==，禁止 >= / 无版本 / -U
+
+torch==2.4.1+cu121
+torchaudio==2.4.1+cu121
+torchvision==0.19.1+cu121
+transformers==4.57.3
+numpy==2.2.6
+fastapi==0.136.3
+uvicorn==0.48.0
+pydantic==2.13.4
+pydantic-settings==2.15.0
+python-multipart==0.0.30
+PyYAML==6.0.3
+httpx==0.28.1
+websockets==16.1.1
+paramiko==5.0.0
+cryptography==50.0.0
+soundfile==0.13.1
+scipy==1.15.3
+qwen-tts==0.1.1
+faster-whisper==1.2.1
+accelerate==1.12.0
+tokenizers==0.22.2
+huggingface-hub==0.36.2
