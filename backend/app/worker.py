@@ -437,6 +437,13 @@ class TaskManager:
         # 导出档位（PHASE-3 3.4）：任务级 export_tier 覆盖设置里的默认档位
         from . import export as export_mod
 
+        # B6：编码档位之前先落一份无损原件（source.wav，不覆盖），供事后重新导出任意档位。
+        # 失败不阻塞出音频：没有原件时重新导出会给出可读错误（EXPORT_SOURCE_MISSING）。
+        try:
+            export_mod.save_source(pcm, sample_rate, out_dir)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("无损原件 source.wav 写入失败（%s）：%s", task_id, exc)
+
         try:
             params_row = TTSParams.from_dict(json.loads(row.params or "{}")) if row is not None else TTSParams()
         except (ValueError, TypeError):
@@ -458,6 +465,9 @@ class TaskManager:
             export_info = export_mod.probe(out_path)
             export_info["tier"] = tier
             export_info["fallback"] = str(exc)[:200]
+        # 原件是否保留决定界面能否「重新导出」（B6）
+        if (out_dir / export_mod.SOURCE_NAME).exists():
+            export_info["source_file"] = export_mod.SOURCE_NAME
         try:
             merged = json.loads(row.params or "{}") if row is not None else {}
             merged["_export"] = export_info
@@ -638,6 +648,12 @@ class TaskManager:
             max_speakers = int(max_speakers) if max_speakers is not None else None
         except (TypeError, ValueError):
             max_speakers = None
+        # B9：任务级「最少说话人」覆盖全局配置（None = 跟随配置）
+        min_speakers = task_params.get("min_speakers")
+        try:
+            min_speakers = int(min_speakers) if min_speakers is not None else None
+        except (TypeError, ValueError):
+            min_speakers = None
         # diarize=None 表示「跟随全局配置」，日志不能写成已开启
         if diarize is None:
             cfg_diarize = getattr(getattr(config_manager.app.asr, "diarize", None), "enabled", False)
@@ -646,9 +662,12 @@ class TaskManager:
             want_diarize = bool(diarize)
         limit = int(max_speakers or getattr(getattr(config_manager.app.asr, "diarize", None), "max_speakers", 4) or 4)
         limit = max(2, min(8, limit))  # 与 asr.py 的夹取保持一致，日志不能写「最多 1 人」实际跑 2 人
+        floor = int(min_speakers or getattr(getattr(config_manager.app.asr, "diarize", None), "min_speakers", 1) or 1)
+        floor = max(1, min(limit, floor))  # 与 asr.py 的 resolve_speaker_bounds 一致：下限不得高于上限
+        speaker_hint = f"{floor}-{limit} 人" if floor > 1 else f"最多 {limit} 人"
         self._log(
             task_id,
-            "开始转写：" + (f"区分说话人（最多 {limit} 人）" if want_diarize else "不分说话人"),
+            "开始转写：" + (f"区分说话人（{speaker_hint}）" if want_diarize else "不分说话人"),
         )
 
         def _on_progress(ratio: float, message: str) -> None:
@@ -661,12 +680,21 @@ class TaskManager:
             row.language or "auto",
             diarize=diarize,
             max_speakers=max_speakers,
+            min_speakers=min_speakers,
             on_progress=_on_progress if want_diarize else None,
             should_cancel=(lambda: bool(cancel is not None and cancel.is_set())),
         )
-        skipped = result.get("diarize_skipped")
-        if skipped:
-            self._log(task_id, f"注意：{skipped}，本次只有纯文本")
+        # 说话人由谁识别（local = 本地 CAM++ / cloud = 云端声纹 / None = 本次未做区分）
+        diarize_backend = result.get("diarize_backend")
+        if want_diarize:
+            if diarize_backend:
+                self._log(task_id, f"说话人识别：{diarize_backend}（{result.get('diarize_engine') or 'CAM++'}）")
+            else:
+                self._log(task_id, "注意：本次没有得到说话人标签（引擎未返回 diarize_backend）")
+            task_params["diarize_backend"] = diarize_backend
+            if result.get("min_speakers") is not None:
+                task_params["min_speakers_effective"] = result.get("min_speakers")
+            self.db.update_task(task_id, params=json.dumps(task_params, ensure_ascii=False))
         text = result.get("text", "")
         out_dir = self.paths.task_dir(task_id)
         txt_path = out_dir / f"{task_id}.txt"

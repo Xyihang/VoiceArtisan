@@ -74,6 +74,15 @@ export const STATUS_LABEL: Record<string, string> = {
   canceled: '已取消',
 };
 
+/** 已知错误码的补充说明：任务记录里只有 code/message，hint 不落库，这里补一句可操作的提示 */
+export const ERROR_HINT: Record<string, string> = {
+  EXPORT_SOURCE_MISSING: '该任务没有保留无损原件（旧任务），重新生成后才能重新导出或按说话人拆分。',
+  SPEAKER_TIMELINE_MISSING: '该任务没有带说话人的分段时间轴：重新转写并勾选「区分说话人」。',
+  CLOUD_DIARIZE_UNSUPPORTED: '云端未执行说话人区分：到「设置 → 语音转文字」把识别位置改为本地，或在云端安装声纹服务。',
+  DIARIZE_UNAVAILABLE: '本地与云端都无法做声纹：安装本地 CAM++ 声纹，或在设置里切换识别位置。',
+  SPEAKER_SPLIT_NOT_FOUND: '还没有分轨文件：先点「拆分」，再打包下载。',
+};
+
 export const TYPE_LABEL: Record<string, string> = {
   tts: '语音生成',
   clone: '声音克隆',

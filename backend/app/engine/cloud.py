@@ -31,12 +31,17 @@ logger = logging.getLogger(__name__)
 class CloudEngine:
     name = "cloud"
 
+    # 云端 ASR 能力探测缓存 TTL（秒）：能力不会频繁变化，但设置改完要能较快生效
+    ASR_CAP_TTL_S = 60.0
+
     def __init__(self, get_app: Callable[[], AppConfig], tunnel: SSHTunnel) -> None:
         self._get_app = get_app
         self.tunnel = tunnel
         self._assets: dict[str, str] = {}
         self._last_error: str | None = None
         self._health_cache: tuple[float, dict] | None = None
+        # (base_url, 时间戳, 能力字典)
+        self._asr_cap_cache: tuple[str, float, dict] | None = None
         self.last_latency_ms: int | None = None
 
     # ---------------- 基础设施 ----------------
@@ -309,29 +314,149 @@ class CloudEngine:
             )
 
     # ---------------- 转写 ----------------
-    def transcribe(self, audio_path: str, language: str = "auto") -> dict:
+    def _asr_base_url(self) -> str:
+        """ASR 可以用独立地址（asr.cloud.base_url），留空复用主云端地址。"""
+        asr_cfg = self._get_app().asr.cloud
+        base = (getattr(asr_cfg, "base_url", "") or "").strip() or self._cfg().effective_base_url()
+        return base.rstrip("/")
+
+    def _asr_headers(self) -> dict:
+        asr_cfg = self._get_app().asr.cloud
+        key = getattr(asr_cfg, "api_key", "") or self._cfg().api_key
+        return {"X-API-Key": key} if key else {}
+
+    def asr_capabilities(self, force: bool = False) -> dict:
+        """读云端 `/v1/health` 的 `asr` 块：能否做说话人区分、支持哪些引擎。
+
+        - 结果缓存 60s（能力探测不能每个任务都打一次云端）；
+        - 探测失败**不抛异常**，按「不支持」处理（旧版云端 / 未装声纹引擎 / 不可达）；
+        - 字段缺失（旧版云端没有 asr 块）同样按不支持处理，绝不静默。
+        """
+        now = time.time()
+        base = self._asr_base_url()
+        cached = self._asr_cap_cache
+        if not force and cached and cached[0] == base and now - cached[1] < self.ASR_CAP_TTL_S:
+            return dict(cached[2])
+        info = self._asr_capabilities_uncached(base)
+        self._asr_cap_cache = (base, now, info)
+        return dict(info)
+
+    def cached_asr_capabilities(self) -> dict | None:
+        """只看缓存，不发网络请求（状态页用它，避免被云端拖慢）。"""
+        cached = self._asr_cap_cache
+        if cached and cached[0] == self._asr_base_url() and time.time() - cached[1] < self.ASR_CAP_TTL_S:
+            return dict(cached[2])
+        return None
+
+    def _asr_capabilities_uncached(self, base: str) -> dict:
+        cfg = self._cfg()
+        empty = {
+            "backend": None,
+            "engine_id": None,
+            "diarize": False,
+            "diarize_engine": None,
+            "min_speakers": False,
+            "reachable": False,
+            "url": base,
+            "error": "",
+        }
+        if not base or "your-cloud" in base:
+            empty["error"] = "未配置云端地址"
+            return empty
+        try:
+            with httpx.Client(
+                base_url=base,
+                timeout=httpx.Timeout(min(6.0, cfg.request_timeout_s), connect=3.0),
+                verify=cfg.verify_tls,
+                headers=self._asr_headers(),
+            ) as client:
+                resp = client.get("/v1/health")
+            if resp.status_code >= 400:
+                empty["error"] = f"云端 /v1/health 返回 {resp.status_code}"
+                return empty
+            data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+            asr = data.get("asr") if isinstance(data, dict) else None
+            if not isinstance(asr, dict):
+                # 旧版云端根本没有 asr 块 → 视为不支持
+                return {**empty, "reachable": True, "error": "云端 /v1/health 无 asr 字段（旧版云端）"}
+            return {
+                "backend": asr.get("backend"),
+                "engine_id": asr.get("engine_id"),
+                "diarize": bool(asr.get("diarize")),
+                "diarize_engine": asr.get("diarize_engine"),
+                "min_speakers": bool(asr.get("min_speakers")),
+                "reachable": True,
+                "url": base,
+                "error": "",
+            }
+        except Exception as exc:  # noqa: BLE001 - 能力探测失败不能影响普通转写
+            empty["error"] = f"{type(exc).__name__}: {exc}"
+            return empty
+
+    def diarize_supported(self) -> bool:
+        """云端是否真的能做说话人区分（唯一判据：health.asr.diarize）。"""
+        return bool(self.asr_capabilities().get("diarize"))
+
+    def transcribe(
+        self,
+        audio_path: str,
+        language: str = "auto",
+        diarize: bool | None = None,
+        max_speakers: int | None = None,
+        min_speakers: int | None = None,
+    ) -> dict:
+        """云端转写；三个新字段都是可选的，不传时行为与旧版完全一致。"""
         cfg = self._cfg()
         self.ensure_ready()
-        asr_cfg = self._get_app().asr.cloud
-        base = asr_cfg.base_url or cfg.effective_base_url()
-        headers = {"X-API-Key": asr_cfg.api_key or cfg.api_key}
+        base = self._asr_base_url()
+        data: dict[str, str] = {
+            "language": language,
+            "model": getattr(self._get_app().asr.cloud, "model", "") or "",
+        }
+        if diarize is not None:
+            data["diarize"] = "true" if diarize else "false"
+        if max_speakers is not None:
+            data["max_speakers"] = str(int(max_speakers))
+        if min_speakers is not None:
+            data["min_speakers"] = str(int(min_speakers))
         with httpx.Client(
-            base_url=base.rstrip("/"),
+            base_url=base,
             timeout=httpx.Timeout(300.0, connect=10.0),
             verify=cfg.verify_tls,
-            headers=headers,
+            headers=self._asr_headers(),
         ) as client:
             with open(audio_path, "rb") as fh:
                 resp = client.post(
                     "/v1/engine/asr",
                     files={"file": (Path(audio_path).name, fh, "audio/wav")},
-                    data={"language": language, "model": asr_cfg.model},
+                    data=data,
                 )
         if resp.status_code == 401:
             raise AppError("CLOUD_AUTH_FAILED")
         if resp.status_code >= 400:
-            raise AppError("ASR_FAILED", f"云端转写失败({resp.status_code})")
+            raise self._asr_error(resp)
         return resp.json()
+
+    @staticmethod
+    def _asr_error(resp: httpx.Response) -> AppError:
+        """把云端 4xx 映射成本地错误码（说话人区分相关要保留可读原因）。"""
+        detail: dict = {}
+        try:
+            payload = resp.json()
+            if isinstance(payload, dict) and isinstance(payload.get("detail"), dict):
+                detail = payload["detail"]
+        except Exception:  # noqa: BLE001
+            detail = {}
+        code = str(detail.get("code") or "")
+        message = str(detail.get("message") or "") or resp.text[:200]
+        hint = str(detail.get("hint") or "")
+        extra = str(detail.get("detail") or "")
+        text = "；".join(part for part in (message, extra, hint) if part) or f"云端转写失败({resp.status_code})"
+        if code == "CLOUD_DIARIZE_UNSUPPORTED":
+            return AppError("CLOUD_DIARIZE_UNSUPPORTED", text)
+        if code in ("INVALID_INPUT", "DIARIZE_UNAVAILABLE"):
+            return AppError(code, text)
+        return AppError("ASR_FAILED", f"云端转写失败({resp.status_code})：{text}")
 
     def unload(self) -> None:  # 云端显存由服务端管理
         return

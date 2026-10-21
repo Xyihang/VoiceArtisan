@@ -25,6 +25,11 @@ export async function downloadFile(url: string, filename: string): Promise<void>
     window.open(url, '_blank');
     throw error;
   }
+  saveBlob(blob, filename);
+}
+
+/** 把内存里的 Blob 触发一次「另存为」（与 downloadFile 共用同一套规避拦截的做法） */
+export function saveBlob(blob: Blob, filename: string): void {
   const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;

@@ -36,6 +36,25 @@
 ### GET /api/system/status
 健康信息 + 生效配置 + 统计（平均首包、平均 RTF、显存）。
 
+ASR 相关的两处新增字段（CLOUD-DIARIZE-1）：
+
+```json
+{ "asr_candidates": ["local", "cloud"],
+  "config": {
+    "asr_engine": "local",
+    "asr_candidates": ["local", "cloud"],
+    "asr_diarize": { "enabled": false, "prefer": "local", "min_speakers": 1, "max_speakers": 4 }
+  } }
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `asr_candidates` | string[] | **实际会按这个顺序尝试**的 ASR 位置（`local` / `cloud`）。由 `asr.engine` 与 `run.asr_prefer` 推导，叠加 `asr.diarize.prefer` 的偏好；计算只读缓存、**不发网络请求**（云端能力由后台探测）。同时出现在顶层与 `config.asr_candidates` |
+| `asr_diarize` | object | **说话人区分的权威可用性**（顶层，前端据此判断能否勾选）：`candidates`（勾选后的真实尝试顺序）/`local_available`+`local_reason`（本地 CAM++ 能否用）/`cloud_supported`（`true`/`false`/`null`=尚未探测）/`cloud_engine`/`prefer`/`min_speakers`/`max_speakers` |
+| `config.asr_diarize` | object | 生效中的说话人配置：`enabled` / `prefer` / `min_speakers` / `max_speakers` |
+
+> 顺序计算失败不会让状态页 500：`asr_candidates` 退化为 `[]` 并只写一条 warning 日志。
+
 ### GET /api/system/logs?limit=200&level=ERROR
 最近日志（内存环形缓冲，最多 800 条）：`{ "items": [{ "ts": 1730000000, "level": "INFO", "logger": "app.worker", "message": "…" }] }`
 
@@ -158,10 +177,15 @@
 | 接口 | 说明 |
 | --- | --- |
 | `GET /api/tasks?status=&type=&page=1&page_size=20&order=desc&q=` | 列表（分页、筛选、搜索） |
-| `GET /api/tasks/{id}` | 详情（含日志与转录文本） |
+| `GET /api/tasks/{id}` | 详情（含日志与转录文本）；有时间轴时另带只读字段 `segments` / `speaker_aliases` / `transcript_by_speaker`（见下） |
 | `POST /api/tasks/{id}/cancel` | 取消（保留已生成片段，标注「已截断」） |
-| `POST /api/tasks/{id}/retry` | `{ "force_backend": "cloud", "params": {…} }` → 新建重试任务；params 白名单覆盖（diarize/max_speakers/force_backend 及常用合成参数） |
+| `POST /api/tasks/{id}/retry` | `{ "force_backend": "cloud", "params": {…} }` → 新建重试任务；params 白名单覆盖（diarize/max_speakers/min_speakers/force_backend 及常用合成参数） |
 | `PATCH /api/tasks/{id}/speakers` | `{ "mapping": {"SPK1": "张三"} }` → 说话人改名（空字符串还原），返回 ok/segments/speaker_aliases |
+| `POST /api/tasks/{id}/speakers/merge` | `{ "from": ["SPK2"], "to": "SPK1" }` → 合并说话人（时间轴不变） |
+| `POST /api/tasks/{id}/split-by-speaker` | 按说话人切分轨 wav，返回清单数组（不返回音频本体） |
+| `GET /api/tasks/{id}/speakers/{name}` | 下载单条分轨（文件名白名单，仅 `.wav`；不存在报 `SPEAKER_SPLIT_NOT_FOUND`） |
+| `GET /api/tasks/{id}/speakers/zip` | 打包下载上一步产出的分轨（`speakers-<id>.zip`） |
+| `POST /api/tasks/{id}/export` | `{ "tier": "original\|standard\|editing" }` → 从无损原件 `source.wav` 重新导出 |
 | `DELETE /api/tasks/{id}` | 删除任务与结果文件 |
 | `POST /api/tasks/batch-delete` | `{ "ids": ["a","b"] }` |
 | `POST /api/tasks/batch` | 批量提交，items 每项可带 text/voice_id/asset_id/instruct/design/language/params |
@@ -203,6 +227,114 @@ curl -k https://localhost:8443/api/tasks/<id>/subtitles?format=srt -o out.srt
 
 > 时间轴按「各块时长累加 + 60ms 句间间隔」计算，并按成品音频总时长等比缩放、末句末尾对齐成品时长
 > （拼接用了交叉淡化，成品会比累计略短）。
+
+---
+
+### 说话人与导出（B6/B7/B8）
+
+所有说话人操作都读写同一份时间轴 `data/outputs/<id>/chunks.json`（`chunks[]` + `speaker_aliases`），
+**不改任务表里的 `transcript`**；因此字幕、`media-info` 与派生文本始终一致。
+
+#### GET /api/tasks/{id} — 只读派生字段
+
+```json
+{ "id": "6acbdf8ed384", "type": "asr", "status": "completed",
+  "transcript": "原始转写文本（库里的原件，永不改写）",
+  "segments": [ { "start_s": 0.0, "end_s": 2.4, "text": "第一句", "speaker": "张三", "speaker_id": "SPK1" } ],
+  "speaker_aliases": { "SPK1": "张三" },
+  "transcript_by_speaker": "[张三] 第一句\n[SPK2] 第二句",
+  "params": { "diarize": true, "max_speakers": 4, "min_speakers": 1,
+              "diarize_backend": "local", "min_speakers_effective": 2 } }
+```
+
+| 字段 | 说明 |
+| --- | --- |
+| `segments` / `speaker_aliases` | 有 `chunks.json` 时才出现；旧任务（无时间轴）不返回这三个键 |
+| `transcript_by_speaker` | 只读派生视图：每行 `[别名] 文本`（无说话人的分段只输出文本），由 `speaker` 优先、回落到 `speaker_id` |
+| `params.diarize_backend` | 说话人由谁识别：`local`（本地 CAM++）/ `cloud`（云端声纹）/ `null`（本次未做区分） |
+| `params.min_speakers_effective` | 本次实际生效的说话人数下限（引擎返回值存在时才写） |
+
+#### POST /api/tasks/{id}/export — 按档位重新导出
+
+```json
+{ "tier": "standard" }        // original | standard | editing
+```
+
+```json
+{ "ok": true, "task_id": "6acbdf8ed384", "tier": "standard",
+  "tier_label": "Standard（44.1k MP3 192k）",
+  "file": "6acbdf8ed384.mp3",
+  "media": { "file": "6acbdf8ed384.mp3", "bytes": 88123, "sample_rate": 44100, "channels": 1,
+             "duration_sec": 5.1, "tier": "standard", "tier_label": "…",
+             "source_file": "source.wav", "source_sample_rate": 24000 },
+  "task": { "id": "6acbdf8ed384", "output_file": "6acbdf8ed384.mp3", "…": "…" } }
+```
+
+- 数据来源是无损原件 `outputs/<id>/source.wav`（**永不覆盖**），所以原文件不会被反复转码劣化；
+- 新成品落盘后才删除旧成品（不含 `source.wav`）；删除失败只记 warning，旧成品仍可下载；
+- `params._export` 写入本次规格；任务的 `output_file` / `output_format` / `sample_rate` / `duration_sec` 同步更新。
+
+| 错误码 | HTTP | 场景 |
+| --- | --- | --- |
+| `INVALID_INPUT` | 400 | `tier` 不是 `original` / `standard` / `editing`（不静默改成默认档） |
+| `EXPORT_SOURCE_MISSING` | 404 | 该任务没有 `source.wav`（升级前的旧任务）或原件为空 → 只能重新生成任务 |
+| `INTERNAL` | 500 | 编码失败（如缺 ffmpeg），detail 带可读原因 |
+
+#### POST /api/tasks/{id}/speakers/merge — 合并说话人
+
+```json
+{ "from": ["SPK2", "SPK3"], "to": "SPK1" }
+```
+
+```json
+{ "ok": true, "merged": { "from": ["SPK2", "SPK3"], "to": "SPK1" },
+  "segments": [ { "start_s": 0.0, "end_s": 2.4, "text": "…", "speaker": "SPK1", "speaker_id": "SPK1" } ],
+  "speaker_aliases": { "SPK1": "张三" } }
+```
+
+- 只改 `chunks.json` 的 `speaker_id` / `speaker` 与 `speaker_aliases`；`start_s` / `end_s` 原样保留，字幕与拆分结果随之变化；
+- `from` 是 Python 关键字，请求体字段名为 `sources` + 别名 `from`，**两种写法都接受**；
+- 目标保留自己的别名（没有别名就是 id 本身）；来源里的重复项会自动去重，与 `to` 相同的项被忽略；
+- 合并完成后推一条 `task.update` 事件。
+
+| 错误码 | HTTP | 场景 |
+| --- | --- | --- |
+| `INVALID_INPUT` | 400 | `to` 为空 / `from` 为空或只有 `to` / `from` 里含时间轴中不存在的说话人（detail 列出已有说话人） |
+| `SPEAKER_TIMELINE_MISSING` | 400 | 该任务的分段**没有任何说话人信息**（旧任务或未开区分说话人） |
+| `SUBTITLE_NOT_FOUND` | 404 | 没有 `chunks.json`（旧任务），需重新转写 |
+
+#### POST /api/tasks/{id}/split-by-speaker — 按说话人拆分音频
+
+```bash
+curl -k -X POST https://localhost:8443/api/tasks/6acbdf8ed384/split-by-speaker
+```
+
+```json
+[ { "speaker": "张三", "speaker_id": "SPK1", "file": "张三.wav",
+    "duration_s": 8.42, "bytes": 404160, "segments": 5 },
+  { "speaker": "SPK2", "speaker_id": "SPK2", "file": "SPK2.wav",
+    "duration_s": 3.10, "bytes": 148800, "segments": 2 } ]
+```
+
+- 返回**数组**（不是对象），顺序按各说话人首次出现时间；音频落在 `outputs/<id>/speakers/<别名>.wav`；
+- 文件名用别名并做安全化（Windows 保留字符/设备名处理，重名自动加序号）；
+- **不做重叠检测**：两人同时说话的重叠区会被两个文件各含一次；
+- 每次调用会先清掉上一次的分轨 wav，避免旧文件混进清单或压缩包；
+- 拆完再用 `GET /api/tasks/{id}/speakers/zip` 打包下载。
+
+| 错误码 | HTTP | 场景 |
+| --- | --- | --- |
+| `SPEAKER_TIMELINE_MISSING` | 400 | 没有分段，或分段里没有说话人 / 缺起止时间 |
+| `EXPORT_SOURCE_MISSING` | 404 | 既没有 `source.wav`、成品也不是 wav/mp3/flac（旧任务）→ 重新生成 |
+| `SUBTITLE_NOT_FOUND` | 404 | 没有 `chunks.json` |
+| `INTERNAL` | 500 | 切分/写盘失败，detail 带原因 |
+
+#### GET /api/tasks/{id}/speakers/zip — 打包下载分轨
+
+- 响应：`application/zip` + `Content-Disposition: attachment; filename="speakers-<id>.zip"`，
+  响应头 `X-Speaker-Files` 给出打包的文件数；zip 内是 `speakers/*.wav` 的扁平文件名。
+- 必须先调用 `split-by-speaker`；目录里没有 wav → 404 `SPEAKER_SPLIT_NOT_FOUND`。
+
 ## 6. 实时推送（WebSocket）
 
 ### WS /ws/events
@@ -223,10 +355,10 @@ curl -k https://localhost:8443/api/tasks/<id>/subtitles?format=srt -o out.srt
 
 | 接口 | 说明 |
 | --- | --- |
-| `GET /v1/health` | 就绪探测（无需鉴权）：`{ "ready": true, "loaded": ["custom_voice"], "models_present": ["custom_voice","base"], "loading": "", "vram_free_gb": 8.1 }` |
+| `GET /v1/health` | 就绪探测（无需鉴权）：`{ "ready": true, "loaded": ["custom_voice"], "models_present": ["custom_voice","base"], "loading": "", "vram_free_gb": 8.1, "asr": {…} }`（新增 `asr` 块，见下） |
 | `POST /v1/engine/assets` | multipart `file` → 参考音频资产 id |
 | `POST /v1/engine/synth` | 合成一段文本，返回 `audio/wav` 字节（响应头 `X-Sample-Rate`、`X-Model`、`X-Elapsed-Ms`） |
-| `POST /v1/engine/asr` | multipart `file`,`language` → `{ "text": "…", "language": "zh" }` |
+| `POST /v1/engine/asr` | multipart `file`,`language`,`model`,`diarize`,`max_speakers`,`min_speakers` → 转写结果（含 `diarize_backend`，见下） |
 | `POST /v1/system/shutdown` | 卸载模型并停机（空闲停机回调） |
 
 `POST /v1/engine/synth` 请求体：
@@ -244,6 +376,83 @@ curl -fk https://localhost:8443/v1/engine/synth \
   -H "X-API-Key: $QWENTTS_API_KEY" -H "Content-Type: application/json" \
   -d '{"kind":"tts","text":"你好","speaker":"vivian"}' -o out.wav
 ```
+
+### ASR 能力矩阵（本地 / 云端）
+
+本项目的转写能力由「本机引擎」与「云端 `/v1/engine/asr`」两部分组成，同一套定义、可互相回退：
+
+| 位置 | 文本 | 时间戳（分段） | 说话人区分 | 最少人数 `min_speakers` | 语种 |
+| --- | --- | --- | --- | --- | --- |
+| 本地 faster-whisper（`asr.local`） | ✅ | ✅ 句级 `start`/`end` | ✅ 需装声纹引擎 CAM++（`asr.diarize.engine_id`，默认 `asr-speaker-campplus`） | ✅ 1-8（默认 1） | ✅ 多语种 + `auto` |
+| 云端 `/v1/engine/asr`（`asr.engine=cloud`） | ✅ | ✅ 云端 `segments` 原样透传 | ✅ **需云端安装 CAM++**（`engines_cli install asr-speaker-campplus`） | ✅ 本地按本次 `min_speakers` 原样下发；云端 `asr.min_speakers=true` 表示它认这个字段（本实现恒为 `true`） | ✅ 由云端 ASR 引擎决定 |
+| mock 联调（`mock.enabled`） | ✅ 占位文本 | ✅ 单条占位分段 | ✅ 标签固定 `SPK1`（仅联调用） | — | — |
+
+- **能力协商**：客户端（本地服务）每次 `/v1/health` 读云端 `asr` 块，`asr.diarize=true` 才把说话人区分交给云端；
+  字段缺失（旧版云端）一律按**不支持**处理，绝静默降级成纯文本。
+- 云端已声明支持但实际没返回 `diarize_backend` → 视为未执行区分，走下一个候选并最终报 `CLOUD_DIARIZE_UNSUPPORTED`。
+- 偏好由 `asr.diarize.prefer` 决定（`local` 默认 / `cloud` / `auto`），实际尝试顺序见 `GET /api/system/status` 的 `asr_candidates`。
+
+### GET /v1/health — `asr` 能力块
+
+```json
+{ "ready": true, "loaded": ["custom_voice"], "vram_free_gb": 8.1,
+  "asr": { "backend": "local",
+           "engine_id": "asr-whisper-small",
+           "diarize": true,
+           "diarize_engine": "asr-speaker-campplus",
+           "min_speakers": true } }
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `backend` | string | 固定 `local`——云端自己在本机推理 |
+| `engine_id` | string | 真实 ASR 引擎 id（`asr.local.engine_id`，为空时回落 `asr-whisper-<model_size>`） |
+| `diarize` | bool | 云端本机是否**真的**能做说话人区分（唯一判据：CAM++ 是否可用） |
+| `diarize_engine` | string \| null | 声纹引擎 id；`diarize=false` 时为 `null` |
+| `min_speakers` | bool | 是否支持最少说话人约束（本实现恒为 `true`） |
+
+### POST /v1/engine/asr（云端转写）
+
+multipart 表单字段（`diarize` / `max_speakers` / `min_speakers` 三个都是**可选**，不传时行为与改造前完全一致）：
+
+| 字段 | 必填 | 取值 | 说明 |
+| --- | --- | --- | --- |
+| `file` | ✅ | 音频文件 | 受 `limits.max_asr_audio_seconds` 限制 |
+| `language` | — | `auto`（默认）/ `zh` / `en` … | 交给 ASR 引擎 |
+| `model` | — | `""` | 旧字段，仅为兼容老客户端保留；**实际引擎 id 由服务端按安装情况回填** |
+| `diarize` | — | `"true"` / `"false"` / `""` | 空串 = 跟随云端全局配置 `asr.diarize.enabled`；真值还接受 `1/on/yes/y`，假值 `0/off/no/n`（大小写不敏感） |
+| `max_speakers` | — | 整数 | 人数上限；超出 2-8 会被**夹取**（保留老客户端宽容行为） |
+| `min_speakers` | — | 整数 | 人数下限，**1-8**，越界或 `min > max` 直接 `INVALID_INPUT`（不静默夹取） |
+
+```bash
+curl -fk https://<云端>:8443/v1/engine/asr \
+  -H "X-API-Key: $QWENTTS_API_KEY" \
+  -F file=@meeting.wav -F language=zh \
+  -F diarize=true -F min_speakers=2 -F max_speakers=4
+```
+
+```json
+{ "text": "第一句。第二句。",
+  "segments": [ { "start": 0.0, "end": 2.4, "text": "第一句。", "speaker": "SPK1" },
+                { "start": 2.4, "end": 4.1, "text": "第二句。", "speaker": "SPK2" } ],
+  "language": "zh", "language_probability": 0.99, "duration": 4.1,
+  "backend": "local",
+  "model": "asr-whisper-small",
+  "diarize_backend": "local",
+  "elapsed_ms": 1830 }
+```
+
+- `model`：改为返回**真实 ASR 引擎 id**（不再是无意义的 `whisper-1`）；
+- `diarize_backend`：`"local"` = 说话人由云端本机（CAM++）识别；`null` = 本次没做区分。
+  对上游调用方而言，「云端本机」就是 `local`；
+- 未开区分说话人时 `segments[].speaker` 为 `null`（或整个 `segments` 不含该键）。
+
+| 错误码 | HTTP | 场景 |
+| --- | --- | --- |
+| `INVALID_INPUT` | 400 | `diarize` 不是真/假/空串；`max_speakers`/`min_speakers` 非整数；`min_speakers` 越界（1-8）或 `min > max` |
+| `CLOUD_DIARIZE_UNSUPPORTED` | 400 | `diarize=true` 但云端未装声纹引擎 → detail 给出 `engines_cli install asr-speaker-campplus`；**不会偷偷改成不区分** |
+| `DIARIZE_UNAVAILABLE` | 400 | 本地与云端都没有可用的说话人区分能力，或声纹抽取失败 |
+| `ASR_FAILED` | 400 | 云端引擎其它失败（音频损坏等） |
 
 ---
 
@@ -360,6 +569,11 @@ curl -s http://127.0.0.1:8443/v1/audio/transcriptions \
 | `ENGINE_TIMEOUT` | 隔离引擎子进程推理超时 | 缩短文本或调高超时后重试 |
 | `VENV_FAILED` | 引擎 venv 创建/装核心依赖失败 | 磁盘空间、杀软拦截、路径含空格，见 [ENGINE_ISOLATION.md](ENGINE_ISOLATION.md) |
 | `VERSION_MISMATCH` | 装完的版本与 `locks/<id>.txt` 不一致（或包缺失） | 详情里给出不匹配清单 + 修复命令（`-c <venv>\constraints.txt -r locks\<id>.txt`）；校验不通过不会置为已安装 |
+| `CLOUD_DIARIZE_UNSUPPORTED` | 云端未安装说话人区分引擎（`asr.diarize.prefer=cloud`，或云端 `/v1/health.asr.diarize=false`） | 提示在云端执行 `engines_cli install asr-speaker-campplus`；或改成 `prefer=local` 用本地 CAM++ |
+| `DIARIZE_UNAVAILABLE` | 本地与云端都没有可用的说话人区分能力，或声纹抽取失败 | 引导装本地「CAM++ 声纹」或云端 `asr-speaker-campplus` |
+| `SPEAKER_TIMELINE_MISSING` | 拆分/合并时说「缺少说话人时间轴」 | 引导重新转写并勾选「区分说话人」 |
+| `SPEAKER_SPLIT_NOT_FOUND` | 还没拆分就请求 `speakers/zip`（404） | 提示先调用 `split-by-speaker` |
+| `EXPORT_SOURCE_MISSING` | 旧任务没有 `source.wav`，无法换档重导出 / 拆分（404） | 说明原因并引导重新生成任务（新任务会自动保留原件） |
 
 ---
 

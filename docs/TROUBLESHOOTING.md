@@ -59,6 +59,21 @@
 | 转写一直失败并提示云端 | 本地失败后回落云端且云端未配置 | 已修：未配置云端时保留本地错误；检查 ASR 日志 |
 | 长音频超时 | 默认上限 1800s | 调 `limits.max_asr_audio_seconds`，或切分音频 |
 
+## 四之二、说话人区分与重导出（B6/B7/B8/B9 + CLOUD-DIARIZE-1）
+
+这五个错误码都是「可读错误 + 修复指引」，不会把堆栈丢到界面上；先看错误 `detail` 里括号中的具体原因。
+
+| 错误码 | 现象 | 原因 | 三步解决 |
+| --- | --- | --- | --- |
+| `EXPORT_SOURCE_MISSING` | 点「重新导出 / 换档位」或「按说话人拆分」时报「缺少原始音频（source.wav）」 | 该任务是升级前生成的，目录里没有无损原件 `outputs/<id>/source.wav`（或原件为空），无法从原件重编码 | ① 打开 `data/outputs/<task_id>/` 确认只有成品、没有 `source.wav`；② **重新生成该任务**（新任务会自动留原件）；③ 若只是想换个格式，先用原任务已有的成品下载，或改 `export.tier` 后重新生成 |
+| `SPEAKER_TIMELINE_MISSING` | 合并说话人 / 按说话人拆分时报「缺少说话人时间轴」 | 有 `chunks.json` 但分段里没有任何说话人（旧任务，或转写时没勾「区分说话人」）；没有 `chunks.json` 的任务报的是 `SUBTITLE_NOT_FOUND` | ① 看任务详情有没有 `segments` 且每段带 `speaker`；② 重新转写并勾选「区分说话人」（`asr.diarize.enabled` 或任务级 `params.diarize=true`）；③ 确认声纹引擎已装（本地 CAM++ / 云端 `asr-speaker-campplus`）后重试 |
+| `CLOUD_DIARIZE_UNSUPPORTED` | 报「云端未安装说话人区分引擎」，任务没出说话人标签 | `asr.diarize.prefer=cloud`（或 auto 选中云端）时，云端 `/v1/health.asr.diarize=false`：云端没装 CAM++；或旧版云端压根没有 `asr` 块 | ① 在云端执行 `engines_cli install asr-speaker-campplus`（或设置 → 引擎与模型 安装「CAM++ 声纹」）；② 或把 `asr.diarize.prefer` 改成 `local` 用本地 CAM++；③ 用 `curl -fk https://<云端>/v1/health` 确认 `asr.diarize=true` 后重试 |
+| `DIARIZE_UNAVAILABLE` | 报「本地与云端都没有可用的说话人区分能力」 | 本地声纹引擎/依赖未装，且云端也不支持（`prefer=auto` 两条路都不通）；或声纹抽取失败（音频过短/采样率不支持） | ① 本地：设置 → 引擎与模型 → 语音识别，安装「CAM++ 声纹」并确认 `scikit-learn` 可用；② 云端：`engines_cli install asr-speaker-campplus`；③ 音频至少含 2 段可分辨人声（单人长静音会被判为无法区分），换 `prefer=local` 再试一次 |
+| `SPEAKER_SPLIT_NOT_FOUND` | 打包下载分轨时 404 | 还没调过 `POST /api/tasks/{id}/split-by-speaker`，`outputs/<id>/speakers/` 里没有 wav | ① 先调拆分接口（界面「按说话人拆分」）；② 看返回数组是否非空（每条含 `file`/`duration_s`/`segments`）；③ 再下载 `GET /api/tasks/{id}/speakers/zip` |
+
+排查顺序建议：`GET /api/system/status` 看 `asr_candidates`（实际尝试顺序）与 `config.asr_diarize`（生效中的 prefer/min/max）→
+`GET /v1/health` 看云端 `asr.diarize` → 任务详情看 `params.diarize_backend`（`local`/`cloud`/`null`）与 `segments[].speaker`。
+
 ## 五、云端与隧道
 
 | 现象 | 原因 | 处理 |

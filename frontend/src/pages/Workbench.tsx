@@ -18,9 +18,9 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { downloadFile } from '../lib/download';
-import { formatSeconds, formatTime, speakerColor, TYPE_LABEL } from '../lib/format';
+import { ERROR_HINT, formatSeconds, formatTime, speakerColor, TYPE_LABEL } from '../lib/format';
 import { useApp } from '../state/AppContext';
-import type { Asset, Task, TaskParams, Voice } from '../types';
+import type { Asset, DiarizeBackend, DiarizePrefer, Task, TaskParams, Voice } from '../types';
 import { AudioPlayer, useAudioEngine } from '../components/Player';
 import { DesignInput } from '../components/DesignInput';
 import { ParamsPanel } from '../components/ParamsPanel';
@@ -46,6 +46,7 @@ const STORE_PARAMS = 'qwentts.workbench.params';
 const STORE_PARAMS_OPEN = 'qwentts.workbench.paramsOpen';
 const STORE_ASR_DIARIZE = 'qwentts.workbench.asrDiarize';
 const STORE_ASR_SPEAKERS = 'qwentts.workbench.asrSpeakers';
+const STORE_ASR_MIN_SPEAKERS = 'qwentts.workbench.asrMinSpeakers';
 
 function readStoredTab(): Tab {
   const value = localStorage.getItem(STORE_TAB);
@@ -140,6 +141,21 @@ export function WorkbenchPage() {
     const n = Number(localStorage.getItem(STORE_ASR_SPEAKERS));
     return Number.isFinite(n) && n >= 2 && n <= 8 ? n : 4;
   });
+  /** 最少说话人（1-8，必须 ≤ 最多说话人） */
+  const [asrMinSpeakers, setAsrMinSpeakers] = useState(() => {
+    const n = Number(localStorage.getItem(STORE_ASR_MIN_SPEAKERS));
+    return Number.isFinite(n) && n >= 1 && n <= 8 ? n : 1;
+  });
+  /** /api/system/status 的 ASR 链路：实际尝试顺序 + 声纹开关，用于提交前判断能否做声纹 */
+  const [asrPlan, setAsrPlan] = useState<{
+    candidates: DiarizeBackend[];
+    prefer: DiarizePrefer;
+    enabled: boolean;
+    /** 本地是否装了 CAM++（后端直报，不再靠 candidates 推断） */
+    localAvailable?: boolean;
+    /** null = 云端能力尚未探测 */
+    cloudSupported?: boolean | null;
+  } | null>(null);
   const voiceFallbackToasted = useRef(false);
 
   // meta 到达后补齐新增字段（保留用户上次调过的参数）
@@ -209,6 +225,13 @@ export function WorkbenchPage() {
   useEffect(() => {
     localStorage.setItem(STORE_ASR_SPEAKERS, String(asrMaxSpeakers));
   }, [asrMaxSpeakers]);
+  useEffect(() => {
+    localStorage.setItem(STORE_ASR_MIN_SPEAKERS, String(asrMinSpeakers));
+  }, [asrMinSpeakers]);
+  // 下限不能超过上限：上限调小时同步夹紧（与设置页的联动校验一致）
+  useEffect(() => {
+    if (asrMinSpeakers > asrMaxSpeakers) setAsrMinSpeakers(asrMaxSpeakers);
+  }, [asrMaxSpeakers, asrMinSpeakers]);
 
   // 命令面板「新建语音生成 / 新建声音克隆」跳转后切换能力
   useEffect(() => {
@@ -278,9 +301,74 @@ export function WorkbenchPage() {
     }
   }, [loadingVoices, pushToast, voiceId, voiceList]);
 
+  // ASR 链路：读实际尝试顺序（asr_candidates）与声纹开关，提交前就能判断「这次能不能做声纹」
+  useEffect(() => {
+    let alive = true;
+    const read = () => {
+      void api
+        .status()
+        .then((res) => {
+          if (!alive) return;
+          const cfg = res.config?.asr_diarize;
+          // asr_diarize 是后端直报的权威块（勾选声纹后的尝试顺序 + 本地/云端可用性）
+          const plan = res.asr_diarize;
+          setAsrPlan({
+            candidates: (plan?.candidates || res.asr_candidates || res.config?.asr_candidates || []) as DiarizeBackend[],
+            prefer: (plan?.prefer || cfg?.prefer || 'local') as DiarizePrefer,
+            enabled: !!(plan?.enabled ?? cfg?.enabled),
+            localAvailable: plan?.local_available,
+            cloudSupported: plan?.cloud_supported ?? null,
+          });
+        })
+        .catch(() => {
+          /* 状态拿不到时不做链路判断，交给后端报错 */
+        });
+    };
+    read();
+    const timer = window.setInterval(read, 20000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   const mode = health?.mode || settings?.run.mode || 'hybrid';
   const cloudMode = mode !== 'local';
   const needPrivacy = tab === 'clone' && cloudMode && !!refAsset;
+
+  /** 说话人识别优先位置：设置页刚改过时以 settings 为准，其次用状态接口回读值 */
+  const diarizePrefer: DiarizePrefer = settings?.asr?.diarize?.prefer ?? asrPlan?.prefer ?? 'local';
+
+  /** 提交前的链路判断：当前 asr_candidates 与 prefer 能不能真做声纹 */
+  const diarizePlan = useMemo(() => {
+    if (!asrPlan || !asrPlan.candidates.length) return null;
+    const candidates = asrPlan.candidates;
+    const where = (name: DiarizeBackend) => (name === 'cloud' ? '云端' : '本地');
+    const target: DiarizeBackend = diarizePrefer === 'auto' ? candidates[0] : diarizePrefer;
+    const other: DiarizeBackend = target === 'local' ? 'cloud' : 'local';
+    const targetOk = candidates.includes(target);
+    const otherOk = candidates.includes(other);
+    if (targetOk) {
+      if (diarizePrefer !== 'auto') return null;
+      return {
+        kind: 'info' as const,
+        text: `自动选择：本次用${where(target)}声纹（尝试顺序 ${candidates.map(where).join(' → ')}）`,
+      };
+    }
+    if (diarizePrefer === 'local' && otherOk) {
+      return {
+        kind: 'info' as const,
+        text: `本地声纹不可用，本次会自动改由${where(other)}识别（asr.diarize.prefer = local）`,
+      };
+    }
+    return {
+      kind: 'warning' as const,
+      text:
+        diarizePrefer === 'cloud'
+          ? '当前链路不支持云端声纹（asr.diarize.prefer = cloud），直接提交会报 CLOUD_DIARIZE_UNSUPPORTED'
+          : '当前链路没有可用的声纹后端（本地未装 CAM++ 且云端不支持），直接提交会报 DIARIZE_UNAVAILABLE',
+    };
+  }, [asrPlan, diarizePrefer]);
 
   /** 当前引擎是否 Qwen 系（Qwen 系必须有音色；其它引擎可以纯文本合成） */
   const engineIsQwen = useMemo(() => !engineCaps.id || engineCaps.id.startsWith('qwen3-tts'), [engineCaps.id]);
@@ -325,6 +413,21 @@ export function WorkbenchPage() {
     [describeError, pushToast],
   );
 
+  /** 一键切换声纹位置：热改 asr.diarize.prefer，不用等任务失败才知道 */
+  const changeDiarizePrefer = async (next: DiarizePrefer) => {
+    try {
+      await api.updateSettings({ asr: { diarize: { prefer: next } } });
+      await app.reloadSettings();
+      pushToast({
+        level: 'success',
+        title: `说话人识别已切换为${next === 'local' ? '本地' : next === 'cloud' ? '云端' : '自动'}`,
+        description: '下一个转写任务按新位置执行。',
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
   const submit = async (retryOf?: string) => {
     if (!params) return;
     if (needPrivacy && !privacyAck) {
@@ -340,12 +443,21 @@ export function WorkbenchPage() {
         created = await api.retryTask(
           retryOf,
           undefined,
-          tab === 'asr' ? { diarize: asrDiarize, max_speakers: asrMaxSpeakers } : undefined,
+          tab === 'asr'
+            ? { diarize: asrDiarize, max_speakers: asrMaxSpeakers, min_speakers: asrMinSpeakers }
+            : undefined,
         );
       } else {
         // 转写任务把工作台的区分说话人开关写进参数，后端按任务级覆盖全局设置
         const mergedParams =
-          tab === 'asr' ? { ...params, diarize: asrDiarize, max_speakers: asrMaxSpeakers } : params;
+          tab === 'asr'
+            ? {
+                ...params,
+                diarize: asrDiarize,
+                max_speakers: asrMaxSpeakers,
+                min_speakers: asrMinSpeakers,
+              }
+            : params;
         const body: Record<string, unknown> = {
           type: tab,
           text: tab === 'asr' ? '' : text,
@@ -657,19 +769,36 @@ export function WorkbenchPage() {
                     <span className="hint">尚未选择文件</span>
                   )}
                 </div>
-                <div className="toolbar" style={{ marginTop: 'var(--space-2)' }}>
+                <div className="toolbar" style={{ marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
                   <label className="checkbox">
                     <input
                       type="checkbox"
                       checked={asrDiarize}
                       disabled={stream.streaming}
                       onChange={(event) => setAsrDiarize(event.target.checked)}
+                      aria-describedby={asrDiarize && diarizePlan ? 'asr-diarize-note' : undefined}
                     />
                     <Users size={14} strokeWidth={1.75} />
                     区分说话人
                   </label>
                   {asrDiarize ? (
                     <>
+                      <span className="hint">最少</span>
+                      <select
+                        className="select"
+                        style={{ width: 'auto' }}
+                        value={asrMinSpeakers}
+                        disabled={stream.streaming}
+                        onChange={(event) => setAsrMinSpeakers(Number(event.target.value))}
+                        aria-label="最少说话人数"
+                        title="说话人下限：不足时后端会强制拆分补足（1 = 不做下限约束）"
+                      >
+                        {Array.from({ length: asrMaxSpeakers }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
                       <span className="hint">最多</span>
                       <select
                         className="select"
@@ -691,6 +820,50 @@ export function WorkbenchPage() {
                     <span className="hint">仅转写文本，不做声纹切分（更快）</span>
                   )}
                 </div>
+                {asrDiarize && diarizePlan ? (
+                  <div id="asr-diarize-note">
+                    <InlineNote
+                      kind={diarizePlan.kind}
+                      action={
+                        <div className="toolbar" style={{ flexWrap: 'wrap' }}>
+                          {asrPlan && asrPlan.candidates.includes('local') && diarizePrefer !== 'local' ? (
+                            <button
+                              type="button"
+                              className="btn btn--sm btn--primary"
+                              onClick={() => void changeDiarizePrefer('local')}
+                              title="把 asr.diarize.prefer 改成 local，用本地 CAM++ 做声纹"
+                            >
+                              改用本地声纹
+                            </button>
+                          ) : null}
+                          {asrPlan && asrPlan.candidates.includes('cloud') && diarizePrefer !== 'cloud' ? (
+                            <button
+                              type="button"
+                              className="btn btn--sm"
+                              onClick={() => void changeDiarizePrefer('cloud')}
+                              title="把 asr.diarize.prefer 改成 cloud"
+                            >
+                              改用云端声纹
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="btn btn--sm"
+                            onClick={() => setAsrDiarize(false)}
+                            title="本次只转文字，不做声纹切分"
+                          >
+                            关闭区分说话人
+                          </button>
+                          <a className="btn btn--sm btn--ghost" href="#/settings?s=asr">
+                            去设置装云端声纹 →
+                          </a>
+                        </div>
+                      }
+                    >
+                      {diarizePlan.text}
+                    </InlineNote>
+                  </div>
+                ) : null}
                 {transcript ? (
                   <div className="nested" style={{ display: 'grid', gap: 'var(--space-2)' }}>
                     <div className="toolbar">
@@ -900,7 +1073,7 @@ export function WorkbenchPage() {
                 }
               >
                 任务失败 <span className="error-code">{taskError.code}</span> {taskError.message}
-                {taskError.hint ? ` ${taskError.hint}` : ''}
+                {taskError.hint ? ` ${taskError.hint}` : ERROR_HINT[taskError.code] ? ` ${ERROR_HINT[taskError.code]}` : ''}
               </InlineNote>
             ) : null}
           </SectionCard>

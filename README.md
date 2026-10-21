@@ -98,6 +98,8 @@ cd backend && python -m app.main --selfcheck
 | T9 | 字幕导出 | `GET /api/tasks/{id}/subtitles?format=srt\|vtt\|ass`，按分块时间轴生成（毫秒精度、`chunks.json` 落盘），任务详情内可下载 |
 | F11 | 多引擎/模型管理（安装器或设置页增删） | `GET/POST/DELETE /api/engines*`（列表/后台安装+事件推送/删除/切换/健康）+ `python -m app.engines_cli`；注册表共 **13 个引擎**：**7 个 TTS**（`qwen3-tts-1.7b` 默认 / `qwen3-tts-0.6b` / `cosyvoice3-0.5b` / `cosyvoice2-0.5b` / `cosyvoice-300m-sft` / `voxcpm1.5` / `indextts2`）+ **5 个 ASR**（faster-whisper `tiny`~`large-v3`）+ **1 个声纹**（CAM++，供说话人区分），见 [API §10](docs/API.md)、[CONFIG §engine](docs/CONFIG.md) |
 | F12 | 引擎依赖隔离（每引擎独立 venv） | 除默认引擎走主环境就地推理（`isolation=inprocess`），其余引擎依赖与 torch 全部装在 `<models_dir>/<engine_id>/.venv`，合成走 `runner.py` 子进程；**主环境 torch 2.4.1+cu121 不会被任何安装动作替换**，见 [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) |
+| F13 | 云端说话人区分 | `POST /v1/engine/asr` 新增表单 `diarize`/`max_speakers`/`min_speakers`，响应回 `diarize_backend`（`local`/`null`）；云端能力由 `GET /v1/health.asr` 协商，云端未装 CAM++ 返回 `CLOUD_DIARIZE_UNSUPPORTED`；偏好 `asr.diarize.prefer`（`local`/`cloud`/`auto`，默认 `local`）+ `asr.diarize.min_speakers`（1-8），见 [API §7](docs/API.md)、[CONFIG §asr](docs/CONFIG.md) |
+| T10 | 按说话人拆分导出 / 重导出 | `POST /api/tasks/{id}/split-by-speaker`（清单数组）+ `GET /api/tasks/{id}/speakers/zip`；`POST /api/tasks/{id}/export` 从无损原件 `outputs/<id>/source.wav` 换档重导出（`original`/`standard`/`editing`，旧任务无原件报 `EXPORT_SOURCE_MISSING`）；`POST /api/tasks/{id}/speakers/merge` 合并说话人，见 [API §5](docs/API.md)、[CONFIG §export](docs/CONFIG.md) |
 | N1-N7 | 双后端 | 直连配置、SSH 隧道、三模式切换、混合路由、空闲停机、就绪探测+重试、状态可见 |
 | D1-D6 | 部署 | 自签 HTTPS、一键启动、加载提示与复用、单独推理脚本、镜像下载、启动自检 |
 | §4 | 前端 | 设计令牌、明暗主题、5 页面、流式播放器、实时推送、三档响应式、键盘可达 |
@@ -142,6 +144,7 @@ python -m app.main --selfcheck          # 只跑启动自检（在 backend/ 下�
 python -m app.engines_cli list --json   # 查看引擎/安装状态（在 backend/ 下）
 python -m app.engines_cli deps voxcpm1.5 --json   # 看某个引擎的依赖/venv/安全安装命令
 python -m app.engines_cli verify voxcpm1.5        # 只按锁文件校验版本（不下载、不安装）
+python -m app.mcp_server                # MCP Server（stdio JSON-RPC，在 backend/ 下；仅 stdio）  详见 docs/MCP.md
 
 > ⚠️ 不要在**主环境**直接执行 `pip install <模型包>`：`voxcpm` 这类包声明 `torch>=2.5`，
 > 会把主环境 `torch 2.4.1+cu121` 换成 CPU 版（真实事故）。引擎依赖一律装进它自己的 venv，
@@ -166,6 +169,7 @@ python -m app.engines_cli verify voxcpm1.5        # 只按锁文件校验版本�
 - [项目开发轨迹（记忆）](docs/PROJECT_HISTORY.md)
 - [健康度治理规格（HEALTH-1）](docs/spec/HEALTH-1.md)
 - [接口文档](docs/API.md)
+- [MCP Server 使用文档](docs/MCP.md)
 - [部署与运维](docs/DEPLOY.md)
 - [前端设计说明](docs/DESIGN.md)
 - [实测报告](docs/BENCHMARK.md)
@@ -198,8 +202,10 @@ python -m app.engines_cli verify voxcpm1.5        # 只按锁文件校验版本�
 | 后期处理链 | 新增 `config.post`（低切 → 高架 → 压缩 → 峰值归一化），全开关、纯 numpy 实现；实测峰值写回任务参数 |
 | 导出档位 | 新增 `export.tier`：Original（模型原生 WAV）/ Standard（44.1k 单声道 MP3 192k）/ For editing（48k 24bit WAV）；可在设置里设默认、工作台按任务覆盖；`GET /api/tasks/{id}/media-info` 读真实文件头返回采样率/声道/位深/体积 |
 | 时长控制 | 新增 `target_duration_s`（工作台高级参数），优先级高于语速，保音高伸缩 + 截断/补静音兜底 |
-| MCP Server | 新增 `backend/app/mcp_server.py`（stdio，行分隔 JSON-RPC）：`tts_synthesize` / `asr_transcribe` / `task_status` / `voice_list`，启动 `cd backend && python -m app.mcp_server` |
+| MCP Server | 新增 `backend/app/mcp_server.py`（stdio，行分隔 JSON-RPC）：`tts_synthesize` / `asr_transcribe` / `task_status` / `voice_list`，启动 `cd backend && python -m app.mcp_server`；**仅 stdio，SSE/resources/prompts 未实现**，配置与边界见 [docs/MCP.md](docs/MCP.md) |
 | 字幕 | 字幕导出支持「带/不带说话人前缀」开关（`/api/tasks/{id}/subtitles?speakers=false`） |
+| 云端说话人区分 | `/v1/engine/asr` 新增可选表单 `diarize`/`max_speakers`/`min_speakers`，响应回 `diarize_backend`、`model` 改为真实 ASR 引擎 id；`/v1/health` 新增 `asr` 能力块（`backend`/`engine_id`/`diarize`/`diarize_engine`/`min_speakers`）；配置新增 `asr.diarize.prefer`（`local`/`cloud`/`auto`）与 `asr.diarize.min_speakers`（1-8），均热改；云端未装 CAM++ → `CLOUD_DIARIZE_UNSUPPORTED`；`/api/system/status` 暴露 `asr_candidates` |
+| 按说话人拆分与重导出 | 新增 `POST /api/tasks/{id}/speakers/merge`（`{"from":["SPK2"],"to":"SPK1"}`）、`POST /api/tasks/{id}/split-by-speaker`（返回 `speaker`/`speaker_id`/`file`/`duration_s`/`bytes`/`segments` 数组）、`GET /api/tasks/{id}/speakers/zip`；新增 `POST /api/tasks/{id}/export`（`tier`=original/standard/editing，从无损原件 `source.wav` 重编码，旧任务报 `EXPORT_SOURCE_MISSING`），新任务生成时保留 `outputs/<id>/source.wav`；任务详情新增只读 `transcript_by_speaker`，任务级新增 `min_speakers` 参数、写回 `params.diarize_backend` |
 
 ## 近期变更（2026-10-19）
 

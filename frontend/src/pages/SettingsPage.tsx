@@ -76,7 +76,23 @@ const SECTIONS: { id: SectionId; label: string; icon: LucideIcon; labels: string
     icon: PlugZap,
     labels: ['SSH 隧道', '启用隧道', 'SSH 主机', 'SSH 端口', '用户名', '私钥路径', '密码', '本地映射端口', '远端地址 / 端口'],
   },
-  { id: 'asr', label: '语音转文字', icon: Database, labels: ['语音转文字', 'ASR 引擎', '本地模型规模', '计算精度'] },
+  {
+    id: 'asr',
+    label: '语音转文字',
+    icon: Database,
+    labels: [
+      '语音转文字',
+      'ASR 引擎',
+      '本地模型规模',
+      '计算精度',
+      '区分说话人',
+      '说话人识别位置',
+      '云端声纹',
+      '最少说话人',
+      '最多说话人',
+      '声纹',
+    ],
+  },
   {
     id: 'warmup',
     label: '模型预热',
@@ -190,6 +206,14 @@ function buildIssues(draft: any): Record<string, string> {
   put('local.vram_reserve_gb', rangeIssue(draft.local.vram_reserve_gb ?? 0, 0, 8, ' GB'));
   put('local.unload_after_idle_seconds', rangeIssue(draft.local.unload_after_idle_seconds, 0, 7200, ' 秒'));
   put('qc.min_similarity', rangeIssue(draft.qc?.min_similarity ?? 0.75, 0.3, 1, ''));
+  // 说话人上下限：越界或 min > max 都是硬冲突（这种状态下不落盘）
+  const diarize = draft.asr?.diarize;
+  if (diarize) {
+    const min = Number(diarize.min_speakers ?? 1);
+    const max = Number(diarize.max_speakers ?? 4);
+    if (!Number.isFinite(min) || min < 1 || min > 8) put('asr.diarize.min_speakers', '最少说话人必须在 1-8 之间');
+    else if (min > max) put('asr.diarize.min_speakers', `最少说话人（${min}）不能大于最多说话人（${max}）`);
+  }
   return issues;
 }
 
@@ -457,6 +481,12 @@ export function SettingsPage() {
   const save = async (silent = false) => {
     const current = draftRef.current;
     if (!current) return;
+    // 硬冲突（min_speakers > max_speakers）不落盘：否则后端会拒或存下自相矛盾的配置
+    const conflict = buildIssues(current)['asr.diarize.min_speakers'];
+    if (conflict) {
+      if (!silent) pushToast({ level: 'warning', title: '设置未保存', description: conflict });
+      return;
+    }
     if (!silent) setSaving(true);
     try {
       const next = await api.updateSettings(buildPayload(current));
@@ -475,14 +505,15 @@ export function SettingsPage() {
     }
   };
 
-  // 改动后自动保存（避免切走页面丢掉修改）
+  // 改动后自动保存（避免切走页面丢掉修改）；min/max 冲突时先不保存，等改对再落盘
   useEffect(() => {
     if (!dirty) return;
+    if (issues['asr.diarize.min_speakers']) return;
     const timer = window.setTimeout(() => {
       void save(true);
     }, 700);
     return () => window.clearTimeout(timer);
-  }, [dirty, draft]);
+  }, [dirty, draft, issues]);
 
   const switchMode = async (mode: RunMode) => {
     try {
@@ -1109,11 +1140,43 @@ export function SettingsPage() {
                   <option value="true">开启</option>
                 </select>
               </Field>
+              <Field
+                label={hl('说话人识别位置')}
+                hint="声纹由谁来做：本地 CAM++ 不依赖网络、云端不占显存；自动 = 云端支持就用云端"
+              >
+                <select
+                  className="select"
+                  value={String(draft.asr.diarize?.prefer ?? 'local')}
+                  onChange={(e) => patchDeep('asr', 'diarize', 'prefer', e.target.value)}
+                  aria-label="说话人识别位置 prefer"
+                >
+                  <option value="local">本地（CAM++，默认）</option>
+                  <option value="cloud">云端（远端声纹服务）</option>
+                  <option value="auto">自动（云端优先，不支持回落本地）</option>
+                </select>
+              </Field>
+              <Field label={hl('最少说话人')} hint="1-8，须 ≤ 最多说话人；不足下限时会强制拆分补足">
+                <input
+                  id="asr-min-speakers"
+                  className="input num"
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={draft.asr.diarize?.min_speakers ?? 1}
+                  onChange={(e) => patchDeep('asr', 'diarize', 'min_speakers', Number(e.target.value))}
+                  aria-label="最少说话人 min_speakers"
+                  aria-invalid={issues['asr.diarize.min_speakers'] ? true : undefined}
+                />
+                {issues['asr.diarize.min_speakers'] ? (
+                  <span className="field-error">{issues['asr.diarize.min_speakers']}</span>
+                ) : null}
+              </Field>
               <Field label={hl('最多说话人')} hint="聚类上限（2-8），3-4 人会议最稳；识别出的簇超过上限会合并最相似的">
                 <select
                   className="select"
                   value={String(draft.asr.diarize?.max_speakers ?? 4)}
                   onChange={(e) => patchDeep('asr', 'diarize', 'max_speakers', Number(e.target.value))}
+                  aria-label="最多说话人 max_speakers"
                 >
                   {[2, 3, 4, 5, 6, 7, 8].map((n) => (
                     <option key={n} value={n}>

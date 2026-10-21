@@ -99,9 +99,34 @@
 | `cloud.base_url` | `""` | 留空复用 `cloud.base_url`（热改） |
 | `cloud.api_key` / `cloud.model` | — | 云端 ASR 鉴权与模型名（热改） |
 | `diarize.enabled` | `false` | 区分说话人总开关；工作台可单次覆盖（热改） |
+| `diarize.prefer` | `local` | 说话人区分在哪执行：`local` 本地优先（本地不可用才看云端能力）/ `cloud` 云端优先（云端不支持就直接报 `CLOUD_DIARIZE_UNSUPPORTED`，**不偷偷改本地**）/ `auto` 云端能用就用云端（快、不占本地显存），否则本地；两者都不可用报 `DIARIZE_UNAVAILABLE`（热改） |
 | `diarize.max_speakers` | `4` | 聚类上限（2-8）；超过上限合并最相似的簇（热改） |
+| `diarize.min_speakers` | `1` | 最少说话人（**1-8**，且必须 ≤ `max_speakers`）：聚类结果不足时强制拆分补足；保持 `1` 时完全不做补足（与改造前一致）。任务级可用 `params.min_speakers` 覆盖（热改） |
 | `diarize.threshold` | `0.75` | 余弦距离阈值，越大越倾向于合成更少的人（热改） |
-| `diarize.engine_id` | `asr-speaker-campplus` | 声纹引擎（CAM++，Apache-2.0） |
+| `diarize.engine_id` | `asr-speaker-campplus` | 声纹引擎（CAM++，Apache-2.0）；云端需各自安装同一引擎 |
+
+**说话人相关取值与影响**：
+
+| 项 | 取值 | 影响 |
+| --- | --- | --- |
+| `diarize.prefer` | `local`（默认） | 先用本地 CAM++；本地不可用才把区分交给云端，两者都不行报 `DIARIZE_UNAVAILABLE` |
+| | `cloud` | 只用云端声纹；云端 `/v1/health.asr.diarize=false` 直接 `CLOUD_DIARIZE_UNSUPPORTED`（含安装提示），**绝不静默降级成纯文本** |
+| | `auto` | 云端可用就云端（省本地显存），否则本地 |
+| `diarize.min_speakers` | `1` | 关闭「补足」逻辑，人数完全由阈值聚类决定 |
+| | `2`-`8` | 低于该人数的聚类结果会被强制拆分补足；`min > max` 直接 `INVALID_INPUT`（不静默夹取） |
+| `diarize.max_speakers` | `2`-`8` | 超界会被夹取（兼容老任务的 `1`/`99`），日志里记 warning |
+
+实际尝试顺序可在 `GET /api/system/status` 的 `asr_candidates` 看到（只读缓存，不发网络请求）。
+
+任务级 `params`（不进配置、写在任务记录里）：
+
+| 键 | 说明 |
+| --- | --- |
+| `diarize` | 本次是否区分说话人（覆盖 `asr.diarize.enabled`） |
+| `max_speakers` / `min_speakers` | 本次人数上限 / 下限（覆盖同名配置） |
+| `diarize_backend` | **写回**：`local`（本地 CAM++）/ `cloud`（云端声纹）/ `null`（本次未区分） |
+| `min_speakers_effective` | **写回**：本次实际生效的人数下限 |
+| `_export` | **写回**：最近一次导出/重导出的真实规格（见 export 段） |
 
 ## limits — 上传与文本限制
 
@@ -155,6 +180,16 @@
 
 单次任务可用 `params.export_tier` 覆盖。档位会覆盖任务的 `output_format`：`standard` 固定出 MP3、`editing` 固定出 24bit WAV、`original` 固定出 WAV。
 成品真实规格（采样率/声道/位深/编码/体积）由 `GET /api/tasks/{id}/media-info` 读文件头返回，同时写进任务 `params._export`。
+
+**无损原件与重导出（B6）**：
+
+| 项 | 说明 |
+| --- | --- |
+| `outputs/<id>/source.wav` | 每个**新任务**生成时先落一份无损原件（模型原生采样率的 WAV PCM_16），编码档位在它之后进行；**永不覆盖、也不会被重导出删除** |
+| 重导出 | `POST /api/tasks/{id}/export` + `{"tier":"original\|standard\|editing"}`：始终从 `source.wav` 重新编码，任意档位来回切换都不会二次转码劣化；新成品落盘后才删旧成品 |
+| 旧任务 | 升级前生成的任务没有 `source.wav` → 重导出/按说话人拆分返回 `EXPORT_SOURCE_MISSING`（404），只能重新生成任务 |
+| 写回 | 每次重导出更新任务的 `output_file`/`output_format`/`sample_rate`/`duration_sec`，并把规格写进 `params._export`（含 `source_file`/`source_sample_rate`） |
+| 原件写入失败 | 不阻塞出音频，只记 warning；此后重导出才报 `EXPORT_SOURCE_MISSING` |
 
 ## qc — 内容质检
 

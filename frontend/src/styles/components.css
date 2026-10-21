@@ -1,4 +1,4 @@
-/* =========================== 鍗＄墖涓庡垎鍖?=========================== */
+﻿/* =========================== 閸楋紕澧栨稉搴″瀻閸?=========================== */
 .card {
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
@@ -6,7 +6,7 @@
   box-shadow: var(--shadow-1);
 }
 
-/* 浠呪€滈€氭爮鍗＄墖鈥濊鍒囧唴瀹癸紱鏅€氬崱鐗囦笉瑁佸垏锛岄伩鍏嶇牬鍧忚〃鏍?sticky 琛ㄥご涓庢诞灞?*/
+/* 娴犲應鈧粓鈧碍鐖崡锛勫閳ユ繆顥嗛崚鍥у敶鐎圭櫢绱遍弲顕€鈧艾宕遍悧鍥︾瑝鐟佷礁鍨忛敍宀勪缉閸忓秶鐗崸蹇氥€冮弽?sticky 鐞涖劌銇旀稉搴㈣癁鐏?*/
 .card--flush {
   overflow: hidden;
 }
@@ -19,7 +19,7 @@
   padding: var(--space-4) var(--space-4) 0;
 }
 
-/* 绔犺妭缂栧彿锛氫粎椤跺眰鍗＄墖鑷姩缂栧彿锛?1 / 02 / 03鈥︼級锛岄浂渚靛叆鍦板甫鏉モ€滆鏄庝功鈥濈З搴忔劅 */
+/* 缁旂姾濡紓鏍у娇閿涙矮绮庢い璺虹湴閸楋紕澧栭懛顏勫З缂傛牕褰块敍?1 / 02 / 03閳ワ讣绱氶敍宀勬祩娓氶潧鍙嗛崷鏉跨敨閺夈儮鈧粏顕╅弰搴濆姛閳ユ繄袟鎼村繑鍔?*/
 .page > .card {
   counter-increment: section;
 }
@@ -81,7 +81,7 @@
   margin: 0;
 }
 
-/* =========================== 鎸夐挳 =========================== */
+/* =========================== 閹稿鎸?=========================== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -171,7 +171,7 @@
   border-radius: var(--radius-md);
 }
 
-/* 涓昏鍔ㄧ偣锛氬伐浣滃彴鐢熸垚鎸夐挳 */
+/* 娑撴槒顢戦崝銊у仯閿涙艾浼愭担婊冨酱閻㈢喐鍨氶幐澶愭尦 */
 .primary-action {
   position: relative;
   width: 100%;
@@ -191,7 +191,7 @@
   }
 }
 
-/* =========================== 琛ㄥ崟 =========================== */
+/* =========================== 鐞涖劌宕?=========================== */
 .field {
   display: grid;
   gap: var(--space-2);
@@ -317,7 +317,7 @@ input[type='range'] {
   color: var(--color-text-muted);
 }
 
-/* =========================== 鏍囩 / 寰芥爣 =========================== */
+/* =========================== 閺嶅洨顒?/ 瀵拌姤鐖?=========================== */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -393,7 +393,7 @@ input[type='range'] {
   color: var(--color-accent);
 }
 
-/* 鍚庣鐘舵€佺偣锛氶鑹?+ 鏂囧瓧鍙岀紪鐮?*/
+/* 閸氬海顏悩鑸碘偓浣哄仯閿涙岸顤侀懝?+ 閺傚洤鐡ч崣宀€绱惍?*/
 .status-dot {
   width: 8px;
   height: 8px;
@@ -433,7 +433,7 @@ input[type='range'] {
   }
 }
 
-/* =========================== 閫夐」鍗?=========================== */
+/* =========================== 闁銆嶉崡?=========================== */
 .segmented {
   display: inline-flex;
   padding: var(--space-1);
@@ -472,14 +472,14 @@ input[type='range'] {
   box-shadow: var(--shadow-1);
 }
 
-/* =========================== 闊宠壊鍗＄墖 =========================== */
+/* =========================== 闂婂疇澹婇崡锛勫 =========================== */
 .voice-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: var(--space-3);
 }
 
-/* 宸ヤ綔鍙板唴鐨勯煶鑹茬綉鏍奸檺楂樻粴鍔紝閬垮厤鎶婁富鎸夐挳鎸ゅ嚭棣栧睆 */
+/* 瀹搞儰缍旈崣鏉垮敶閻ㄥ嫰鐓堕懝鑼秹閺嶅ジ妾烘妯荤泊閸旑煉绱濋柆鍨帳閹跺﹣瀵岄幐澶愭尦閹搞倕鍤＃鏍х潌 */
 .workbench .voice-grid {
   max-height: 320px;
   overflow-y: auto;
@@ -550,7 +550,7 @@ input[type='range'] {
   overflow: hidden;
 }
 
-/* =========================== 娉㈠舰 =========================== */
+/* =========================== 濞夈垹鑸?=========================== */
 .waveform {
   position: relative;
   width: 100%;
@@ -578,7 +578,7 @@ input[type='range'] {
   pointer-events: none;
 }
 
-/* =========================== 鎾斁鍣?=========================== */
+/* =========================== 閹绢厽鏂侀崳?=========================== */
 .player {
   display: grid;
   gap: var(--space-3);
@@ -615,7 +615,7 @@ input[type='range'] {
   color: var(--color-warning);
 }
 
-/* =========================== 杩涘害 =========================== */
+/* =========================== 鏉╂稑瀹?=========================== */
 .progress {
   height: 6px;
   border-radius: var(--radius-full);
@@ -692,7 +692,7 @@ input[type='range'] {
   }
 }
 
-/* =========================== 琛ㄦ牸 =========================== */
+/* =========================== 鐞涖劍鐗?=========================== */
 .table-wrap {
   overflow-x: auto;
 }
@@ -799,7 +799,7 @@ input[type='range'] {
   color: var(--color-text-muted);
 }
 
-/* =========================== 鎻愮ず / 楠ㄦ灦 / 绌虹姸鎬?=========================== */
+/* =========================== 閹绘劗銇?/ 妤犮劍鐏?/ 缁岃櫣濮搁幀?=========================== */
 .toast-stack {
   position: fixed;
   right: var(--space-5);
@@ -916,7 +916,7 @@ input[type='range'] {
   max-width: 380px;
 }
 
-/* =========================== 闈㈡澘 / 鎶藉眽 / 寮瑰眰 =========================== */
+/* =========================== 闂堛垺婢?/ 閹惰棄鐪?/ 瀵懓鐪?=========================== */
 .overlay {
   position: fixed;
   inset: 0;
@@ -983,7 +983,7 @@ input[type='range'] {
   border-top: var(--border-width) solid var(--color-border);
 }
 
-/* =========================== 閿€煎睍绀?=========================== */
+/* =========================== 闁款喖鈧厧鐫嶇粈?=========================== */
 .kv {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1038,7 +1038,7 @@ input[type='range'] {
   background: var(--color-error);
 }
 
-/* =========================== 涓婁紶鍖?=========================== */
+/* =========================== 娑撳﹣绱堕崠?=========================== */
 .dropzone {
   display: grid;
   place-items: center;
@@ -1103,7 +1103,7 @@ input[type='range'] {
   color: var(--color-error);
 }
 
-/* =========================== 閫氱煡 / 寰芥爣琛?=========================== */
+/* =========================== 闁氨鐓?/ 瀵拌姤鐖ｇ悰?=========================== */
 .toolbar {
   display: flex;
   gap: var(--space-2);
@@ -1136,10 +1136,10 @@ input[type='range'] {
 }
 
 /* =========================================================================
-   瑙嗚绮句慨锛氭帶鍒跺彴璇劅锛堝井鎺掔増 / 浠〃鐩樻暟瀛?/ 缁嗙嚎锛?
+   鐟欏棜顫庣划鍙ユ叏閿涙碍甯堕崚璺哄酱鐠囶厽鍔呴敍鍫濅簳閹烘帞澧?/ 娴狀亣銆冮惄妯绘殶鐎?/ 缂佸棛鍤庨敍?
    ========================================================================= */
 
-/* 瀵艰埅锛氬簭鍙风敤绛夊灏忓瓧锛屽彸渚х暀鍑哄簭鍙蜂綅 */
+/* 鐎佃壈鍩呴敍姘碍閸欓鏁ょ粵澶婎啍鐏忓繐鐡ч敍灞藉礁娓氀呮殌閸戝搫绨崣铚傜秴 */
 .nav-item {
   position: relative;
 }
@@ -1165,7 +1165,7 @@ input[type='range'] {
   color: var(--color-primary);
 }
 
-/* 椤舵爮锛氬簳閮ㄧ粏绾?+ 鍙充晶鍏冧俊鎭敤绛夊灏忓瓧 */
+/* 妞よ埖鐖敍姘俺闁劎绮忕痪?+ 閸欏厖鏅堕崗鍐т繆閹垳鏁ょ粵澶婎啍鐏忓繐鐡?*/
 .topbar {
   border-bottom: var(--border-width) solid var(--color-hairline);
 }
@@ -1186,7 +1186,7 @@ input[type='range'] {
   font-weight: var(--fw-medium);
 }
 
-/* 鍗＄墖锛氱粏鎻忚竟 + 椤堕儴 1px 楂樺厜锛堟祬鑹诧級/ 鍐呮弿杈癸紙娣辫壊锛?*/
+/* 閸楋紕澧栭敍姘辩矎閹诲繗绔?+ 妞ゅ爼鍎?1px 妤傛ê鍘滈敍鍫熺ガ閼硅绱? 閸愬懏寮挎潏鐧哥礄濞ｈ精澹婇敍?*/
 .card {
   position: relative;
 }
@@ -1209,7 +1209,7 @@ input[type='range'] {
   border-radius: var(--radius-full);
 }
 
-/* 涓绘寜閽細鍔犱竴灞傞《閮ㄥ唴楂樺厜锛屾寜涓嬪幓鏇粹€滃疄鈥?*/
+/* 娑撶粯瀵滈柦顕嗙窗閸旂姳绔寸仦鍌炪€婇柈銊ュ敶妤傛ê鍘滈敍灞惧瘻娑撳骞撻弴绮光偓婊冪杽閳?*/
 .btn--primary {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
@@ -1222,14 +1222,14 @@ input[type='range'] {
   letter-spacing: 0.01em;
 }
 
-/* 杈撳叆鎺т欢锛氬唴鍑规劅 */
+/* 鏉堟挸鍙嗛幒褌娆㈤敍姘敶閸戣鍔?*/
 .input,
 .textarea,
 .select {
   box-shadow: inset 0 1px 2px var(--color-hairline);
 }
 
-/* 琛ㄦ牸澶达細绛夊灏忓瀷澶у啓 */
+/* 鐞涖劍鐗告径杈剧窗缁涘顔旂亸蹇撶€锋径褍鍟?*/
 .table th {
   font-family: var(--font-mono);
   font-size: var(--fs-eyebrow);
@@ -1243,7 +1243,7 @@ input[type='range'] {
   box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
-/* 鎾斁鍣細鏃堕棿璇绘暟鏀惧ぇ銆佺瓑瀹斤紝甯﹀埢搴︾嚎 */
+/* 閹绢厽鏂侀崳顭掔窗閺冨爼妫跨拠缁樻殶閺€鎯с亣閵嗕胶鐡戠€规枻绱濈敮锕€鍩㈡惔锔惧殠 */
 .player__time {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -1273,7 +1273,7 @@ input[type='range'] {
   pointer-events: none;
 }
 
-/* 闊宠壊鍗★細閫変腑鎬佸乏渚у己璋冩潯 */
+/* 闂婂疇澹婇崡鈽呯窗闁鑵戦幀浣镐箯娓氀冨繁鐠嬪啯娼?*/
 .voice-card {
   border-left-width: 2px;
   border-left-color: transparent;
@@ -1288,7 +1288,7 @@ input[type='range'] {
   letter-spacing: -0.01em;
 }
 
-/* 绌虹姸鎬侊細绛夊灏忔爣 + 鏇村厠鍒剁殑鍥惧舰 */
+/* 缁岃櫣濮搁幀渚婄窗缁涘顔旂亸蹇旂垼 + 閺囨潙鍘犻崚鍓佹畱閸ユ儳鑸?*/
 .empty-state__title {
   letter-spacing: -0.01em;
 }
@@ -1297,7 +1297,7 @@ input[type='range'] {
   line-height: var(--lh-base);
 }
 
-/* 閿€煎潡锛氭爣绛剧敤绛夊灏忓瓧锛屾暟鍊肩敤浠〃鐩樻暟瀛?*/
+/* 闁款喖鈧厧娼￠敍姘垼缁涘墽鏁ょ粵澶婎啍鐏忓繐鐡ч敍灞炬殶閸婅偐鏁ゆ禒顏囥€冮惄妯绘殶鐎?*/
 .kv__label {
   font-family: var(--font-mono);
   font-size: var(--fs-eyebrow);
@@ -1311,17 +1311,17 @@ input[type='range'] {
   letter-spacing: -0.01em;
 }
 
-/* 鏃ュ織锛氱瓑瀹借楂樻洿绱?*/
+/* 閺冦儱绻旈敍姘辩搼鐎瑰€燁攽妤傛ɑ娲跨槐?*/
 .log-line {
   line-height: 1.45;
 }
 
-/* Toast锛氬乏渚?2px 寮鸿皟鏉?+ 缁嗘弿杈?*/
+/* Toast閿涙艾涔忔笟?2px 瀵缚鐨熼弶?+ 缂佸棙寮挎潏?*/
 .toast {
   border-left-width: 2px;
 }
 
-/* 宸ヤ綔鍙颁袱鍒楀唴鐨勫崱鐗囧悓鏍疯鍏ョ珷鑺傜紪鍙?*/
+/* 瀹搞儰缍旈崣棰佽⒈閸掓鍞撮惃鍕幢閻楀洤鎮撻弽鐤吀閸忋儳鐝烽懞鍌滅椽閸?*/
 .workbench__column {
   counter-reset: section;
 }
@@ -1342,7 +1342,7 @@ input[type='range'] {
   font-variant-numeric: tabular-nums;
 }
 
-/* 琛ㄥ崟椤规崲琛屾洿浠庡锛岄伩鍏嶆爣绛捐鎸ゆ垚绔栨帓 */
+/* 鐞涖劌宕熸い瑙勫床鐞涘本娲挎禒搴☆啇閿涘矂浼╅崗宥嗙垼缁涙崘顫﹂幐銈嗗灇缁旀牗甯?*/
 .field-row > .field {
   flex: 1 1 200px;
   min-width: 180px;
@@ -1352,12 +1352,12 @@ input[type='range'] {
   row-gap: var(--space-4);
 }
 
-/* 缃戞牸搴曠汗鐣ユ彁鍙搴?*/
+/* 缂冩垶鐗告惔鏇犳睏閻ｃ儲褰侀崣顖濐潌鎼?*/
 :root {
   --color-grid: rgba(19, 24, 32, 0.05);
 }
 
-/* =========================== 寮曟搸鍗＄墖 =========================== */
+/* =========================== 瀵洘鎼搁崡锛勫 =========================== */
 .engine-specs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1414,7 +1414,7 @@ input[type='range'] {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* =========================== 瀵洘鎼搁崡锛勫閿涙艾鐣ㄧ憗鍛搭暕鐟欏牓娼伴弶?=========================== */
+/* =========================== 鐎殿喗娲橀幖鎼佸础閿涘嫬顣婚柨娑欒壘閻ｃ劎鎲楅崨鎼殨閻熸瑥鐗撳浼村级?=========================== */
 .engine-plan {
   display: grid;
   gap: var(--space-2);
@@ -1533,11 +1533,11 @@ input[type='range'] {
 }
 
 /* =========================================================================
-   閿洏浼樺厛 / 鍛戒护闈㈡澘 / 绛涢€?chips / 琛屽唴鎿嶄綔锛坲i-craft dense dashboard锛?
-   浠呰拷鍔狅紝涓嶆敼鏃㈡湁绫?
+   闁款喚娲忔导妯哄帥 / 閸涙垝鎶ら棃銏℃緲 / 缁涙盯鈧?chips / 鐞涘苯鍞撮幙宥勭稊閿涘澆i-craft dense dashboard閿?
+   娴犲懓鎷烽崝鐙呯礉娑撳秵鏁奸弮銏℃箒缁?
    ========================================================================= */
 
-/* --- kbd锛氱瓑瀹藉皬閿附锛屽缁堝彲瑙侊紙蹇嵎閿笉闅愯棌锛?--- */
+/* --- kbd閿涙氨鐡戠€硅棄鐨柨顔奸檮閿涘苯顫愮紒鍫濆讲鐟欎緤绱欒箛顐ｅ祹闁款喕绗夐梾鎰閿?--- */
 .kbd {
   display: inline-flex;
   align-items: center;
@@ -1563,7 +1563,7 @@ input[type='range'] {
   color: var(--color-on-primary);
 }
 
-/* --- 椤舵爮鍛戒护鍏ュ彛 --- */
+/* --- 妞よ埖鐖崨鎴掓姢閸忋儱褰?--- */
 .cmd-trigger {
   display: inline-flex;
   align-items: center;
@@ -1602,7 +1602,7 @@ input[type='range'] {
   }
 }
 
-/* --- 鍛戒护闈㈡澘 --- */
+/* --- 閸涙垝鎶ら棃銏℃緲 --- */
 .cmdk__overlay {
   position: fixed;
   inset: 0;
@@ -1735,7 +1735,7 @@ input[type='range'] {
   gap: var(--space-1);
 }
 
-/* --- 绛涢€?chips锛氭弿杈?+ 鍙Щ闄?脳锛屾棤濉厖鑳跺泭 --- */
+/* --- 缁涙盯鈧?chips閿涙碍寮挎潏?+ 閸欘垳些闂?鑴抽敍灞炬￥婵夘偄鍘栭懗璺烘抄 --- */
 .chip-row {
   display: flex;
   align-items: center;
@@ -1774,7 +1774,7 @@ input[type='range'] {
   opacity: 1;
 }
 
-/* --- 琛ㄦ牸锛氶€変腑琛?/ 澶辫触琛?/ 琛屽唴鎿嶄綔 / 楠ㄦ灦琛?--- */
+/* --- 鐞涖劍鐗搁敍姘垛偓澶夎厬鐞?/ 婢惰精瑙︾悰?/ 鐞涘苯鍞撮幙宥勭稊 / 妤犮劍鐏︾悰?--- */
 .table tbody tr[data-active='true'] {
   background: color-mix(in srgb, var(--color-primary) 6%, transparent);
   box-shadow: inset 2px 0 0 var(--color-primary);
@@ -1830,14 +1830,14 @@ input[type='range'] {
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
-/* 浠诲姟琛ㄦ洿瀵嗭細妯悜 padding 鏀跺埌 8px锛?0 鍒楀悎璁＄渷鍑?80px锛岄伩鍏嶆搷浣滃垪琚尋鍑哄彲瑙嗗尯 */
+/* 娴犺濮熺悰銊︽纯鐎靛棴绱板Ο顏勬倻 padding 閺€璺哄煂 8px閿?0 閸掓鎮庣拋锛勬阜閸?80px閿涘矂浼╅崗宥嗘惙娴ｆ粌鍨悮顐ｅ皨閸戝搫褰茬憴鍡楀隘 */
 .table--tasks th,
 .table--tasks td {
   padding-left: var(--space-2);
   padding-right: var(--space-2);
 }
 
-/* 鎿嶄綔鍒楀繀椤诲寰椾笅 5 涓浘鏍囷紙hover 鎵嶆樉褰紝浣嗕笉鑳借鎸ゅ嚭鍘伙級 */
+/* 閹垮秳缍旈崚妤€绻€妞よ顔愬妞剧瑓 5 娑擃亜娴橀弽鍥风礄hover 閹靛秵妯夎ぐ顫礉娴ｅ棔绗夐懗鍊燁潶閹搞倕鍤崢浼欑礆 */
 .table__actions {
   width: 156px;
   min-width: 152px;
@@ -1849,7 +1849,7 @@ input[type='range'] {
   opacity: 1;
 }
 
-/* 閿洏鐢ㄦ埛锛氬浘鏍囨寜閽仛鐒︽椂蹇呴』鏈夊彲瑙佺幆 */
+/* 闁款喚娲忛悽銊﹀煕閿涙艾娴橀弽鍥ㄥ瘻闁筋喛浠涢悞锔芥韫囧懘銆忛張澶婂讲鐟欎胶骞?*/
 .table__row-btn:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
@@ -1869,7 +1869,7 @@ input[type='range'] {
   background: transparent;
 }
 
-/* --- 鎵归噺鎿嶄綔鏉?--- */
+/* --- 閹靛綊鍣洪幙宥勭稊閺?--- */
 .bulk-bar {
   display: flex;
   align-items: center;
@@ -1883,7 +1883,7 @@ input[type='range'] {
   color: var(--color-text);
 }
 
-/* --- 鍒嗛〉 --- */
+/* --- 閸掑棝銆?--- */
 .pagination__text {
   font-size: var(--fs-13);
   color: var(--color-text-secondary);
@@ -1895,7 +1895,7 @@ input[type='range'] {
   color: var(--color-text-muted);
 }
 
-/* --- 宸ヤ綔鍙帮細绂佺敤鍘熷洜 / 闀挎枃鏈彁绀?/ 鎾斁鍣ㄩ鏋?--- */
+/* --- 瀹搞儰缍旈崣甯窗缁備胶鏁ら崢鐔锋礈 / 闂€鎸庢瀮閺堫剚褰佺粈?/ 閹绢厽鏂侀崳銊╊€囬弸?--- */
 .submit-reason {
   margin-top: var(--space-2);
   text-align: center;
@@ -1935,9 +1935,9 @@ input[type='range'] {
   gap: var(--space-2);
 }
 
-/* --- 绐勫睆锛氭寜閽枃妗堜笉鎹㈣锛屾搷浣滃尯鎶樺彔椤哄簭 --- */
+/* --- 缁愬嫬鐫嗛敍姘瘻闁筋喗鏋冨鍫滅瑝閹广垼顢戦敍灞炬惙娴ｆ粌灏幎妯哄綌妞ゅ搫绨?--- */
 @media (max-width: 900px) {
-  /* 浠诲姟琛ㄥ湪绐勫睆鎶樺彔娆¤鍒楋紙绫诲瀷/闊宠壊/棣栧寘/鑰楁椂/鍒涘缓鏃堕棿锛夛紝淇濈暀 ID/鎽樿/鐘舵€?鎿嶄綔 */
+  /* 娴犺濮熺悰銊ユ躬缁愬嫬鐫嗛幎妯哄綌濞喡ゎ洣閸掓绱欑猾璇茬€?闂婂疇澹?妫ｆ牕瀵?閼版妞?閸掓稑缂撻弮鍫曟？閿涘绱濇穱婵堟殌 ID/閹芥顩?閻樿埖鈧?閹垮秳缍?*/
   .table--tasks {
     table-layout: fixed;
     width: 100%;
@@ -1964,7 +1964,7 @@ input[type='range'] {
     max-width: none;
   }
 
-  /* 绐勫睆鐘舵€佸垪鏀剁獎鍚庯紝閿欒鐮佹崲琛屽埌绗簩琛岋紙涓嶈鍒囥€佷笉璺ㄥ垪锛?*/
+  /* 缁愬嫬鐫嗛悩鑸碘偓浣稿灙閺€鍓佺崕閸氬函绱濋柨娆掝嚖閻焦宕茬悰灞藉煂缁楊兛绨╃悰宀嬬礄娑撳秷顥嗛崚鍥モ偓浣风瑝鐠恒劌鍨敍?*/
   .table--tasks .table__status {
     flex-wrap: wrap;
     row-gap: 2px;
@@ -2011,7 +2011,7 @@ input[type='range'] {
 }
 
 /* =========================================================================
-   璁剧疆椤碉細宸︿晶閿氱偣瀵艰埅 + 鍒嗗尯鎼滅储 + 瀛楁绾ф牎楠?
+   鐠佸墽鐤嗘い纰夌窗瀹革缚鏅堕柨姘卞仯鐎佃壈鍩?+ 閸掑棗灏幖婊呭偍 + 鐎涙顔岀痪褎鐗庢?
    ========================================================================= */
 .settings-body {
   display: grid;
@@ -2137,7 +2137,7 @@ input[type='range'] {
   min-width: 0;
 }
 
-/* 鍗＄墖浠嶆槸銆岀紪鍙烽」銆嶏細绛変环浜?.page > .card 鐨勫簭鍙蜂笌鍏ュ満锛堣〃鏍?鍒楄〃鍖轰笉鍋氶敊宄帮級 */
+/* 閸楋紕澧栨禒宥嗘Ц閵嗗瞼绱崣鐑姐€嶉妴宥忕窗缁涘鐜禍?.page > .card 閻ㄥ嫬绨崣铚傜瑢閸忋儱婧€閿涘牐銆冮弽?閸掓銆冮崠杞扮瑝閸嬫岸鏁婂畡甯礆 */
 .settings-content > .card {
   counter-increment: section;
   animation: card-enter var(--duration-slow) var(--ease-out) both;
@@ -2164,7 +2164,7 @@ input[type='range'] {
   display: none;
 }
 
-/* 鎼滅储鍛戒腑鐨勯珮浜細鍙敤 warning 娴呭簳锛屼笉寮曞叆鏂伴鑹?*/
+/* 閹兼粎鍌ㄩ崨鎴掕厬閻ㄥ嫰鐝禍顕嗙窗閸欘亞鏁?warning 濞村懎绨抽敍灞肩瑝瀵洖鍙嗛弬浼搭杹閼?*/
 mark.hl {
   background: var(--color-warning-soft);
   color: inherit;
@@ -2252,7 +2252,7 @@ mark.hl {
   font-size: var(--fs-13);
 }
 
-/* 鏂囧瓧鎸夐挳锛氬彧鐢ㄤ簬銆屽幓璁剧疆 / 鍘讳换鍔′腑蹇冦€嶈繖绫昏交閲忚烦杞?*/
+/* 閺傚洤鐡ч幐澶愭尦閿涙艾褰ч悽銊ょ艾閵嗗苯骞撶拋鍓х枂 / 閸樿鎹㈤崝鈥茶厬韫囧啨鈧秷绻栫猾鏄忎氦闁插繗鐑︽潪?*/
 .link-btn {
   justify-self: start;
   padding: 0;
@@ -2290,7 +2290,7 @@ mark.hl {
 }
 
 /* =========================================================================
-   鐘舵€侀〉锛氬仴搴峰崱鐗?/ 鑷琛?/ 鏃ュ織 chips
+   閻樿埖鈧線銆夐敍姘淮鎼村嘲宕遍悧?/ 閼奉亝顥呯悰?/ 閺冦儱绻?chips
    ========================================================================= */
 .health-grid {
   display: grid;
@@ -2425,7 +2425,7 @@ mark.hl {
 }
 
 /* =========================================================================
-   闊宠壊搴擄細涓€灞忓厠闅?/ 鍗＄墖 hover 鎿嶄綔 / 鏂板崱鐗囬珮浜?
+   闂婂疇澹婃惔鎿勭窗娑撯偓鐏炲繐鍘犻梾?/ 閸楋紕澧?hover 閹垮秳缍?/ 閺傛澘宕遍悧鍥彯娴?
    ========================================================================= */
 .clone-flow {
   display: grid;
@@ -2540,7 +2540,7 @@ mark.hl {
   opacity: 1;
 }
 
-/* 瑙﹀睆娌℃湁 hover锛氭搷浣滃父鏄撅紝閬垮厤銆岀湅涓嶈灏辩偣涓嶅埌銆?*/
+/* 鐟欙箑鐫嗗▽鈩冩箒 hover閿涙碍鎼锋担婊冪埗閺勬拝绱濋柆鍨帳閵嗗瞼婀呮稉宥堫潌鐏忚京鍋ｆ稉宥呭煂閵?*/
 @media (hover: none) {
   .voice-card__actions {
     opacity: 1;
@@ -2566,12 +2566,12 @@ mark.hl {
   background: var(--color-error-soft);
 }
 
-/* 鎸夐挳鏂囨鍗曡涓嶆崲琛岋細绐勫睆闈犳姌鍙犳瑕佸姩浣滐紝鑰屼笉鏄鏂囧瓧鎶樻垚涓よ */
+/* 閹稿鎸抽弬鍥攳閸楁洝顢戞稉宥嗗床鐞涘矉绱扮粣鍕潌闂堢姵濮岄崣鐘愁偧鐟曚礁濮╂担婊愮礉閼板奔绗夐弰顖濐唨閺傚洤鐡ч幎妯诲灇娑撱倛顢?*/
 .btn {
   white-space: nowrap;
 }
 
-/* 瀛楁鏍囩涓嶆妸涓枃璇嶆媶寮€鎹㈣锛堛€岀┖闂茶嚜鍔ㄥ仠鏈恒€嶄笉璁告柇鎴愩€岀┖闂茶嚜鍔?/ 鍋滄満銆嶏級 */
+/* 鐎涙顔岄弽鍥╊劮娑撳秵濡告稉顓熸瀮鐠囧秵濯跺鈧幑銏ｎ攽閿涘牄鈧瞼鈹栭梻鑼跺殰閸斻劌浠犻張鎭掆偓宥勭瑝鐠佸憡鏌囬幋鎰┾偓宀€鈹栭梻鑼跺殰閸?/ 閸嬫粍婧€閵嗗稄绱?*/
 .label {
   flex-wrap: wrap;
   word-break: keep-all;
@@ -2627,9 +2627,9 @@ mark.hl {
 }
 
 
-/* =========================== 瀵归綈涓庣暀鐧戒綋鏁达紙UI-POLISH-1锛?=========================== */
+/* =========================== 鐎靛綊缍堟稉搴ｆ殌閻ф垝缍嬮弫杈剧礄UI-POLISH-1閿?=========================== */
 
-/* 1) 琛ㄥ崟琛岋細椤堕儴瀵归綈 + 鎺т欢绛夐珮锛堝師鏉?flex-end 浼氳甯﹁鏄庣殑瀛楁椤跺埌涓婇潰锛?*/
+/* 1) 鐞涖劌宕熺悰宀嬬窗妞ゅ爼鍎寸€靛綊缍?+ 閹貉傛缁涘鐝敍鍫濆斧閺?flex-end 娴兼俺顔€鐢箒顕╅弰搴ｆ畱鐎涙顔屾い璺哄煂娑撳﹪娼伴敍?*/
 .field-row {
   align-items: flex-start;
 }
@@ -2657,7 +2657,7 @@ mark.hl {
   min-height: 96px;
 }
 
-/* 2) 鍗＄墖绛夐珮锛氱綉鏍兼媺浼?+ 璇存槑鍥哄畾涓よ + 鏍囩璐村簳 */
+/* 2) 閸楋紕澧栫粵澶愮彯閿涙氨缍夐弽鍏煎娴?+ 鐠囧瓨妲戦崶鍝勭暰娑撱倛顢?+ 閺嶅洨顒风拹鏉戠俺 */
 .voice-card {
   height: 100%;
   align-content: start;
@@ -2679,7 +2679,7 @@ mark.hl {
   min-width: 0;
 }
 
-/* 3) 寮瑰眰锛氬浐瀹氳鍙ｅ眳涓紝鑳屾櫙宸茬敱 Modal 閿佹粴鍔?*/
+/* 3) 瀵懓鐪伴敍姘祼鐎规俺顫嬮崣锝呯湷娑擃叏绱濋懗灞炬珯瀹歌尙鏁?Modal 闁夸焦绮撮崝?*/
 .modal-layer {
   position: fixed;
   inset: 0;
@@ -2702,7 +2702,7 @@ mark.hl {
   max-width: min(560px, 100%);
 }
 
-/* 4) 绐勫睆涓嶅啀妯悜婧㈠嚭 */
+/* 4) 缁愬嫬鐫嗘稉宥呭晙濡亜鎮滃┃銏犲毉 */
 .settings-shell,
 .settings-body,
 .workbench,
@@ -2727,7 +2727,7 @@ mark.hl {
   }
 }
 
-/* 鏈€杩戜换鍔?*/
+/* 閺堚偓鏉╂垳鎹㈤崝?*/
 .recent-list {
   list-style: none;
   margin: 0 0 var(--space-2);
@@ -2779,7 +2779,7 @@ mark.hl {
   text-decoration: none;
 }
 
-/* 蹇嵎閿〃 */
+/* 韫囶偅宓庨柨顔裤€?*/
 .shortcut-list {
   margin: 0;
   display: grid;
@@ -2813,7 +2813,7 @@ mark.hl {
   }
 }
 
-/* 闊宠壊缃戞牸锛氳法琛岀瓑楂橈紙鍚屼竴缃戞牸鍐呮墍鏈夊崱鐗囦竴鑷达級 */
+/* 闂婂疇澹婄純鎴炵壐閿涙俺娉曠悰宀€鐡戞姗堢礄閸氬奔绔寸純鎴炵壐閸愬懏澧嶉張澶婂幢閻楀洣绔撮懛杈剧礆 */
 .voice-grid {
   grid-auto-rows: 1fr;
   align-items: stretch;
@@ -2823,8 +2823,8 @@ mark.hl {
   height: 100%;
 }
 
-/* 闊宠壊鍗★細鍥哄畾琛岄珮锛岃法琛屽畬鍏ㄧ瓑楂橈紙鍐呭瓒呭嚭鏃跺唴閮ㄦ埅鏂級 */
-/* 鍗＄墖楂樺害鐢卞唴瀹瑰喅瀹氾紙鍥哄畾琛岄珮浼氳鍐呭灏戠殑鑷畾涔夐煶鑹插嚭鐜板ぇ鐗囩┖鐧斤級 */
+/* 闂婂疇澹婇崡鈽呯窗閸ュ搫鐣剧悰宀勭彯閿涘矁娉曠悰灞界暚閸忋劎鐡戞姗堢礄閸愬懎顔愮搾鍛毉閺冭泛鍞撮柈銊﹀焻閺傤叏绱?*/
+/* 閸楋紕澧栨妯哄閻㈠崬鍞寸€圭懓鍠呯€规熬绱欓崶鍝勭暰鐞涘矂鐝导姘愁唨閸愬懎顔愮亸鎴犳畱閼奉亜鐣炬稊澶愮叾閼规彃鍤悳鏉裤亣閻楀洨鈹栭惂鏂ょ礆 */
 .voice-grid {
   grid-auto-rows: auto;
   align-items: stretch;
@@ -2835,9 +2835,9 @@ mark.hl {
   overflow: hidden;
 }
 
-/* =========================== 鑷€傚簲楂樺害锛圲I-POLISH-2锛?=========================== */
+/* =========================== 閼奉亪鈧倸绨叉妯哄閿涘湶I-POLISH-2閿?=========================== */
 
-/* 璁剧疆椤碉細宸﹀鑸笌鍐呭绛夐珮锛堝師鏉ユ槸 align-items: start锛屽鑸彧鏈夎嚜韬唴瀹归珮锛?*/
+/* 鐠佸墽鐤嗘い纰夌窗瀹革箑顕遍懜顏冪瑢閸愬懎顔愮粵澶愮彯閿涘牆甯弶銉︽Ц align-items: start閿涘苯顕遍懜顏勫涧閺堝鍤滈煬顐㈠敶鐎瑰綊鐝敍?*/
 .settings-body {
   align-items: stretch;
 }
@@ -2857,7 +2857,7 @@ mark.hl {
   min-height: 0;
 }
 
-/* 浠诲姟涓績锛氭暣椤垫濂藉崰婊＄獥鍙ｏ紝琛ㄦ牸鍖哄唴閮ㄦ粴鍔紝鍒嗛〉鍥哄畾鍦ㄥ崱鐗囧簳閮?*/
+/* 娴犺濮熸稉顓炵妇閿涙碍鏆ｆい鍨劀婵傝棄宕板锛勭崶閸欙綇绱濈悰銊︾壐閸栧搫鍞撮柈銊︾泊閸旑煉绱濋崚鍡涖€夐崶鍝勭暰閸︺劌宕遍悧鍥х俺闁?*/
 .page--fill {
   height: calc(100vh - var(--shell-topbar) - var(--space-5) * 2);
   max-height: calc(100vh - var(--shell-topbar) - var(--space-5) * 2);
@@ -2907,7 +2907,7 @@ mark.hl {
   }
 }
 
-/* 淇锛歋ectionCard 鍐呴儴澶氫簡涓€灞?.card__body锛宖lex 瑙勫垯瑕佷笅閽?*/
+/* 娣囶喗顒滈敍姝媏ctionCard 閸愬懘鍎存径姘啊娑撯偓鐏?.card__body閿涘畺lex 鐟欏嫬鍨憰浣风瑓闁?*/
 .card--fill > .card__body {
   flex: 1 1 auto;
   min-height: 0;
@@ -2932,7 +2932,7 @@ mark.hl {
   border-top: var(--border-width) solid var(--color-hairline);
 }
 
-/* 鍙湁銆屽～鍏呭瀷椤甸潰銆嶆墠鎶婁富鍖洪攣鎴愪竴灞忛珮锛屽叾瀹冮〉闈㈢収甯告粴鍔?*/
+/* 閸欘亝婀侀妴灞斤綖閸忓懎鐎锋い鐢告桨閵嗗秵澧犻幎濠佸瘜閸栨椽鏀ｉ幋鎰鐏炲繘鐝敍灞藉従鐎瑰啴銆夐棃銏㈠弾鐢憡绮撮崝?*/
 .main:has(.page--fill) {
   height: calc(100vh - var(--shell-topbar));
   overflow: hidden;
@@ -2962,9 +2962,9 @@ mark.hl {
   }
 }
 
-/* =========================== 淇锛氳缃鑸仮澶嶆偓娴紱浠诲姟椤靛簳閮ㄥ啀澶?15px =========================== */
+/* =========================== 娣囶喗顒滈敍姘愁啎缂冾喖顕遍懜顏呬划婢跺秵鍋撳ù顕嗙幢娴犺濮熸い闈涚俺闁劌鍟€婢?15px =========================== */
 
-/* 璁剧疆椤靛乏瀵艰埅锛氭偓娴紙sticky锛? 瑙嗗彛楂橈紝涓€灞忓唴濮嬬粓鍙鍙偣锛屽垪琛ㄥ唴閮ㄦ粴鍔?*/
+/* 鐠佸墽鐤嗘い闈涗箯鐎佃壈鍩呴敍姘亾濞搭噯绱檚ticky閿? 鐟欏棗褰涙姗堢礉娑撯偓鐏炲繐鍞存慨瀣矒閸欘垵顫嗛崣顖滃仯閿涘苯鍨悰銊ュ敶闁劍绮撮崝?*/
 .settings-body {
   align-items: start;
 }
@@ -2986,7 +2986,7 @@ mark.hl {
   overflow-y: auto;
 }
 
-/* 浠诲姟涓績锛氬簳閮ㄥ啀澶?15px锛堝垎椤垫潯鏇磋创杩戠獥鍙ｅ簳杈癸級 */
+/* 娴犺濮熸稉顓炵妇閿涙艾绨抽柈銊ュ晙婢?15px閿涘牆鍨庢い鍨蒋閺囩鍒涙潻鎴犵崶閸欙絽绨虫潏鐧哥礆 */
 .page--fill {
   padding-bottom: calc(var(--space-5) - 15px);
 }
@@ -3003,7 +3003,7 @@ mark.hl {
   }
 }
 
-/* 浠诲姟涓績锛氱户缁创搴曪紙鍘绘帀椤甸潰涓嬪唴杈硅窛 + 椤佃剼鍘嬬缉鎴愪竴鏉＄粏绾匡級 */
+/* 娴犺濮熸稉顓炵妇閿涙氨鎴风紒顓″垱鎼存洩绱欓崢缁樺竴妞ょ敻娼版稉瀣敶鏉堢绐?+ 妞や絻鍓奸崢瀣級閹存劒绔撮弶锛勭矎缁惧尅绱?*/
 .page--fill {
   padding-bottom: 0;
 }
@@ -3015,7 +3015,7 @@ mark.hl {
   opacity: 0.75;
 }
 
-/* 浠诲姟涓績璐村簳锛堢粓鐗堬級锛氶殣钘忛〉鑴?+ 椤堕儴鍐呰竟璺濇敹绱э紝璁╄〃鏍煎崱鐗囧敖閲忚创鍒扮獥鍙ｅ簳杈?*/
+/* 娴犺濮熸稉顓炵妇鐠愭潙绨抽敍鍫㈢矒閻楀牞绱氶敍姘舵閽樺繘銆夐懘?+ 妞ゅ爼鍎撮崘鍛扮珶鐠烘繃鏁圭槐褝绱濈拋鈺勩€冮弽鐓庡幢閻楀洤鏁栭柌蹇氬垱閸掓壆鐛ラ崣锝呯俺鏉?*/
 .main:has(.page--fill) > .app-footer {
   display: none;
 }
@@ -3025,7 +3025,7 @@ mark.hl {
   gap: var(--space-3);
 }
 
-/* 浠诲姟涓績锛氱敤鏄惧紡楂樺害绮剧‘璐村簳锛堣窛绐楀彛搴?8px锛夛紝涓嶄緷璧?shell 鐨勫墿浣欒绠?*/
+/* 娴犺濮熸稉顓炵妇閿涙氨鏁ら弰鎯х础妤傛ê瀹崇划鍓р€樼拹鏉戠俺閿涘牐绐涚粣妤€褰涙惔?8px閿涘绱濇稉宥勭贩鐠?shell 閻ㄥ嫬澧挎担娆掝吀缁?*/
 .main:has(.page--fill) > .page--fill {
   flex: 0 0 auto;
   height: calc(100vh - var(--shell-topbar) - 8px);
@@ -3034,7 +3034,7 @@ mark.hl {
   overflow: hidden;
 }
 
-/* 浠诲姟涓績璐村簳锛堜慨姝ｉ€夋嫨鍣細.page 鐨勭埗绾ф槸 <main>锛屼笉鏄?.main锛?*/
+/* 娴犺濮熸稉顓炵妇鐠愭潙绨抽敍鍫滄叏濮濓綁鈧瀚ㄩ崳顭掔窗.page 閻ㄥ嫮鍩楃痪褎妲?<main>閿涘奔绗夐弰?.main閿?*/
 .main .page--fill {
   height: calc(100vh - var(--shell-topbar) - 8px);
   max-height: calc(100vh - var(--shell-topbar) - 8px);
@@ -3047,7 +3047,7 @@ mark.hl {
   overflow: hidden;
 }
 
-/* 鍒嗛〉鏉℃敼涓烘櫘閫氭祦锛堣〃鏍煎凡鍐呴儴婊氬姩锛屼笉闇€瑕?sticky锛涢伩鍏?sticky+overflow 鐨勫悎鎴愬紓甯革級 */
+/* 閸掑棝銆夐弶鈩冩暭娑撶儤娅橀柅姘ウ閿涘牐銆冮弽鐓庡嚒閸愬懘鍎村姘З閿涘奔绗夐棁鈧憰?sticky閿涙盯浼╅崗?sticky+overflow 閻ㄥ嫬鎮庨幋鎰磽鐢潻绱?*/
 .card--fill .pagination {
   position: static;
   bottom: auto;
@@ -3056,7 +3056,7 @@ mark.hl {
   border-top: var(--border-width) solid var(--color-hairline);
 }
 
-/* 浠诲姟涓績璐村簳锛堢粓鐗?锛夛細鎶?.main 鎾戝埌绐楀彛楂樺害锛岄〉闈㈢敤 100% 濉弧鍏跺唴瀹圭洅锛岄伩鍏嶈瀛愮骇瑁佸壀 */
+/* 娴犺濮熸稉顓炵妇鐠愭潙绨抽敍鍫㈢矒閻?閿涘绱伴幎?.main 閹炬垵鍩岀粣妤€褰涙妯哄閿涘矂銆夐棃銏㈡暏 100% 婵夘偅寮ч崗璺哄敶鐎瑰湱娲呴敍宀勪缉閸忓秷顫︾€涙劗楠囩憗浣稿 */
 .main:has(.page--fill) {
   height: calc(100vh - 8px);
   min-height: 0;
@@ -3071,7 +3071,7 @@ mark.hl {
 }
 
 
-/* 銆岀函鏂囨湰鍚堟垚銆嶄吉闊宠壊锛氭暣琛屽尯鍧楋紝涓嶅弬涓?voice-grid 鐨勭瓑楂樺竷灞€ */
+/* 閵嗗瞼鍑介弬鍥ㄦ拱閸氬牊鍨氶妴宥勫悏闂婂疇澹婇敍姘殻鐞涘苯灏崸妤嬬礉娑撳秴寮稉?voice-grid 閻ㄥ嫮鐡戞妯虹鐏炩偓 */
 .voice-plain {
   display: block;
   width: 100%;
@@ -3100,7 +3100,7 @@ mark.hl {
 }
 
 /* =========================================================================
-   鏁欑▼椤碉細鍒嗗尯姝ｆ枃锛堟楠?/ 瀛楁琛?/ FAQ / 鎻愮ず锛?   ========================================================================= */
+   閺佹瑧鈻兼い纰夌窗閸掑棗灏锝嗘瀮閿涘牊顒炴?/ 鐎涙顔岀悰?/ FAQ / 閹绘劗銇氶敍?   ========================================================================= */
 .guide-steps {
   display: grid;
   gap: var(--space-2);
@@ -3217,4 +3217,38 @@ mark.hl {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-1);
   }
+}
+/* =========================== 鎵归噺鎻愪氦锛氶€愯瑕嗙洊 =========================== */
+.batch-rows {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.batch-row {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--color-surface-nested);
+}
+
+.batch-row__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.batch-row__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-13);
+}
+
+.batch-row .nested {
+  margin-top: var(--space-2);
 }

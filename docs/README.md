@@ -47,6 +47,13 @@
 | [spec/GUIDE-1.md](spec/GUIDE-1.md) | 应用内「教程」页规格：覆盖设置 11 个分区 + 常见错误速查、搜索、跳转验收标准 |
 | [LAUNCHER.md](LAUNCHER.md) | 安装器说明（已移除下载模型、新增 venv 选择） |
 
+## 能力索引（说话人区分与导出）
+
+| 能力 | 说明 | 文档 |
+| --- | --- | --- |
+| 云端说话人区分 | `POST /v1/engine/asr` 支持 `diarize`/`max_speakers`/`min_speakers`，响应回 `diarize_backend`；云端需装 CAM++，由 `GET /v1/health` 的 `asr.diarize` 协商；偏好 `asr.diarize.prefer`（`local`/`cloud`/`auto`） | [API §7](API.md) · [CONFIG §asr](CONFIG.md) · [TROUBLESHOOTING §四之二](TROUBLESHOOTING.md) |
+| 按说话人拆分导出 / 重导出 | `POST /api/tasks/{id}/split-by-speaker` + `GET /api/tasks/{id}/speakers/zip`；`POST /api/tasks/{id}/export` 从无损原件 `source.wav` 换档重导出；`POST /api/tasks/{id}/speakers/merge` 合并说话人 | [API §5](API.md) · [CONFIG §export](CONFIG.md) · [TROUBLESHOOTING §四之二](TROUBLESHOOTING.md) |
+
 ## 运维与交付
 
 | 文档 | 适合场景 |
@@ -63,6 +70,7 @@
 | --- | --- |
 | [DESIGN.md](DESIGN.md) | 前端设计令牌表、页面结构、组件清单、响应式与无障碍 |
 | [API.md](API.md) | 前后端契约；接自有系统时按此对接 |
+| [MCP.md](MCP.md) | 给外部 Agent 接入：stdio 启动、Claude Desktop / Cline 配置、4 个工具参数与返回、环境变量、能力边界（无 SSE/resources/prompts） |
 | [../README.md](../README.md) | 目录结构、能力对照表、常用脚本 |
 
 ## 常用脚本速查

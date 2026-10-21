@@ -1,4 +1,8 @@
-"""语音转文字：本地 faster-whisper / 云端接口，两种实现共用同一返回结构。"""
+"""语音转文字：本地 faster-whisper / 云端接口，两种实现共用同一返回结构。
+
+说话人区分（CLOUD-DIARIZE-1）：云端与本机跑的是同一份 ASRRouter，
+所以「本地 / 云端」都能出 speaker；位置由 `asr.diarize.prefer`（local/cloud/auto）决定。
+"""
 from __future__ import annotations
 
 import logging
@@ -7,6 +11,7 @@ import time
 from pathlib import Path
 from typing import Callable
 
+from .. import diarize as _diarize_mod
 from ..config import AppConfig
 from ..errors import AppError
 from . import vram
@@ -150,6 +155,7 @@ class LocalASREngine:
         language: str = "auto",
         diarize: bool | None = None,
         max_speakers: int | None = None,
+        min_speakers: int | None = None,
         on_progress: "Callable[[float, str], None] | None" = None,
         should_cancel: "Callable[[], bool] | None" = None,
     ) -> dict:
@@ -195,9 +201,11 @@ class LocalASREngine:
                 cfg,
                 diarize_cfg,
                 max_speakers,
+                min_speakers,
                 on_progress,
                 should_cancel,
             )
+        engine_id = (getattr(cfg.asr.local, "engine_id", "") or "").strip()
         return {
             "text": text,
             "segments": raw_segments,
@@ -205,7 +213,9 @@ class LocalASREngine:
             "language_probability": round(float(getattr(info, "language_probability", 0.0)), 3),
             "duration": round(float(getattr(info, "duration", 0.0)), 2),
             "backend": "local",
-            "model": f"faster-whisper-{cfg.asr.local.model_size}",
+            # model 填真实引擎 id（云端 /v1/engine/asr 也回填这个，不再是无意义的 whisper-1）
+            "model": engine_id or f"asr-whisper-{cfg.asr.local.model_size}",
+            "diarize_backend": "local" if want else None,
             "elapsed_ms": int((time.perf_counter() - started) * 1000),
         }
 
@@ -216,22 +226,19 @@ class LocalASREngine:
         cfg,
         diarize_cfg,
         max_speakers: int | None = None,
+        min_speakers: int | None = None,
         on_progress: "Callable[[float, str], None] | None" = None,
         should_cancel: "Callable[[], bool] | None" = None,
     ) -> list[dict]:
         """给片段回填 speaker；依赖或模型缺失时直接报错（不静默降级）。"""
-        from .. import diarize as _diarize_mod
         from ..audio import read_audio, resample
 
+        floor, limit = _diarize_mod.resolve_speaker_bounds(diarize_cfg, min_speakers, max_speakers)
         pcm, sr = read_audio(audio_path)
         if sr != 16000:
             pcm = resample(pcm, sr, 16000)
             sr = 16000
         model_file = _diarize_mod.engine_model_path(cfg)
-        limit = int(getattr(diarize_cfg, "max_speakers", 4) or 4)
-        if max_speakers:
-            limit = int(max_speakers)
-        limit = max(2, min(8, limit))
         threshold = float(getattr(diarize_cfg, "threshold", 0.75) or 0.75)
         return _diarize_mod.assign_speakers(
             pcm,
@@ -239,6 +246,7 @@ class LocalASREngine:
             segments,
             model_file,
             max_speakers=limit,
+            min_speakers=floor,
             threshold=threshold,
             on_progress=on_progress,
             should_cancel=should_cancel,
@@ -255,10 +263,20 @@ class LocalASREngine:
 
 
 class ASRRouter:
+    """ASR 路由：决定这次转写走本地还是云端，并统一说话人区分策略。
+
+    优先级（BEHAVIOR-1 B1 定稿）：
+    - `asr.engine`（显式 local/cloud）> `run.asr_prefer`（仅 hybrid 时生效）决定**首选**；
+    - `run.mode=local` 只限制**回退候选**：首选为云端时仍允许回退本地 whisper 并写日志；
+    - 说话人区分的落点由 `asr.diarize.prefer`（local/cloud/auto）决定（CLOUD-DIARIZE-1 §3.3）。
+    """
+
     def __init__(self, get_app: Callable[[], AppConfig], cloud: CloudEngine) -> None:
         self._get_app = get_app
         self.local = LocalASREngine(get_app)
         self.cloud = cloud
+        # 状态页的后台能力探测线程（只保留一个）
+        self._caps_thread: threading.Thread | None = None
 
     def plan(self) -> str:
         cfg = self._get_app()
@@ -270,20 +288,175 @@ class ASRRouter:
             return "local"
         return cfg.run.asr_prefer
 
+    # ---------------- 策略计算 ----------------
+    def _want_diarize(self, diarize: bool | None) -> bool:
+        """任务级开关优先于全局配置；None 表示跟随 asr.diarize.enabled。"""
+        cfg = self._get_app()
+        diarize_cfg = getattr(cfg.asr, "diarize", None)
+        want = bool(getattr(diarize_cfg, "enabled", False))
+        if diarize is not None:
+            want = bool(diarize)
+        return want
+
+    def _cloud_configured(self) -> bool:
+        url = (getattr(self.cloud._cfg(), "base_url", "") or "").strip()
+        return bool(url) and "your-cloud" not in url
+
+    def _cloud_diarize_available(self, probe: bool = True) -> tuple[bool, str]:
+        """云端能否做说话人区分（读 /v1/health 的 asr.diarize，带 60s 缓存）。
+
+        probe=False 时只看缓存并顺手在后台探测一次——状态页不能被云端拖慢 6 秒。
+        """
+        if not self._cloud_configured():
+            return False, "未配置云端地址（cloud.base_url）"
+        if probe:
+            caps = self.cloud.asr_capabilities()
+        else:
+            caps = self.cloud.cached_asr_capabilities()
+            if caps is None:
+                self._warm_cloud_caps()
+                return False, "云端能力尚未探测（已提交后台探测，稍后刷新即可）"
+        if not caps.get("reachable"):
+            return False, caps.get("error") or "云端不可达，无法确认是否支持说话人区分"
+        if not caps.get("diarize"):
+            return False, "云端 /v1/health 未声明 asr.diarize（旧版云端或未安装声纹引擎）"
+        return True, ""
+
+    def _warm_cloud_caps(self) -> None:
+        """后台批量探测云端 ASR 能力（只允许一个在跑，避免状态页被反复打爆）。"""
+        if self._caps_thread is not None and self._caps_thread.is_alive():
+            return
+
+        def _run() -> None:
+            try:
+                self.cloud.asr_capabilities(force=True)
+            except Exception as exc:  # noqa: BLE001 - 后台探测失败无所谓，下次还会再试
+                logger.debug("后台探测云端 ASR 能力失败：%s", exc)
+
+        self._caps_thread = threading.Thread(target=_run, name="asr-cloud-caps", daemon=True)
+        self._caps_thread.start()
+
+    def _base_order(self) -> list[str]:
+        """不含声纹偏好的候选顺序：首选 + 回退。"""
+        cfg = self._get_app()
+        primary = self.plan()
+        other = "cloud" if primary == "local" else "local"
+        mode = getattr(cfg.run, "mode", "local") or "local"
+        if mode == "local":
+            if primary == "local":
+                # 纯本地模式不回退云端：云端不可达时 ensure_ready 会白等 minutes
+                return ["local"]
+            # B1：显式选了云端但处在 local 模式时，云端失败允许回退本地 whisper
+            return [primary, other]
+        return [primary, other]
+
+    def _plan_order(self, want: bool, safe: bool = False, probe_cloud: bool = True) -> tuple[list[str], dict]:
+        """按 prefer 计算实际尝试顺序；safe=True 时不抛错（状态页展示用）。"""
+        cfg = self._get_app()
+        diarize_cfg = getattr(cfg.asr, "diarize", None)
+        base = self._base_order()
+        diag: dict = {
+            "prefer": str(getattr(diarize_cfg, "prefer", "local") or "local"),
+            "diarize": bool(want),
+            "local_available": None,
+            "cloud_available": None,
+            "local_reason": "",
+            "cloud_reason": "",
+            "diarize_error": "",
+        }
+        if not want:
+            diag["candidates"] = list(base)
+            return base, diag
+        prefer = str(getattr(diarize_cfg, "prefer", "local") or "local").strip().lower()
+        if prefer not in ("local", "cloud", "auto"):
+            prefer = "local"
+        diag["prefer"] = prefer
+        local_ok, local_reason = _diarize_mod.local_diarize_available(cfg)
+        cloud_ok, cloud_reason = self._cloud_diarize_available(probe=probe_cloud)
+        diag.update(
+            {
+                "local_available": bool(local_ok),
+                "cloud_available": bool(cloud_ok),
+                "local_reason": local_reason,
+                "cloud_reason": cloud_reason,
+            }
+        )
+        try:
+            if prefer == "cloud":
+                # 云端优先：云端不支持就明确报错，不偷偷改本地
+                if not cloud_ok:
+                    raise AppError(
+                        "CLOUD_DIARIZE_UNSUPPORTED",
+                        f"{cloud_reason}；{_diarize_mod.CLOUD_INSTALL_HINT}",
+                    )
+                order = ["cloud"]
+            elif prefer == "auto":
+                # 云端支持就用云端（快、不占本地显存），否则本地；两者都不行明确报错
+                if cloud_ok:
+                    order = self._ordered(base, "cloud")
+                elif local_ok:
+                    order = self._ordered(base, "local")
+                    logger.info("说话人区分：云端不支持（%s），已用本地 CAM++", cloud_reason)
+                else:
+                    raise AppError(
+                        "DIARIZE_UNAVAILABLE",
+                        f"云端不支持（{cloud_reason}）；本地不可用（{local_reason}）",
+                    )
+            else:
+                # local（默认，与改造前一致）：本地优先；本地不可用才看云端能力
+                if local_ok:
+                    order = self._ordered(base, "local")
+                elif cloud_ok:
+                    order = self._ordered(base, "cloud")
+                    logger.info("说话人区分：本地不可用（%s），已用云端", local_reason)
+                else:
+                    raise AppError(
+                        "DIARIZE_UNAVAILABLE",
+                        f"本地不可用（{local_reason}）；云端不支持（{cloud_reason}）",
+                    )
+        except AppError as exc:
+            if not safe:
+                raise
+            diag["diarize_error"] = exc.code
+            diag["candidates"] = list(base)
+            return base, diag
+        diag["candidates"] = list(order)
+        return order, diag
+
+    @staticmethod
+    def _ordered(base: list[str], first: str) -> list[str]:
+        """把 first 提到最前；first 不在候选里时保持原顺序。"""
+        if first not in base:
+            return list(base)
+        return [first] + [name for name in base if name != first]
+
+    def candidates(self, probe_cloud: bool = False) -> list[str]:
+        """当前实际尝试顺序（状态页 / B1 第 3 点用；默认只在后台探测云端能力）。"""
+        return self.candidates_for(self._want_diarize(None), probe_cloud=probe_cloud)
+
+    def candidates_for(self, want_diarize: bool, probe_cloud: bool = False) -> list[str]:
+        """按「是否要求说话人区分」计算的尝试顺序。
+
+        界面需要在提交前就知道勾了开关之后的真实链路（全局开关关闭时 candidates() 给出的是
+        纯文本顺序），所以这里单独暴露一份，不改变原 candidates() 语义。
+        """
+        order, _ = self._plan_order(bool(want_diarize), safe=True, probe_cloud=probe_cloud)
+        return order
+
+    # ---------------- 转写 ----------------
     def transcribe(
         self,
         audio_path: str,
         language: str = "auto",
         diarize: bool | None = None,
         max_speakers: int | None = None,
+        min_speakers: int | None = None,
         on_progress: Callable[[float, str], None] | None = None,
         should_cancel: Callable[[], bool] | None = None,
     ) -> dict:
         cfg = self._get_app()
         diarize_cfg = getattr(cfg.asr, "diarize", None)
-        want = bool(getattr(diarize_cfg, "enabled", False))
-        if diarize is not None:
-            want = bool(diarize)
+        want = self._want_diarize(diarize)
         if cfg.mock.enabled:
             return {
                 "text": "（模拟转写）这是一段用于联调的占位转写文本。",
@@ -293,49 +466,94 @@ class ASRRouter:
                 "backend": "mock",
                 "model": "mock-asr",
                 "elapsed_ms": 10,
+                "diarize_backend": "local" if want else None,
                 # 联调也要能看到分段（否则勾了区分说话人却一片空白，会被当成 bug）
                 "segments": [
                     {"start": 0.0, "end": 1.5, "text": "（模拟转写）占位片段。", "speaker": "SPK1" if want else None}
                 ],
             }
-        order = [self.plan()]
-        order.append("cloud" if order[0] == "local" else "local")
-        # 纯本地模式（run.mode=local）不回退云端：云端不可达时 ensure_ready 会白等 minutes，
-        # 表现为任务卡在「运行中」且任务日志一片空白
-        if (getattr(cfg.run, "mode", "local") or "local") == "local":
-            order = [name for name in order if name != "cloud"] or [order[0]]
-        elif want:
-            # 明确要求区分说话人时先试本地（云端没有声纹链路）
-            order = ["local"] + [name for name in order if name != "local"]
+        # 说话人上下限先校验：min > max / 越界都要在真正跑模型之前报 INVALID_INPUT
+        floor, limit = 1, 4
+        if want:
+            floor, limit = _diarize_mod.resolve_speaker_bounds(diarize_cfg, min_speakers, max_speakers)
+        order, diag = self._plan_order(want)
+        logger.info(
+            "ASR 候选顺序 %s（diarize=%s prefer=%s 本地=%s 云端=%s）",
+            order,
+            want,
+            diag.get("prefer"),
+            diag.get("local_available"),
+            diag.get("cloud_available"),
+        )
         last_error: AppError | None = None
+        last_diarize_error: AppError | None = None
         for name in order:
             try:
                 if name == "cloud":
-                    if not self.cloud._cfg().base_url.strip() or "your-cloud" in self.cloud._cfg().base_url:
+                    if not self._cloud_configured():
                         # 未配置云端时不要用云端错误覆盖本地真实错误
                         continue
-                    result = self.cloud.transcribe(audio_path, language)
+                    result = self.cloud.transcribe(
+                        audio_path,
+                        language,
+                        diarize=True if want else None,
+                        max_speakers=limit if want else None,
+                        min_speakers=floor if want else None,
+                    )
                     result.setdefault("backend", "cloud")
+                    # 旧版云端不返回 diarize_backend：一律视为「没做区分」，绝不静默
+                    if want and not result.get("diarize_backend"):
+                        last_diarize_error = AppError(
+                            "CLOUD_DIARIZE_UNSUPPORTED",
+                            "云端没有返回 diarize_backend，说明它未执行说话人区分（旧版云端）；"
+                            + _diarize_mod.CLOUD_INSTALL_HINT,
+                        )
+                        logger.warning("云端未执行说话人区分，尝试下一个候选")
+                        continue
                     if want:
-                        # 云端没有声纹链路：明确标记，别让「勾了开关却没有 SPK」变成静默失效
-                        result["diarize_skipped"] = "云端转写不支持说话人区分（只有本地 CAM++ 链路可用）"
+                        # 对客户端而言，区分是「云端」做的（云端返回的 local 是它本机）
+                        result["diarize_backend"] = "cloud"
+                        result["min_speakers"] = floor
+                        result["max_speakers"] = limit
                     return result
-                return self.local.transcribe(
+                result = self.local.transcribe(
                     audio_path,
                     language,
-                    diarize=diarize,
-                    max_speakers=max_speakers,
-                    on_progress=on_progress,
+                    diarize=True if want else None,
+                    max_speakers=limit if want else None,
+                    min_speakers=floor if want else None,
+                    on_progress=on_progress if want else None,
                     should_cancel=should_cancel,
                 )
+                if want:
+                    # 本地引擎正常会自带 diarize_backend=local；这里兜底，避免上层拿到 None
+                    result["diarize_backend"] = result.get("diarize_backend") or "local"
+                    result["min_speakers"] = floor
+                    result["max_speakers"] = limit
+                if last_error is not None:
+                    # B1 验收：日志必须写明发生过回退
+                    logger.warning("云端失败，已回退本地 whisper：%s", last_error.detail or last_error.message)
+                return result
             except AppError as exc:
                 code = exc.code or ""
-                # 声纹相关问题不能拿云端兜底：那会静默退化成纯文本
-                if code.startswith("DIARIZE") or code == "CANCELED":
+                if code == "CANCELED":
                     raise
+                if want:
+                    # 声纹失败不能静默退化成纯文本：记下来，等候选都试完再给可读错误
+                    last_diarize_error = exc
+                    logger.warning("ASR（%s）说话人区分失败：%s，尝试备用位置", name, exc.detail or exc.message)
+                    continue
                 last_error = exc
                 logger.warning("ASR（%s）失败：%s，尝试备用位置", name, exc.detail or exc.message)
                 continue
+        if want and last_diarize_error is not None:
+            if last_diarize_error.code == "CLOUD_DIARIZE_UNSUPPORTED":
+                raise last_diarize_error
+            raise AppError(
+                "DIARIZE_UNAVAILABLE",
+                f"说话人区分失败：{last_diarize_error.detail or last_diarize_error.message}；"
+                + _diarize_mod.EMBED_MODEL_HINT,
+            )
         raise last_error or AppError("ASR_FAILED")
 
     def unload(self) -> None:

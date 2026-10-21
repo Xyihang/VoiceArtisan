@@ -2,6 +2,12 @@ export type TaskStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancel
 export type TaskType = 'tts' | 'clone' | 'design' | 'asr';
 export type Backend = 'local' | 'cloud' | 'mock';
 export type RunMode = 'local' | 'cloud' | 'hybrid';
+/** 说话人区分实际由谁执行（后端回填到 params.diarize_backend） */
+export type DiarizeBackend = 'local' | 'cloud';
+/** 说话人区分优先位置（asr.diarize.prefer） */
+export type DiarizePrefer = 'local' | 'cloud' | 'auto';
+/** 导出档位：原件 / 标准交付 / 剪辑素材 */
+export type ExportTier = 'original' | 'standard' | 'editing';
 
 export interface TaskParams {
   speed: number;
@@ -24,9 +30,13 @@ export interface TaskParams {
   target_duration_s?: number | null;
   /** 导出档位：original / standard / editing（留空跟随设置） */
   export_tier?: string | null;
-  /** 转写任务级开关：是否区分说话人 / 最多说话人 */
+  /** 转写任务级开关：是否区分说话人 / 最少·最多说话人 */
   diarize?: boolean | null;
   max_speakers?: number | null;
+  /** 说话人下限（1-8，须 ≤ max_speakers） */
+  min_speakers?: number | null;
+  /** 本次说话人由谁识别（后端回填，只读） */
+  diarize_backend?: DiarizeBackend | null;
 }
 
 /** 转写时间轴片段（区分说话人时带 speaker） */
@@ -64,6 +74,8 @@ export interface Task {
   output_file: string | null;
   output_format: string;
   transcript: string | null;
+  /** 仅转写任务返回：只读派生视图，形如「[张三] 文本」 */
+  transcript_by_speaker?: string | null;
   /** 仅转写任务返回：来自 chunks.json 的时间轴 */
   segments?: TaskSegment[];
   /** 说话人编号 → 展示名（改名后返回，如 {"SPK1": "张三"}） */
@@ -199,6 +211,109 @@ export interface ChunkEvent {
   backend: Backend;
   model: string;
   wav_b64: string;
+}
+
+/* =========================== 说话人 / 导出 / 批量 =========================== */
+
+/** asr.diarize 配置块（设置页与 /api/system/status 共用） */
+export interface AsrDiarizeConfig {
+  enabled: boolean;
+  prefer: DiarizePrefer;
+  min_speakers: number;
+  max_speakers: number;
+}
+
+/** /api/system/status 的 asr_diarize 块：说话人区分的权威可用性（不靠启发式） */
+export interface AsrDiarizeStatus {
+  prefer: DiarizePrefer;
+  enabled: boolean;
+  /** 勾选区分说话人后的真实尝试顺序 */
+  candidates: DiarizeBackend[];
+  local_available: boolean;
+  local_reason?: string;
+  /** null = 尚未探测云端；true/false = 云端是否认 diarize 字段 */
+  cloud_supported: boolean | null;
+  cloud_engine?: string | null;
+  min_speakers: number;
+  max_speakers: number;
+}
+
+/** GET /api/system/status：只取前端用得到的只读字段，其余保持宽松 */
+export interface SystemStatus {
+  asr_candidates?: DiarizeBackend[];
+  asr_diarize?: AsrDiarizeStatus;
+  config?: {
+    asr_engine?: string;
+    asr_candidates?: DiarizeBackend[];
+    asr_diarize?: AsrDiarizeConfig;
+  } & Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/** 重新导出时后端探测到的成品规格 */
+export interface ExportMediaInfo {
+  file?: string | null;
+  bytes?: number;
+  sample_rate: number | null;
+  channels: number | null;
+  bits: number | null;
+  codec: string | null;
+  duration_sec: number | null;
+  tier?: string | null;
+  tier_label?: string | null;
+}
+
+/** POST /api/tasks/{id}/export 的返回（export 与 media 二选一，旧实现只给 media） */
+export interface TaskExportResult {
+  ok: boolean;
+  task_id?: string;
+  tier: ExportTier;
+  tier_label?: string | null;
+  file?: string;
+  export?: ExportMediaInfo;
+  media?: ExportMediaInfo;
+  task?: Task;
+}
+
+/** POST /api/tasks/{id}/speakers/merge 的返回 */
+export interface SpeakerMergeResult {
+  ok: boolean;
+  merged: { from: string[]; to: string };
+  segments: TaskSegment[];
+  speaker_aliases: Record<string, string>;
+}
+
+/** POST /api/tasks/{id}/split-by-speaker 的单个分轨文件 */
+export interface SpeakerSplitItem {
+  speaker: string;
+  speaker_id: string;
+  file: string;
+  duration_s: number;
+  bytes: number;
+  segments: number;
+}
+
+/** POST /api/tasks/batch 的单项：每项都可以覆盖音色 / 语言 / 指令 / 参数 */
+export interface BatchItemPayload {
+  text: string;
+  voice_id?: string | null;
+  asset_id?: string | null;
+  instruct?: string;
+  design?: string;
+  language?: string;
+  params?: Partial<TaskParams> & Record<string, unknown>;
+}
+
+export interface BatchCreateRequest {
+  type: TaskType;
+  items: BatchItemPayload[];
+  defaults?: Partial<TaskParams> & Record<string, unknown>;
+}
+
+export interface BatchCreateResult {
+  batch_id: string;
+  task_ids: string[];
+  total: number;
 }
 
 /* =========================== 引擎与模型 =========================== */
@@ -341,6 +456,7 @@ export interface SettingsPayload {
     engine: 'local' | 'cloud';
     local: { model_size: string; device: string; compute_type: string; beam_size: number };
     cloud: { base_url: string; api_key: string; model: string };
+    diarize?: AsrDiarizeConfig;
   };
   defaults: TaskParams;
   local: {

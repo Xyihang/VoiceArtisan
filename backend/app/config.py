@@ -38,6 +38,10 @@ RUNTIME_MUTABLE = (
     "agent",
     "agent.llm",
     "asr.diarize",
+    "asr.diarize.prefer",
+    "asr.diarize.min_speakers",
+    "asr.diarize.max_speakers",
+    "asr.diarize.enabled",
     "asr.engine",
     "asr.local",
     "asr.cloud",
@@ -191,7 +195,13 @@ class AsrDiarizeCfg(BaseModel):
     """转写时区分说话人（默认关闭；关闭时行为与之前完全一致）。"""
 
     enabled: bool = False
+    # 转写位置偏好（CLOUD-DIARIZE-1 §3.3）：
+    # local = 本地优先（本地不行才看云端能力）/ cloud = 云端优先（云端不支持就报错，不偷偷改本地）
+    # auto  = 云端支持就云端（不占本地显存），否则本地；两者都不行报 DIARIZE_UNAVAILABLE
+    prefer: Literal["local", "cloud", "auto"] = "local"
     max_speakers: int = 4
+    # 最少说话人（B9）：聚类结果不足时强行拆分补足；必须 ≤ max_speakers
+    min_speakers: int = 1
     threshold: float = 0.75
     # 说话人声纹模型（与转写引擎分开选，互不覆盖）
     engine_id: str = "asr-speaker-campplus"

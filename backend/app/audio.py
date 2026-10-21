@@ -200,3 +200,34 @@ def write_wav(pcm: np.ndarray, sr: int, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     sf.write(str(path), to_mono_float32(pcm), sr, subtype="PCM_16")
     return path
+
+
+def slice_ranges(
+    pcm: np.ndarray,
+    sr: int,
+    ranges: list[tuple[float, float]],
+    fade_ms: float = 6.0,
+) -> np.ndarray:
+    """按若干时间区间（秒）切出片段并首尾拼接（B8 按说话人拆分的核心）。
+
+    - 区间按传入顺序保留（即说话人自身的时间轴顺序）；
+    - 每段做极短淡入淡出，避免切点爆音；
+    - 越界区间自动夹到音频范围内；空区间直接跳过；
+    - 不做重叠检测/归属判定：重叠部分会被两个输出各含一次（规格 §3 决策 4）。
+    """
+    pcm = to_mono_float32(pcm)
+    if len(pcm) == 0 or sr <= 0:
+        return np.zeros(0, dtype=np.float32)
+    total = len(pcm)
+    pieces: list[np.ndarray] = []
+    for start_s, end_s in ranges:
+        start = int(round(max(0.0, float(start_s)) * sr))
+        end = int(round(float(end_s) * sr))
+        start = min(start, total)
+        end = min(max(start, end), total)
+        if end - start <= 0:
+            continue
+        pieces.append(fade_edges(pcm[start:end], sr, fade_ms=fade_ms))
+    if not pieces:
+        return np.zeros(0, dtype=np.float32)
+    return np.concatenate(pieces).astype(np.float32)

@@ -38,6 +38,30 @@ ERRORS: dict[str, tuple[str, str]] = {
     "AUDIO_TOO_LONG": ("音频时长超出上限", "请裁剪参考音频到推荐时长（3-10 秒）。"),
     "AUDIO_DECODE": ("音频解析失败", "请确认文件未损坏，或改用 wav 格式。"),
     "ASR_FAILED": ("语音转写失败", "请检查音频内容与 ASR 引擎状态。"),
+    # ---- 说话人区分（B7/B8/B9 + CLOUD-DIARIZE-1）----
+    "CLOUD_DIARIZE_UNSUPPORTED": (
+        "云端未安装说话人区分引擎",
+        "在云端执行 engines_cli install asr-speaker-campplus；或把 asr.diarize.prefer 改成 local 用本地 CAM++。",
+    ),
+    "DIARIZE_UNAVAILABLE": (
+        "本地与云端都没有可用的说话人区分能力",
+        "本地：设置 → 引擎与模型 → 语音识别，安装「CAM++ 声纹」；"
+        "云端：在云端执行 engines_cli install asr-speaker-campplus。",
+    ),
+    "SPEAKER_TIMELINE_MISSING": (
+        "缺少说话人时间轴",
+        "该任务没有可用的时间轴或没有任何说话人信息（旧任务 / 未开启区分说话人）；"
+        "请重新转写并勾选「区分说话人」后再操作。",
+    ),
+    "SPEAKER_SPLIT_NOT_FOUND": (
+        "尚未按说话人拆分",
+        "请先调用 POST /api/tasks/{id}/split-by-speaker 生成分轨文件，再打包下载。",
+    ),
+    "EXPORT_SOURCE_MISSING": (
+        "缺少原始音频（source.wav）",
+        "该任务生成时没有保留无损原件（通常是升级前的旧任务），无法按其它档位重新导出；"
+        "请重新生成任务（新任务会自动保留 source.wav）。",
+    ),
     "NO_REF_AUDIO": ("缺少参考音频", "声音克隆需要上传或录制 3-10 秒参考音频。"),
     "VOICE_NOT_FOUND": ("音色不存在", "请刷新音色库后重新选择。"),
     "CANCELED": ("任务已取消", "已生成的片段会保留。"),

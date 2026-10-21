@@ -18,6 +18,57 @@ from .errors import AppError
 logger = logging.getLogger(__name__)
 
 EMBED_MODEL_HINT = "请到 设置 → 引擎与模型 → 语音识别 安装「CAM++ 声纹」后重试"
+# 云端安装声纹引擎的运维命令（错误文案里要能直接抄走执行）
+CLOUD_INSTALL_HINT = "在云端执行 engines_cli install asr-speaker-campplus"
+# 说话人数量上下限（B9）：下限 1-8，上限沿用 2-8
+MIN_SPEAKERS_RANGE = (1, 8)
+MAX_SPEAKERS_RANGE = (2, 8)
+
+def resolve_speaker_bounds(
+    cfg_diarize,
+    min_speakers: int | None = None,
+    max_speakers: int | None = None,
+) -> tuple[int, int]:
+    """把「任务级参数 / 全局配置」收敛成合法区间 (下限, 上限)。
+
+    - 下限 1-8，越界直接 INVALID_INPUT（不静默夹取，避免日志与实际不符）；
+    - 上限 2-8：沿用改造前「超界夹取」的宽容做法（老任务的 max_speakers=1/99 仍能跑）；
+    - 下限 > 上限同样 INVALID_INPUT（B9 验收）。
+    """
+    lo_min, hi_min = MIN_SPEAKERS_RANGE
+    lo_max, hi_max = MAX_SPEAKERS_RANGE
+    raw_max = max_speakers if max_speakers is not None else getattr(cfg_diarize, "max_speakers", 4)
+    raw_min = min_speakers if min_speakers is not None else getattr(cfg_diarize, "min_speakers", 1)
+    try:
+        raw_limit = int(raw_max if raw_max is not None else 4)
+        floor = int(raw_min if raw_min is not None else 1)
+    except (TypeError, ValueError) as exc:
+        raise AppError("INVALID_INPUT", "min_speakers / max_speakers 必须是整数") from exc
+    limit = max(lo_max, min(hi_max, raw_limit))
+    if limit != raw_limit:
+        logger.warning("max_speakers=%s 超出 %s-%s，已夹取为 %s", raw_limit, lo_max, hi_max, limit)
+    if not (lo_min <= floor <= hi_min):
+        raise AppError("INVALID_INPUT", f"min_speakers 超出范围（{lo_min}-{hi_min}）：{floor}")
+    if floor > limit:
+        raise AppError(
+            "INVALID_INPUT",
+            f"min_speakers（{floor}）不能大于 max_speakers（{limit}）：请调小下限或调大上限",
+        )
+    return floor, limit
+
+
+def local_diarize_available(cfg) -> tuple[bool, str]:
+    """本地现在能不能真的做声纹：依赖齐备 + 模型文件存在。返回 (可用, 不可用原因)。"""
+    ok, reason = deps_ready()
+    if not ok:
+        return False, reason
+    try:
+        model_file = engine_model_path(cfg)
+    except Exception:  # noqa: BLE001 - 引擎注册表异常不能挡住能力判定
+        model_file = model_path(Path(cfg.models_dir))
+    if not Path(model_file).exists():
+        return False, f"声纹模型未安装（{model_file}）"
+    return True, ""
 
 
 def _import_extractor():
@@ -117,6 +168,27 @@ def _merge_to_limit(matrix: np.ndarray, labels: list[int], limit: int) -> list[i
     return labels
 
 
+def _enforce_minimum(matrix: np.ndarray, labels: list[int], minimum: int) -> list[int]:
+    """簇数不足 minimum 时按「最不相似处先拆」补足下限（B9）。
+
+    实现：对同一批声纹向量改用层次聚类强制 K=minimum（cosine + average），
+    等价于沿着最不相似的分裂点逐步拆簇，天然先拆开差异最大的簇；
+    向量条数不足 minimum 时最多只能得到 len(matrix) 个簇，此时如实返回（不造假说话人）。
+    """
+    labels = list(labels)
+    target = min(max(1, int(minimum or 1)), len(matrix))
+    if target <= 1 or len(set(labels)) >= target:
+        return labels
+    try:
+        from sklearn.cluster import AgglomerativeClustering
+    except ImportError as exc:
+        raise AppError("DIARIZE_DEPS_MISSING", "缺少 scikit-learn：pip install scikit-learn") from exc
+    model = AgglomerativeClustering(n_clusters=target, metric="cosine", linkage="average")
+    forced = model.fit_predict(matrix).tolist()
+    logger.info("说话人下限补足：%d → %d 簇（min_speakers=%d）", len(set(labels)), len(set(forced)), target)
+    return forced
+
+
 def assign_speakers(
     pcm: np.ndarray,
     sample_rate: int,
@@ -124,6 +196,7 @@ def assign_speakers(
     model_file: Path,
     max_speakers: int = 4,
     threshold: float = 0.75,
+    min_speakers: int = 1,
     on_progress: Callable[[float, str], None] | None = None,
     should_cancel: Callable[[], bool] | None = None,
 ) -> list[dict]:
@@ -162,8 +235,9 @@ def assign_speakers(
 
     matrix = np.stack(vectors)
     limit = max(1, int(max_speakers or 4))
+    floor = min(max(1, int(min_speakers or 1)), limit)
     if on_progress:
-        on_progress(0.9, f"聚类分析（最多 {limit} 人）")
+        on_progress(0.9, f"聚类分析（{floor}-{limit} 人）")
     # 先用距离阈值自动决定人数（强制 K=max_speakers 会把单人音频拆成 N 个人）
     model = AgglomerativeClustering(
         n_clusters=None,
@@ -172,6 +246,8 @@ def assign_speakers(
         linkage="average",
     )
     labels = model.fit_predict(matrix).tolist()
+    # B9：不足下限先强制拆分补足（min_speakers=1 时这一步完全不做，行为与改造前一致）
+    labels = _enforce_minimum(matrix, labels, floor)
     # 再按「最多 N 人」上限合并最相似的簇：这是 max_speakers 真正生效的地方
     labels = _merge_to_limit(matrix, labels, limit)
 
@@ -192,10 +268,11 @@ def assign_speakers(
     if on_progress:
         on_progress(1.0, f"区分完成：{len(order)} 个说话人")
     logger.info(
-        "说话人区分完成：%d 段 / %d 个说话人（threshold=%.2f, max_speakers=%d）",
+        "说话人区分完成：%d 段 / %d 个说话人（threshold=%.2f, max_speakers=%d, min_speakers=%d）",
         len(segments),
         len(order),
         threshold,
         limit,
+        floor,
     )
     return segments

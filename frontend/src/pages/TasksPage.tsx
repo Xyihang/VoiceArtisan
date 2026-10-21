@@ -6,20 +6,29 @@ import {
   Copy,
   Download,
   FileText,
+  PackageOpen,
   RefreshCw,
   RotateCcw,
+  Scissors,
   Trash2,
+  Users,
   X,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { downloadFile } from '../lib/download';
 import { useApp } from '../state/AppContext';
-import type { Task } from '../types';
-import { TYPE_LABEL, formatBytes, formatMs, formatSeconds, formatTime } from '../lib/format';
+import type { ExportTier, SpeakerSplitItem, Task, TaskSegment } from '../types';
+import { ERROR_HINT, TYPE_LABEL, formatBytes, formatMs, formatSeconds, formatTime } from '../lib/format';
 import { isEditableTarget } from '../lib/shortcuts';
 import { BatchPanel } from '../components/BatchPanel';
 import { SpeakerSegments } from '../components/SpeakerSegments';
-import { SectionCard, Skeleton, StatusBadge, EmptyState } from '../components/ui';
+import { SectionCard, Skeleton, Spinner, StatusBadge, EmptyState } from '../components/ui';
+
+const EXPORT_TIERS: { id: ExportTier; label: string }[] = [
+  { id: 'original', label: 'Original（模型原生 WAV）' },
+  { id: 'standard', label: 'Standard（44.1k MP3 192k）' },
+  { id: 'editing', label: 'For editing（48k 24bit WAV）' },
+];
 
 const PAGE_SIZE = 12;
 
@@ -111,6 +120,12 @@ export function TasksPage() {
   }>>({});
   const [subtitleFormat, setSubtitleFormat] = useState<'srt' | 'vtt' | 'ass'>('srt');
   const [subtitleSpeakers, setSubtitleSpeakers] = useState(true);
+  /** 重新导出：三档任选 */
+  const [exportTier, setExportTier] = useState<ExportTier>('standard');
+  const [exporting, setExporting] = useState<string | null>(null);
+  /** 按说话人拆分：任务 id → 分轨清单 */
+  const [splits, setSplits] = useState<Record<string, SpeakerSplitItem[]>>({});
+  const [splitBusy, setSplitBusy] = useState<string | null>(null);
   const [active, setActive] = useState(0);
   const pendingIndex = useRef<number | null>(null);
 
@@ -312,6 +327,110 @@ export function TasksPage() {
         pushToast({ level: 'success', title: '已复制错误信息' });
       } catch {
         pushToast({ level: 'error', title: '复制失败', description: '浏览器拒绝了剪贴板访问' });
+      }
+    },
+    [pushToast],
+  );
+
+  /** 详情重新拉一次（改名 / 合并 / 重新导出后分段与派生文本都会变） */
+  const refreshDetail = useCallback(async (id: string) => {
+    try {
+      const full = await api.getTask(id);
+      setDetail((prev) => (prev && prev.id === id ? full : prev));
+      return full;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const applySegments = useCallback(
+    (taskId: string, segments: TaskSegment[]) => {
+      setDetail((prev) => (prev && prev.id === taskId ? { ...prev, segments } : prev));
+      void refreshDetail(taskId);
+      void load();
+    },
+    [load, refreshDetail],
+  );
+
+  /** 重新导出：从无损原件按档位重编码，成功后刷新规格行 */
+  const reexport = useCallback(
+    async (task: Task, tier: ExportTier) => {
+      setExporting(task.id);
+      try {
+        const res = await api.exportTask(task.id, tier);
+        const info = res.export || res.media;
+        const label = res.tier_label || info?.tier_label || tier;
+        pushToast({
+          level: 'success',
+          title: `已重新导出 #${task.id}`,
+          description: `档位：${label}${info?.bytes ? ` · ${formatBytes(info.bytes)}` : ''}`,
+        });
+        setMedia((prev) => {
+          const next = { ...prev };
+          delete next[task.id];
+          return next;
+        });
+        void api
+          .mediaInfo(task.id)
+          .then((meta) => setMedia((prev) => ({ ...prev, [task.id]: meta })))
+          .catch(() => undefined);
+        await load();
+        if (detail?.id === task.id) await refreshDetail(task.id);
+      } catch (error) {
+        pushToast({ level: 'error', ...describeError(error) });
+      } finally {
+        setExporting(null);
+      }
+    },
+    [describeError, detail?.id, load, pushToast, refreshDetail],
+  );
+
+  /** 按说话人拆分（结果直接返回清单，文件落在任务目录 speakers/ 下） */
+  const splitBySpeaker = useCallback(
+    async (task: Task) => {
+      setSplitBusy(task.id);
+      try {
+        const items = await api.splitBySpeaker(task.id);
+        setSplits((prev) => ({ ...prev, [task.id]: items }));
+        pushToast({
+          level: 'success',
+          title: `已拆出 ${items.length} 条分轨`,
+          description: '可单独下载，或一次性打包成 zip。',
+        });
+      } catch (error) {
+        pushToast({ level: 'error', ...describeError(error) });
+      } finally {
+        setSplitBusy(null);
+      }
+    },
+    [describeError, pushToast],
+  );
+
+  const downloadSplitFile = useCallback(
+    async (task: Task, item: SpeakerSplitItem) => {
+      try {
+        await downloadFile(api.speakerFileUrl(task.id, item.file), `${task.id}-${item.speaker}.wav`);
+      } catch (error) {
+        pushToast({
+          level: 'error',
+          title: '单轨下载失败',
+          description: (error as Error)?.message || '请改用「打包下载 zip」',
+        });
+      }
+    },
+    [pushToast],
+  );
+
+  const downloadSpeakersZip = useCallback(
+    async (task: Task) => {
+      try {
+        await downloadFile(api.speakersZipUrl(task.id), `speakers-${task.id}.zip`);
+      } catch (error) {
+        pushToast({
+          level: 'error',
+          title: '打包下载失败',
+          description: (error as Error)?.message || '请先按说话人拆分',
+        });
       }
     },
     [pushToast],
@@ -585,6 +704,11 @@ export function TasksPage() {
                   ))
                 : merged.map((task, index) => {
                     const isActive = index === active;
+                    const segs = (detail?.id === task.id ? detail.segments : task.segments) ?? [];
+                    const bySpeakerText =
+                      detail?.id === task.id ? detail.transcript_by_speaker : task.transcript_by_speaker;
+                    const splitItems = splits[task.id] || [];
+                    const diarizeBackend = task.params?.diarize_backend;
                     return (
                       <React.Fragment key={task.id}>
                         <tr
@@ -737,6 +861,14 @@ export function TasksPage() {
                                     </span>
                                   </div>
                                 </div>
+                                {diarizeBackend ? (
+                                  <div className="toolbar">
+                                    <span className="badge badge--info">
+                                      <Users size={11} strokeWidth={2} aria-hidden="true" />
+                                      说话人：{diarizeBackend === 'cloud' ? '云端识别' : '本地识别'}
+                                    </span>
+                                  </div>
+                                ) : null}
                                 {media[task.id] ? (
                                   <p className="hint" style={{ marginBottom: 'var(--space-2)' }}>
                                     实际规格：
@@ -755,6 +887,40 @@ export function TasksPage() {
                                     <span className="num">{formatBytes(media[task.id].bytes)}</span>
                                     {media[task.id].tier_label ? `　档位：${media[task.id].tier_label}` : ''}
                                   </p>
+                                ) : null}
+                                {task.output_file ? (
+                                  <div className="toolbar" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>
+                                    <span className="kv__label">重新导出</span>
+                                    <select
+                                      className="select"
+                                      style={{ width: 'auto' }}
+                                      value={exportTier}
+                                      onChange={(event) => setExportTier(event.target.value as ExportTier)}
+                                      aria-label="重新导出的档位"
+                                      title="从无损原件按档位重编码，原件不会被覆盖"
+                                    >
+                                      {EXPORT_TIERS.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                          {item.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      className="btn btn--sm"
+                                      disabled={exporting === task.id}
+                                      onClick={() => void reexport(task, exportTier)}
+                                      aria-label={`按 ${exportTier} 档位重新导出任务 ${task.id}`}
+                                      title="按所选档位重新编码成品"
+                                    >
+                                      {exporting === task.id ? (
+                                        <Spinner size={13} />
+                                      ) : (
+                                        <RotateCcw size={14} strokeWidth={1.75} />
+                                      )}
+                                      重新导出
+                                    </button>
+                                  </div>
                                 ) : null}
                                 <div className="toolbar" style={{ alignItems: 'center', gap: 'var(--space-2)' }}>
                                   <span className="kv__label">字幕 / 时间戳</span>                                  <select
@@ -795,18 +961,90 @@ export function TasksPage() {
                                     </p>
                                   </div>
                                 ) : null}
+                                {bySpeakerText ? (
+                                  <details className="nested">
+                                    <summary>按说话人渲染的文本（只读）</summary>
+                                    <p style={{ whiteSpace: 'pre-wrap', fontSize: 'var(--fs-13)', marginTop: 'var(--space-2)' }}>
+                                      {bySpeakerText}
+                                    </p>
+                                  </details>
+                                ) : null}
                                 <SpeakerSegments
                                   taskId={task.id}
-                                  segments={(detail?.id === task.id ? detail.segments : task.segments) ?? []}
-                                  onRenamed={(updated) => {
-                                    if (detail?.id === task.id) setDetail({ ...detail, segments: updated });
-                                    void load();
-                                  }}
+                                  segments={segs}
+                                  onRenamed={(updated) => applySegments(task.id, updated)}
+                                  onMerged={(updated) => applySegments(task.id, updated)}
                                 />
+                                {segs.some((seg) => seg.speaker) ? (
+                                  <div>
+                                    <div className="toolbar" style={{ marginBottom: 'var(--space-2)' }}>
+                                      <h3 style={{ margin: 0 }}>按说话人拆分</h3>
+                                      <div className="toolbar__spacer" />
+                                      <button
+                                        type="button"
+                                        className="btn btn--sm"
+                                        disabled={splitBusy === task.id}
+                                        onClick={() => void splitBySpeaker(task)}
+                                        aria-label={`按说话人拆分任务 ${task.id} 的音频`}
+                                        title="按分段自身时间轴切原音频，每个说话人一条 wav"
+                                      >
+                                        {splitBusy === task.id ? (
+                                          <Spinner size={13} />
+                                        ) : (
+                                          <Scissors size={14} strokeWidth={1.75} />
+                                        )}
+                                        拆分
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn--sm"
+                                        disabled={!splitItems.length}
+                                        onClick={() => void downloadSpeakersZip(task)}
+                                        aria-label={`打包下载任务 ${task.id} 的分轨音频`}
+                                        title={splitItems.length ? '下载分轨 zip' : '先拆分再打包下载'}
+                                      >
+                                        <PackageOpen size={14} strokeWidth={1.75} /> 打包下载 zip
+                                      </button>
+                                    </div>
+                                    {splitItems.length ? (
+                                      <div style={{ display: 'grid', gap: 'var(--space-1)' }}>
+                                        {splitItems.map((item) => (
+                                          <div key={item.file} className="toolbar" style={{ alignItems: 'baseline' }}>
+                                            <span className="chip" style={{ flex: '0 0 auto' }}>
+                                              {item.speaker}
+                                            </span>
+                                            <span className="hint num">{formatSeconds(item.duration_s, 1)}</span>
+                                            <span className="hint num">{formatBytes(item.bytes)}</span>
+                                            <span className="hint">{item.segments} 段</span>
+                                            <div className="toolbar__spacer" />
+                                            <button
+                                              type="button"
+                                              className="btn btn--ghost btn--sm"
+                                              onClick={() => void downloadSplitFile(task, item)}
+                                              aria-label={`下载 ${item.speaker} 的分轨文件`}
+                                              title={`下载 ${item.file}`}
+                                            >
+                                              <Download size={13} strokeWidth={1.75} /> 下载
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="hint" style={{ margin: 0 }}>
+                                        拆分后每个说话人一条 wav，可单独下载或打包；新任务才有原件，旧任务会提示缺少原件。
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : null}
                                 {task.error_message ? (
                                   <div className="inline-note inline-note--error">
                                     <div>
                                       <span className="error-code">{task.error_code}</span> {task.error_message}
+                                      {task.error_code && ERROR_HINT[task.error_code] ? (
+                                        <p className="hint" style={{ margin: 'var(--space-1) 0 0' }}>
+                                          {ERROR_HINT[task.error_code]}
+                                        </p>
+                                      ) : null}
                                     </div>
                                     <div style={{ marginTop: 'var(--space-2)' }}>
                                       <button

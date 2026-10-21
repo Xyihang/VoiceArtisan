@@ -119,6 +119,15 @@
 
 ## 7. MCP Server（3.7）
 
-- 目标：把「合成 / 转写 / 任务查询」暴露为 MCP 工具，供外部 Agent 调用。
-- 实现建议：新增 `backend/app/mcp_server.py`（stdio + 可选 SSE），工具集 `tts_synthesize / asr_transcribe / task_status / voice_list`，内部直接复用现有 service 层，不经过 HTTP。
-- 认证：本地 stdio 无需认证；SSE 模式复用现有 `X-API-Key`。
+**已实现范围（v1.1.11）：仅 stdio；SSE / resources / prompts 未实现，登记为后续项。**
+
+| 项 | 现状 |
+| --- | --- |
+| 传输 | **仅 stdio**（行分隔 JSON-RPC 2.0，协议版本 `2024-11-05`），启动 `cd backend && python -m app.mcp_server` |
+| 工具 | `tts_synthesize` / `asr_transcribe` / `task_status` / `voice_list`（4 个） |
+| 能力声明 | `initialize` 的 `capabilities` 只有 `{"tools": {}}` |
+| 调用路径 | 复用**本机 HTTP 接口**（默认 `QWENTTS_MCP_BASE_URL=https://127.0.0.1:8443`），不新建引擎、不加载模型；原设想的「进程内直调 service 层」未采用（4GB 卡会重复占显存） |
+| 认证 | 本地 stdio 无需认证；需要时设 `QWENTTS_MCP_API_KEY`（带 `X-API-Key` 头） |
+| 未实现（后续项） | **SSE / Streamable HTTP 传输**、`resources`、`prompts`、`sampling`、`logging`/进度通知、`completions`；客户端侧表现为无资源/提示词面板，硬调对应方法回 `-32601` |
+
+使用文档（客户端配置、4 个工具参数与返回、环境变量、错误码、能力边界表）：见 [docs/MCP.md](../MCP.md)。

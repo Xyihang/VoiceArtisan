@@ -78,6 +78,13 @@ def health(state: AppState = Depends(get_state)):
 def status(state: AppState = Depends(get_state)):
     data = build_health(state)
     cfg = state.cfg
+    # B1 第 3 点：把 ASR 实际尝试顺序暴露出来（只读缓存，不发网络请求）
+    candidates: list[str] = []
+    if state.asr is not None:
+        try:
+            candidates = state.asr.candidates(probe_cloud=False)
+        except Exception as exc:  # noqa: BLE001 - 状态页不能因为策略计算失败而 500
+            logger.warning("ASR 候选顺序计算失败：%s", exc)
     data["config"] = {
         "mode": cfg.run.mode,
         "device": cfg.local.device,
@@ -88,8 +95,49 @@ def status(state: AppState = Depends(get_state)):
         "cloud_url": cfg.cloud.base_url,
         "tunnel_enabled": cfg.cloud.tunnel.enabled,
         "asr_engine": cfg.asr.engine,
+        # 实际会按这个顺序尝试（asr.engine > run.asr_prefer；run.mode=local 只限制回退）
+        "asr_candidates": candidates,
+        "asr_diarize": {
+            "enabled": bool(cfg.asr.diarize.enabled),
+            "prefer": cfg.asr.diarize.prefer,
+            "min_speakers": cfg.asr.diarize.min_speakers,
+            "max_speakers": cfg.asr.diarize.max_speakers,
+        },
         "data_dir": str(cfg.data_dir),
         "models_dir": str(cfg.models_dir),
+    }
+    data["asr_candidates"] = candidates
+    # 前端「能不能做说话人区分」的权威依据：本地是否装了声纹、云端是否认这个能力
+    diarize_candidates: list[str] = []
+    local_ok, local_reason = False, "未初始化"
+    if state.asr is not None:
+        try:
+            diarize_candidates = state.asr.candidates_for(True, probe_cloud=False)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("声音人候选顺序计算失败：%s", exc)
+        try:
+            from .. import diarize as _diarize_mod
+
+            local_ok, local_reason = _diarize_mod.local_diarize_available(cfg)
+        except Exception as exc:  # noqa: BLE001
+            local_reason = f"探测失败：{exc}"
+    cloud_caps = None
+    if state.cloud is not None and state.asr is not None:
+        try:
+            cloud_caps = state.cloud.cached_asr_capabilities()
+        except Exception:  # noqa: BLE001 - 状态页不能因云端探测失败而 500
+            cloud_caps = None
+    data["asr_diarize"] = {
+        "prefer": cfg.asr.diarize.prefer,
+        "enabled": bool(cfg.asr.diarize.enabled),
+        "candidates": diarize_candidates,
+        "local_available": local_ok,
+        "local_reason": local_reason,
+        # None = 还没探测过云端（不阻塞状态接口）；True/False = 云端是否认 diarize
+        "cloud_supported": None if cloud_caps is None else bool(cloud_caps.get("diarize")),
+        "cloud_engine": (cloud_caps or {}).get("diarize_engine"),
+        "min_speakers": cfg.asr.diarize.min_speakers,
+        "max_speakers": cfg.asr.diarize.max_speakers,
     }
     data["stats"] = _recent_stats(state)
     return data

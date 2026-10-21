@@ -18,6 +18,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from .. import audio as audio_utils
+from .. import diarize as diarize_mod
 from ..engine import SynthRequest, TTSParams, vram
 from ..errors import AppError
 from ..state import AppState
@@ -25,6 +26,52 @@ from .deps import get_state, require_api_key, to_http
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1", tags=["remote"])
+
+# 表单里 diarize 的真值写法（前端/脚本可能传 true/1/on/yes）
+_TRUE_WORDS = {"true", "1", "on", "yes", "y"}
+_FALSE_WORDS = {"false", "0", "off", "no", "n"}
+
+
+def _parse_diarize_flag(raw: str) -> bool | None:
+    """解析表单 diarize：空串 = 跟随云端全局配置，返回 None。"""
+    text = (raw or "").strip().lower()
+    if not text:
+        return None
+    if text in _TRUE_WORDS:
+        return True
+    if text in _FALSE_WORDS:
+        return False
+    raise AppError("INVALID_INPUT", f"diarize 只接受 true / false / 空串，收到：{raw}")
+
+
+def _parse_optional_int(raw: str, name: str) -> int | None:
+    text = (raw or "").strip()
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError as exc:
+        raise AppError("INVALID_INPUT", f"{name} 必须是整数，收到：{raw}") from exc
+
+
+def _asr_health(state: AppState) -> dict:
+    """`/v1/health` 的 asr 块：云端自己能提供什么（客户端据此做能力协商）。"""
+    cfg = state.cfg
+    asr_cfg = getattr(cfg, "asr", None)
+    local_asr = getattr(asr_cfg, "local", None)
+    diarize_cfg = getattr(asr_cfg, "diarize", None)
+    engine_id = (getattr(local_asr, "engine_id", "") or "").strip()
+    if not engine_id:
+        engine_id = f"asr-whisper-{getattr(local_asr, 'model_size', 'small')}"
+    ok, _reason = diarize_mod.local_diarize_available(cfg)
+    return {
+        "backend": "local",
+        "engine_id": engine_id,
+        "diarize": bool(ok),
+        "diarize_engine": getattr(diarize_cfg, "engine_id", None) if ok else None,
+        # 本服务支持 min_speakers（B9）
+        "min_speakers": True,
+    }
 
 
 class SynthPayload(BaseModel):
@@ -67,6 +114,8 @@ def health(state: AppState = Depends(get_state)):
         "vram_total_gb": local.get("vram_total_gb", 0),
         "vram_allocated_mb": vram.allocated_mb(),
         "mode": cfg.run.mode,
+        # CLOUD-DIARIZE-1 §3.2：客户端凭这块做能力协商（缺失即视为「不支持」）
+        "asr": _asr_health(state),
         "uptime_s": int(time.time() - state.started_at),
     }
 
@@ -146,15 +195,44 @@ async def transcribe(
     state: AppState = Depends(get_state),
     file: UploadFile = File(...),
     language: str = Form("auto"),
+    # 旧字段：保留以兼容老客户端，实际引擎 id 由服务端按安装情况回填
     model: str = Form(""),
+    diarize: str = Form(""),
+    max_speakers: str = Form(""),
+    min_speakers: str = Form(""),
 ):
+    """转写（CLOUD-DIARIZE-1）：三个新表单字段全部可选，不传时行为与改造前完全一致。"""
     data = await file.read()
     try:
+        want = _parse_diarize_flag(diarize)
+        limit = _parse_optional_int(max_speakers, "max_speakers")
+        floor = _parse_optional_int(min_speakers, "min_speakers")
+        # 说话人上下限先校验（min > max / 越界 → INVALID_INPUT），再决定要不要跑声纹
+        diarize_mod.resolve_speaker_bounds(state.cfg.asr.diarize, floor, limit)
         asset = state.assets.save_bytes(file.filename or "audio.wav", data)
         audio_path = str(state.assets.get_path(asset["id"]))
-        result = state.asr.transcribe(audio_path, language)
+        if want:
+            # 云端本机没装声纹引擎时，提交阶段就给出可执行的安装提示（不是静默返回纯文本）
+            ok, reason = diarize_mod.local_diarize_available(state.cfg)
+            if not ok:
+                raise AppError(
+                    "CLOUD_DIARIZE_UNSUPPORTED",
+                    f"云端未安装说话人区分引擎（{reason}）；{diarize_mod.CLOUD_INSTALL_HINT}",
+                )
+        result = state.asr.transcribe(
+            audio_path,
+            language,
+            diarize=want,
+            max_speakers=limit,
+            min_speakers=floor,
+        )
     except AppError as exc:
         raise to_http(exc) from exc
+    # 对本接口的调用方而言：区分是「云端本机（local）」做的，没做就是 null
+    backend = result.get("diarize_backend")
+    result["diarize_backend"] = "local" if backend else None
+    # model 回填真实 ASR 引擎 id（不再是无意义的 whisper-1）
+    result["model"] = result.get("model") or _asr_health(state)["engine_id"]
     return result
 
 

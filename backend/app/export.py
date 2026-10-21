@@ -7,6 +7,9 @@
 | editing  | 48 kHz / 24 bit / 单声道 / WAV PCM_24 |
 
 成品规格一律**读真实文件头**（soundfile），不写死；读不到时退回 ffprobe，再退回已知参数。
+
+B6 重新导出：生成任务时先落一份无损原件 `source.wav`（编码档位之前、不覆盖），
+事后可反复按任意档位重新编码（`export_from_source`），原件永远不动。
 """
 from __future__ import annotations
 
@@ -19,11 +22,14 @@ from pathlib import Path
 import numpy as np
 
 from . import audio
+from .errors import AppError
 
 logger = logging.getLogger(__name__)
 
 TIERS = ("original", "standard", "editing")
 DEFAULT_TIER = "original"
+# 无损原件文件名（固定名，重新导出永远不写它）
+SOURCE_NAME = "source.wav"
 
 # 每个档位的目标规格（None = 跟随模型原生/默认）
 _TIER_SPEC = {
@@ -88,6 +94,46 @@ def encode_with_tier(pcm: np.ndarray, sr: int, out_dir: Path, stem: str, tier: s
     info = probe(out_path)
     info["tier"] = tier
     info["tier_label"] = _TIER_LABEL[tier]
+    return out_path, info
+
+
+def save_source(pcm: np.ndarray, sr: int, out_dir: Path | str) -> Path:
+    """把生成音频的无损原件落盘为 `<任务目录>/source.wav`（B6）。
+
+    - 必须发生在按档位编码**之前**：档位文件（尤其是 MP3）不可再当作原件；
+    - **不覆盖**已有原件：重复执行（重试/中断恢复）不会把原件换成截断版本。
+    """
+    target = Path(out_dir) / SOURCE_NAME
+    if target.exists():
+        logger.info("无损原件已存在，保留不覆盖：%s", target)
+        return target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    import soundfile as sf
+
+    sf.write(str(target), audio.to_mono_float32(pcm), int(sr), subtype="PCM_16")
+    return target
+
+
+def export_from_source(task_dir: Path | str, stem: str, tier: str | None) -> tuple[Path, dict]:
+    """从无损原件 `source.wav` 按档位重新编码（B6 重新导出）。
+
+    - 原件缺失（旧任务）→ 抛 `EXPORT_SOURCE_MISSING`（可读错误，提示只能重新生成）；
+    - 重采样只发生在档位要求处（original 永远跟随原件采样率）；
+    - `stem` 不允许等于原件名，防止把 source.wav 覆盖掉。
+    """
+    base = Path(task_dir)
+    src = base / SOURCE_NAME
+    if not src.exists():
+        raise AppError("EXPORT_SOURCE_MISSING", f"任务目录 {base.name} 下没有 {SOURCE_NAME}", status_code=404)
+    safe_stem = str(stem or base.name)
+    if Path(safe_stem).stem.lower() == Path(SOURCE_NAME).stem:
+        safe_stem = f"{safe_stem}-export"
+    pcm, sr = audio.read_audio(src)
+    if len(pcm) == 0:
+        raise AppError("EXPORT_SOURCE_MISSING", "source.wav 为空，无法重新导出", status_code=404)
+    out_path, info = encode_with_tier(pcm, sr, base, safe_stem, tier)
+    info["source_file"] = SOURCE_NAME
+    info["source_sample_rate"] = int(sr)
     return out_path, info
 
 

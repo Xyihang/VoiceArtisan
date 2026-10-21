@@ -1,14 +1,22 @@
 import type {
   Asset,
+  BatchCreateRequest,
+  BatchCreateResult,
   EngineHealth,
   EngineInstallStatus,
   EngineList,
   EnginePlan,
+  ExportTier,
   Health,
   Meta,
   SettingsPayload,
+  SpeakerMergeResult,
+  SpeakerSplitItem,
+  SystemStatus,
   Task,
+  TaskExportResult,
   TaskList,
+  TaskSegment,
   VoicesResponse,
 } from '../types';
 
@@ -59,7 +67,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   health: () => request<Health>('/api/health'),
-  status: () => request<any>('/api/system/status'),
+  /** 完整状态：asr_candidates（实际尝试顺序）与 config.asr_diarize 是说话人链路的判定依据 */
+  status: () => request<SystemStatus>('/api/system/status'),
   selfcheck: () => request<any>('/api/system/selfcheck'),
   logs: (limit = 200, level?: string) =>
     request<{ items: { ts: number; level: string; logger: string; message: string }[] }>(
@@ -102,11 +111,35 @@ export const api = {
   deleteTask: (id: string) => request<{ ok: boolean }>(`/api/tasks/${id}`, { method: 'DELETE' }),
   /** 说话人改名：mapping {"SPK1": "张三"}，空字符串表示还原 */
   renameSpeakers: (id: string, mapping: Record<string, string>) =>
-    request<{ ok: boolean; segments: any[]; speaker_aliases: Record<string, string> }>(
+    request<{ ok: boolean; segments: TaskSegment[]; speaker_aliases: Record<string, string> }>(
       `/api/tasks/${id}/speakers`,
       { method: 'PATCH', body: JSON.stringify({ mapping }) },
     ),
-  batchProgress: (id: string) => request<any>(`/api/tasks/batch/${id}`),  batchCancel: (id: string) =>
+  /** 合并说话人：from 里的编号并入 to，时间轴不变 */
+  mergeSpeakers: (id: string, sources: string[], to: string) =>
+    request<SpeakerMergeResult>(`/api/tasks/${id}/speakers/merge`, {
+      method: 'POST',
+      body: JSON.stringify({ from: sources, to }),
+    }),
+  /** 按档位重新导出（从无损原件重编码，原件不动） */
+  exportTask: (id: string, tier: ExportTier) =>
+    request<TaskExportResult>(`/api/tasks/${id}/export`, {
+      method: 'POST',
+      body: JSON.stringify({ tier }),
+    }),
+  /** 按说话人拆分：直接返回分轨清单 */
+  splitBySpeaker: (id: string) =>
+    request<SpeakerSplitItem[]>(`/api/tasks/${id}/split-by-speaker`, { method: 'POST' }),
+  /** 分轨打包下载（需先拆分），走 fetch+Blob 下载 */
+  speakersZipUrl: (id: string) => `/api/tasks/${id}/speakers/zip`,
+  /** 单条分轨：走文件路由（后端已做文件名白名单），不再让浏览器解压 zip */
+  speakerFileUrl: (id: string, name: string) =>
+    `/api/tasks/${id}/speakers/${encodeURIComponent(name)}`,
+  /** 批量提交：items 每项都能覆盖音色 / 语言 / 指令 / 参数 */
+  batchCreate: (body: BatchCreateRequest) =>
+    request<BatchCreateResult>('/api/tasks/batch', { method: 'POST', body: JSON.stringify(body) }),
+  batchProgress: (id: string) => request<any>(`/api/tasks/batch/${id}`),
+  batchCancel: (id: string) =>
     request<{ ok: boolean; canceled: string[]; skipped: string[] }>(`/api/tasks/batch/${id}/cancel`, {
       method: 'POST',
     }),
