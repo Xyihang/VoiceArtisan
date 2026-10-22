@@ -122,21 +122,58 @@ class CAMPlusPlusAdapter(BaseAdapter):
 
     @staticmethod
     def _download(url: str, dest: Path, progress) -> None:
+        """带**断点续传**与**停滞超时**的下载。
+
+        - 断了下次从 .part 的末尾接着下（两个源都支持 Range）
+        - 单次读 30s 没数据就抛错，交给上层换下一个源，而不是无限挂着
+        """
+        import socket
         import urllib.request
 
         tmp = dest.with_suffix(".part")
-        with urllib.request.urlopen(url, timeout=120) as resp:  # noqa: S310
-            total = int(resp.headers.get("Content-Length") or 0)
-            done = 0
-            with open(tmp, "wb") as fh:
-                while True:
-                    chunk = resp.read(65536)
-                    if not chunk:
-                        break
-                    fh.write(chunk)
-                    done += len(chunk)
-                    if progress and total:
-                        progress("download", min(0.95, done / total), f"{done // 1024}KB / {total // 1024}KB")
+        have = tmp.stat().st_size if tmp.exists() else 0
+        headers = {"Range": f"bytes={have}-"} if have else {}
+        req = urllib.request.Request(url, headers=headers)  # noqa: S310
+        try:
+            resp = urllib.request.urlopen(req, timeout=30)  # noqa: S310
+        except urllib.error.HTTPError as exc:
+            if exc.code == 416 and have:  # 服务器说已经下完了
+                tmp.replace(dest)
+                return
+            raise
+
+        with resp:
+            status = getattr(resp, "status", 200) or 200
+            if have and status != 206:
+                # 服务器不支持续传：从头来
+                have = 0
+                headers = {}
+            total = int(resp.headers.get("Content-Length") or 0) + have
+            done = have
+            mode = "ab" if have else "wb"
+            if have and progress:
+                progress("download", 0.2, f"续传 {have // 1024}KB / {total // 1024}KB")
+            try:
+                with open(tmp, mode) as fh:
+                    while True:
+                        chunk = resp.read(65536)
+                        if not chunk:
+                            break
+                        fh.write(chunk)
+                        done += len(chunk)
+                        if progress and total:
+                            progress(
+                                "download",
+                                min(0.95, done / total),
+                                f"{done // 1024}KB / {total // 1024}KB",
+                            )
+            except (socket.timeout, TimeoutError) as exc:
+                raise RuntimeError(
+                    f"下载停滞超过 30 秒（已下 {done // 1024}KB/{total // 1024}KB，"
+                    f"保留 .part 可续传）：{exc}"
+                ) from exc
+            if total and done < total:
+                raise RuntimeError(f"下载不完整（{done // 1024}KB/{total // 1024}KB）")
         tmp.replace(dest)
 
     def remove(self) -> None:

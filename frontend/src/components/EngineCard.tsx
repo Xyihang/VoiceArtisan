@@ -788,6 +788,60 @@ export function EngineSection({ id }: { id?: string } = {}) {
     };
   }, [finishInstall, load, pushToast]);
 
+  /**
+   * 兜底轮询：界面进度只靠 WebSocket 推送，一旦事件没送到就会一直停在初始文案，
+   * 最后「突然完成」。这里对每个正在安装的引擎每 3 秒查一次 install/status，
+   * WS 正常时也基本无害（只是多几个 GET）。
+   */
+  const pendingIds = useMemo(
+    () => Object.entries(installs).filter(([, v]) => !v.done).map(([id]) => id),
+    [installs],
+  );
+  const pendingKey = pendingIds.join(',');
+
+  useEffect(() => {
+    if (!pendingKey) return;
+    let cancelled = false;
+    const ids = pendingKey.split(',');
+    const timer = window.setInterval(() => {
+      ids.forEach((id) => {
+        api
+          .installStatus(id)
+          .then((status) => {
+            if (cancelled || !status) return;
+            // 只覆盖本地仍是「未完成」的条目，避免把已完成的状态打回去
+            setInstalls((prev) => {
+              const current = prev[id];
+              if (!current || current.done) return prev;
+              const next: InstallState = {
+                phase: (status.phase as InstallState['phase']) ?? current.phase,
+                progress:
+                  typeof status.progress === 'number' ? Number(status.progress) : current.progress,
+                message: status.message || current.message,
+                done: Boolean(status.done) || !status.running,
+              };
+              if (
+                next.phase === current.phase &&
+                next.progress === current.progress &&
+                next.message === current.message &&
+                next.done === current.done
+              ) {
+                return prev;
+              }
+              return { ...prev, [id]: next };
+            });
+          })
+          .catch(() => {
+            /* 轮询失败静默，下一轮再试 */
+          });
+      });
+    }, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [pendingKey]);
+
   const setAction = (id: string, action: EngineAction | null) =>
     setBusy((prev) => ({ ...prev, [id]: action }));
 
@@ -807,9 +861,14 @@ export function EngineSection({ id }: { id?: string } = {}) {
       const res = await api.installEngine(item.id);
       setInstalls((prev) => ({
         ...prev,
-        [item.id]: { phase: 'download', progress: 0, message: `任务 ${res.job_id} 已排队`, done: false },
+        [item.id]: {
+          phase: 'download',
+          progress: 0,
+          message: `正在启动安装（job ${res.job_id}）`,
+          done: false,
+        },
       }));
-      pushToast({ level: 'info', title: `开始安装 ${item.name}`, description: '进度通过实时事件推送' });
+      pushToast({ level: 'info', title: `开始安装 ${item.name}`, description: '进度实时显示，掉线会自动轮询兜底' });
     });
 
   const handleRemove = (item: EngineItem) => {

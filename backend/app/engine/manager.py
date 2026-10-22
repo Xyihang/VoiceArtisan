@@ -127,7 +127,7 @@ class EngineManager:
                 "job_id": job_id,
                 "phase": "queued",
                 "progress": 0.0,
-                "message": "已进入安装队列",
+                "message": "正在启动安装任务…",
                 "done": False,
                 "error": None,
                 "started_at": _now(),
@@ -143,6 +143,20 @@ class EngineManager:
             self._threads[engine_id] = thread
             thread.start()
         logger.info("引擎安装任务已启动：%s（job=%s）", engine_id, job_id)
+        # 立刻推一条事件：前端点完安装会先显示"正在启动"，等第一条真事件覆盖，
+        # 不会出现界面长时间停在占位文案（对齐兜底轮询也更顺）
+        bus.publish(
+            TOPIC,
+            EVENT,
+            {
+                "engine_id": engine_id,
+                "job_id": job_id,
+                "phase": "queued",
+                "progress": 0.0,
+                "message": "正在启动安装任务…",
+                "done": False,
+            },
+        )
         return {"job_id": job_id, "engine_id": engine_id, "running": True}
 
     def install_blocking(self, engine_id: str, on_progress: Callable[[dict], None] | None = None) -> dict:
@@ -169,23 +183,22 @@ class EngineManager:
         on_progress: Callable[[dict], None] | None,
     ) -> None:
         adapter = registry.get(engine_id)
+        # base：引擎自己上报的真实进度文案；心跳只读它，不去改写，避免"仍在进行："套娃
+        last = {
+            "ts": _now(),
+            "phase": "preparing",
+            "pct": 0.0,
+            "base": "准备安装",
+        }
 
-        def progress(phase: str, pct: float, message: str = "") -> None:
-            payload = {
-                "engine_id": engine_id,
-                "job_id": job_id,
-                "phase": phase,
-                "progress": round(max(0.0, min(1.0, float(pct))), 4),
-                "message": message,
-                "done": phase in ("done", "error"),
-            }
+        def _publish(payload: dict) -> None:
             with self._lock:
                 current = self._jobs.get(engine_id) or {"engine_id": engine_id, "job_id": job_id}
                 current.update(payload)
-                if phase == "done":
+                if payload.get("phase") == "done":
                     current.update(error=None, finished_at=_now())
-                elif phase == "error":
-                    current.update(error=message, finished_at=_now())
+                elif payload.get("phase") == "error":
+                    current.update(error=payload.get("message"), finished_at=_now())
                 self._jobs[engine_id] = current
                 self._save_state()
             bus.publish(TOPIC, EVENT, payload)
@@ -195,6 +208,46 @@ class EngineManager:
                 except Exception:  # noqa: BLE001 - 回调异常不影响安装
                     pass
 
+        def progress(phase: str, pct: float, message: str = "") -> None:
+            last.update(ts=_now(), phase=phase, pct=round(float(pct), 4), base=message)
+            _publish(
+                {
+                    "engine_id": engine_id,
+                    "job_id": job_id,
+                    "phase": phase,
+                    "progress": round(max(0.0, min(1.0, float(pct))), 4),
+                    "message": message,
+                    "done": phase in ("done", "error"),
+                }
+            )
+
+        stop_beat = threading.Event()
+
+        def heartbeat() -> None:
+            """任何阶段超过 5 秒没有新进度，就补一条事件。
+
+            下载卡住 / pip 静默 / snapshot_download 阻塞时，界面（只靠事件推送）
+            会像卡死；有心跳至少能看到「仍在进行 + 已等待多少秒」。
+            """
+            while not stop_beat.wait(5.0):
+                idle = _now() - float(last["ts"])
+                if idle < 5.0:
+                    continue
+                base = str(last.get("base") or last["phase"])
+                _publish(
+                    {
+                        "engine_id": engine_id,
+                        "job_id": job_id,
+                        "phase": str(last["phase"]),
+                        "progress": round(float(last["pct"]), 4),
+                        "message": f"仍在进行：{base}（已等待 {int(idle)}s）",
+                        "done": False,
+                    }
+                )
+                last["ts"] = _now()  # 下一拍再等 5 秒，避免刷屏
+
+        beat = threading.Thread(target=heartbeat, name=f"engine-install-beat-{engine_id}", daemon=True)
+        beat.start()
         logger.info("开始安装引擎 %s", engine_id)
         progress("pip" if getattr(adapter, "package", None) else "download", 0.01, "准备安装")
         try:
@@ -219,11 +272,14 @@ class EngineManager:
         except AppError as exc:
             detail = exc.detail or exc.message
             logger.warning("引擎 %s 安装失败：%s", engine_id, detail)
+            stop_beat.set()
             progress("error", 1.0, detail)
         except Exception as exc:  # noqa: BLE001
             logger.exception("引擎 %s 安装异常", engine_id)
+            stop_beat.set()
             progress("error", 1.0, f"{type(exc).__name__}: {exc}")
         else:
+            stop_beat.set()
             logger.info("引擎 %s 安装完成（%.1fMB）", engine_id, adapter.model_size_mb())
             try:
                 _iso = getattr(adapter, "isolated", False)

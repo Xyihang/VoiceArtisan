@@ -390,6 +390,9 @@ export interface EngineInstallStatus {
   progress: number;
   message: string;
   done: boolean;
+  /** 后端 install/status 会返回：线程是否还在跑（轮询兜底用） */
+  running?: boolean;
+  job_id?: string;
 }
 
 export interface EngineHealth {

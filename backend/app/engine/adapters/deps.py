@@ -402,13 +402,73 @@ def install_main_packages(
     base = [sys.executable, "-m", "pip", "install", "--no-cache-dir", "-U"]
     if constraint:
         base += ["-c", constraint]
+
     last = ""
     for index in (PIP_MIRROR, None):
         cmd = list(base) + list(missing) + (["-i", index] if index else [])
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1500)
-        last = (proc.stdout + proc.stderr)[-600:]
-        if proc.returncode == 0:
+        last = _run_pip_with_heartbeat(cmd, on_progress)
+        if last["ok"]:
             invalidate()
-            return {"ok": True, "installed": missing, "skipped": False,
-                    "mirror": index or "default", "tail": last[-200:]}
-    raise RuntimeError("依赖自动安装失败：" + last[-400:])
+            return {
+                "ok": True,
+                "installed": missing,
+                "skipped": False,
+                "mirror": index or "default",
+                "tail": last["tail"][-200:],
+            }
+        last_text = last["tail"]
+    raise RuntimeError("依赖自动安装失败：" + str(last_text)[-400:])
+
+
+def _run_pip_with_heartbeat(cmd: list[str], on_progress=None, timeout: int = 1500) -> dict:
+    """跑 pip，并且**每 2 秒发一次心跳**。
+
+    pip 装 onnxruntime/scipy 这类包要几分钟且完全静默，界面（只靠事件推送）
+    会一直停在初始文案上，看起来像卡死。这里用轮询 + 心跳把等待过程暴露出来。
+    """
+    import subprocess
+    import threading
+    import time
+
+    started = time.time()
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    lines: list[str] = []
+
+    def _drain() -> None:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            lines.append(line.rstrip())
+            if len(lines) > 400:
+                del lines[:200]
+
+    reader = threading.Thread(target=_drain, daemon=True)
+    reader.start()
+
+    tick = 0
+    while True:
+        if proc.poll() is not None:
+            break
+        if time.time() - started > timeout:
+            proc.kill()
+            return {"ok": False, "tail": "\n".join(lines[-20:]) + "\n[pip 超时被终止]"}
+        tick += 1
+        if on_progress is not None and tick % 2 == 0:
+            waited = int(time.time() - started)
+            tail = lines[-1][:60] if lines else ""
+            pct = min(0.14, 0.03 + waited * 0.002)
+            try:
+                on_progress("pip", pct, f"正在安装依赖… 已等待 {waited}s" + (f"（{tail}）" if tail else ""))
+            except Exception:  # noqa: BLE001
+                pass
+        time.sleep(1)
+
+    reader.join(timeout=5)
+    tail = "\n".join(lines[-40:])
+    return {"ok": proc.returncode == 0, "tail": tail}
