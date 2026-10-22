@@ -783,7 +783,12 @@ def detect_ffmpeg() -> Check:
 
 def detect_model(root: Path, model_name: str) -> Check:
     mdir = root / "models" / model_name
-    key = "model_" + model_name.split("-")[-1].lower()
+    # 1.7B 与 0.6B 的 Base/CustomVoice 末段同名，只用末段会撞 iid（Treeview 会报
+    # "Item model_base already exists"），所以带上规格段：model_17b_base / model_06b_base
+    parts = model_name.split("-")
+    size_tag = parts[-2].lower().replace(".", "") if len(parts) >= 2 else "x"
+    kind_tag = parts[-1].lower() if parts else "x"
+    key = f"model_{size_tag}_{kind_tag}"
     short = (model_name.replace("Qwen3-TTS-12Hz-1.7B-", "1.7B-")
              .replace("Qwen3-TTS-12Hz-0.6B-", "0.6B-"))
     main_file = mdir / "model.safetensors"
@@ -1642,6 +1647,18 @@ class LauncherApp:
         return selection[0]
 
     def _render_checks(self, checks) -> None:
+        # 防御：iid 必须唯一，否则 Tk 抛 "Item xxx already exists" 导致整块刷新失败
+        seen: dict[str, int] = {}
+        uniq: list = []
+        for check in checks:
+            key = str(getattr(check, "key", "") or "check")
+            if key in seen:
+                seen[key] += 1
+                check.key = f"{key}#{seen[key]}"
+            else:
+                seen[key] = 0
+            uniq.append(check)
+        checks = uniq
         self.checks = {c.key: c for c in checks}
         self.check_order = [c.key for c in checks]
         for item in self.tree.get_children():

@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.20",
+  "version": "1.1.21",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.21：修安装器「环境体检」报 TclError（Item model_base already exists）——1.7B/0.6B 同名模型的体检项 key 撞车，现改成 model_17b_base / model_06b_base，并对重复 key 做兜底去重",
     "v1.1.20：安装进度不再假死——主环境依赖安装加心跳、下载卡住 30s 自动换源并续传、引擎安装任一步骤静默 5s 补一条\"仍在进行\"，前端加 3s 兜底轮询",
     "v1.1.19：新增独立升级工具 QWENTTS-Upgrader.exe（选两个目录一键升级，自动备份/回滚，data/models/config 永不覆盖）",
     "v1.1.18：引擎缺 Python 依赖时程序自动安装（带 torch 约束，不会替换 cu121）；不再让用户手敲 pip",
