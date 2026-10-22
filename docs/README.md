@@ -61,6 +61,8 @@
 | --- | --- |
 | [DEPLOY.md](DEPLOY.md) | 环境要求、venv 安装、systemd / Windows 服务、Nginx 反代、备份升级、端口清单 |
 | [DELIVERY-AND-CLOUD-VERIFY.md](DELIVERY-AND-CLOUD-VERIFY.md) | **发版与云端实证手册**：exe/源码包/便携包怎么打、打包必排项、云端模型直传、diarize 实证命令与踩坑（av.open / 配置覆盖） |
+| [PACKAGING-AND-TRIBAL-KNOWLEDGE.md](PACKAGING-AND-TRIBAL-KNOWLEDGE.md) | **维护者手册（经验文档）**：打包/发版全流程、打包脚本硬规则、PyInstaller 占用处理、按模块的踩坑清单（依赖与 torch、安装进度、云端、其它历史事故）、打包后抽查清单、排障速查 |
+| [UPGRADE.md](UPGRADE.md) | 独立升级工具 `QWENTTS-Upgrader.exe` 的使用方法与保留/覆盖规则 |
 | [BENCHMARK.md](BENCHMARK.md) | 实测数据：1.7B 在 4GB 卡、流式 vs 非流式、云端链路、验收结论 |
 | [API.md](API.md) | 接口文档：请求/响应示例、WebSocket 事件、`/v1` 云端接口、错误码 |
 | [COMPETITIVE_VOICESTUDIO.md](COMPETITIVE_VOICESTUDIO.md) | 竞品与功能差距：GitHub VOICESTUDIO 调研、24 项功能对比、缺失功能排序与路线建议 |
