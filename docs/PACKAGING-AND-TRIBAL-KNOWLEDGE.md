@@ -92,6 +92,21 @@
 - `data/engines_state.json` 会持久化 job；进程被强杀后残留 `running` 状态。判断线程是否真活着要用 `_is_running()`（`thread.is_alive()`），别只看状态文件
 - 下载必须带：**断点续传**（`Range: bytes=<已有>-`，`.part` 保留）+ **停滞超时**（30s 无数据即换源）。`urlopen(timeout=120)` 会让 GitHub 卡住静默两分钟
 
+### 5.2.1 ASR / 声纹 跑在哪
+
+- **Whisper 跟随配置**：`asr.local.device`（`auto`→torch 有卡就用 cuda）+ `asr.local.compute_type`。
+  注意 `engine/adapters/asr_whisper.py` 里那句 `WhisperModel(..., device="cpu", compute_type="int8")`
+  **只是安装时的预取**，不是推理；排查时别看错地方。
+- **CAM++ 恒定 CPU**：`sherpa_onnx.SpeakerEmbeddingExtractorConfig` 不传 provider 就是 CPU，
+  聚类用 sklearn 也是 CPU。所以 4GB 卡上 TTS 吃显存、ASR/声纹不吃，这是设计如此。
+- **加载必须逐级降级**（`engine/asr.py` 的 `_load_candidates`）：
+  `cuda+配置精度 → cuda+其它精度(int8_float16/float16/int8/float32) → cpu+int8 → cpu+float32`。
+  历史事故：某些机器上 CTranslate2 认为后端不支持 `int8_float16`，旧代码不降级 → 直接抛
+  `ASR_FAILED`，三条任务连着失败，而配置里还写着 cuda。
+- 实际生效的 device/compute 记在 `LocalASREngine._effective_device/_effective_compute`，
+  并通过 `health()` 暴露（`{"device": ..., "compute_type": ...}`）；日志里会写
+  「ASR 已降级运行：配置 … → 实际 …」。**排查用户机器时先看这两行日志**，别只看配置。
+
 ### 5.3 云端（一键接入 / 云端引擎）
 
 - `pkill -f 'app.main --host …'` 会**匹配到自己这条 ssh 命令**（bash -c 命令行含同样文字），把清理脚本自己杀掉 → 用 `app[.]main` 字符类规避

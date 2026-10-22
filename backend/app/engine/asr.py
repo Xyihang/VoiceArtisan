@@ -82,6 +82,39 @@ def _model_dir_with_bin(root: Path) -> str | None:
     return None
 
 
+# faster-whisper(CTranslate2) 在不同机器上支持的精度不一样，这里给出逐级降级顺序。
+# 背景：device=cuda 但 CT2 认为后端不支持 int8_float16 时会直接抛错，旧代码不降级 → 整个 ASR 不可用。
+_CUDA_COMPUTE_FALLBACK = ("int8_float16", "float16", "int8", "float32")
+_CPU_COMPUTE_FALLBACK = ("int8", "float32")
+
+
+def _load_candidates(device: str, compute_type: str) -> list[tuple[str, str]]:
+    """生成 (device, compute_type) 尝试序列：先配置值，再同设备其它精度，最后退回 CPU。"""
+    out: list[tuple[str, str]] = []
+
+    def add(dev: str, comp: str) -> None:
+        pair = (dev, comp)
+        if pair not in out:
+            out.append(pair)
+
+    device = (device or "cpu").lower()
+    compute_type = (compute_type or "int8").lower()
+    if device.startswith("cuda"):
+        add(device, compute_type)
+        for comp in _CUDA_COMPUTE_FALLBACK:
+            add(device, comp)
+        # GPU 实在不行就退回 CPU，保证功能可用（只是慢）
+        for comp in _CPU_COMPUTE_FALLBACK:
+            add("cpu", comp)
+    else:
+        if compute_type in {"float16", "int8_float16"}:
+            compute_type = "int8"
+        add("cpu", compute_type)
+        for comp in _CPU_COMPUTE_FALLBACK:
+            add("cpu", comp)
+    return out
+
+
 class LocalASREngine:
     name = "local"
 
@@ -90,6 +123,9 @@ class LocalASREngine:
         self._model = None
         self._lock = threading.RLock()
         self._loaded_size: str | None = None
+        # 实际生效的推理参数（可能因降级与配置不同，界面/日志以这两个为准）
+        self._effective_device: str = ""
+        self._effective_compute: str = ""
 
     def _ensure(self):
         with self._lock:
@@ -135,19 +171,50 @@ class LocalASREngine:
                         f"请到 设置 → 引擎与模型 → 语音识别 重新安装「{engine_id}」",
                     )
                 model_ref = resolved
-            logger.info("加载本地 ASR 模型 size=%s device=%s compute=%s", size, device, compute_type)
-            try:
-                self._model = WhisperModel(
-                    model_ref,
-                    local_files_only=Path(str(model_ref)).exists(),
-                    device=device,
-                    compute_type=compute_type,
-                    download_root=str(model_dir),
-                )
-            except Exception as exc:  # noqa: BLE001
-                raise AppError("ASR_FAILED", f"ASR 模型加载失败：{exc}") from exc
-            self._loaded_size = size
-            return self._model
+            logger.info(
+                "加载本地 ASR 模型 size=%s 配置=device:%s compute:%s（失败会自动降级）",
+                size, device, compute_type,
+            )
+            candidates = _load_candidates(device, compute_type)
+            errors: list[str] = []
+            for cand_device, cand_compute in candidates:
+                try:
+                    model = WhisperModel(
+                        model_ref,
+                        local_files_only=Path(str(model_ref)).exists(),
+                        device=cand_device,
+                        compute_type=cand_compute,
+                        download_root=str(model_dir),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    errors.append(f"{cand_device}/{cand_compute}：{exc}")
+                    logger.warning("ASR 加载尝试失败（%s/%s）：%s", cand_device, cand_compute, exc)
+                    continue
+                self._model = model
+                self._effective_device = cand_device
+                self._effective_compute = cand_compute
+                self._loaded_size = size
+                if (cand_device, cand_compute) != (device, compute_type):
+                    logger.warning(
+                        "ASR 已降级运行：配置 device=%s compute=%s → 实际 device=%s compute=%s",
+                        device, compute_type, cand_device, cand_compute,
+                    )
+                else:
+                    logger.info("ASR 就绪：size=%s device=%s compute=%s",
+                                size, cand_device, cand_compute)
+                return self._model
+            # 报错里同时给「首个尝试」和「最后几次」：首个通常最能说明根因（就是配置那档），
+            # 末尾则是降级到 CPU 之后的失败原因。
+            shown = [errors[0]] if errors else []
+            if len(errors) > 3:
+                shown += errors[1:][-2:]
+            else:
+                shown += errors[1:]
+            detail = "；".join(shown) if shown else "未知原因"
+            raise AppError(
+                "ASR_FAILED",
+                f"ASR 模型加载失败（已尝试 {len(candidates)} 种组合）：{detail}",
+            )
 
     def transcribe(
         self,
@@ -264,10 +331,18 @@ class LocalASREngine:
         with self._lock:
             self._model = None
             self._loaded_size = None
+            self._effective_device = ""
+            self._effective_compute = ""
         vram.hard_release()
 
     def health(self) -> dict:
-        return {"backend": "local", "ready": self._model is not None, "model": self._loaded_size}
+        return {
+            "backend": "local",
+            "ready": self._model is not None,
+            "model": self._loaded_size,
+            "device": self._effective_device or None,
+            "compute_type": self._effective_compute or None,
+        }
 
 
 class ASRRouter:

@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.22",
+  "version": "1.1.23",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.23：Whisper 加载改逐级降级（cuda 各精度 → cpu），修「Requested int8_float16 … not support」导致 ASR 全挂；实际生效的 device/compute 写入日志与 /api/health",
     "v1.1.22：新增维护者手册 docs/PACKAGING-AND-TRIBAL-KNOWLEDGE.md——打包/发版全流程、打包脚本硬规则、PyInstaller 占用处理、按模块踩坑清单、打包后抽查与排障速查",
     "v1.1.21：修安装器「环境体检」报 TclError（Item model_base already exists）——1.7B/0.6B 同名模型的体检项 key 撞车，现改成 model_17b_base / model_06b_base，并对重复 key 做兜底去重",
     "v1.1.20：安装进度不再假死——主环境依赖安装加心跳、下载卡住 30s 自动换源并续传、引擎安装任一步骤静默 5s 补一条\"仍在进行\"，前端加 3s 兜底轮询",
