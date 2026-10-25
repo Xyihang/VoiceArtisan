@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 # 任务类型 → 需要的能力标签（与 adapter.kind_tags 对齐）
 ALL_CAPS = ("tts", "clone", "design", "asr")
+# 声纹不是"任务类型"，不进 caps 门禁，单独用 diarize_available 暴露
+CLOUD_EXTRA_CAPS = ("diarize",)
 
 
 def _cloud_caps(cloud_cfg: Any) -> tuple[set[str], list[str]]:
@@ -99,8 +101,8 @@ def effective_capabilities_with(
     if cloud_snapshot and cloud_snapshot.get("caps"):
         actual = set(cloud_snapshot["caps"])
         cloud_verified = True
-        # ASR 与 TTS 模型无关，始终保留
-        cloud_caps = actual | {"asr"}
+        # 实测为准：asr 也要云端真的有才给（以前这里写死 +{"asr}"，云端没装 ASR 时也是 true）
+        cloud_caps = {c for c in actual if c in ALL_CAPS}
         cloud_missing = [c for c in ALL_CAPS if c not in cloud_caps]
     cloud_configured = bool(
         str(getattr(cloud_cfg, "base_url", "") or "").strip()
@@ -141,6 +143,10 @@ def effective_capabilities_with(
         "cloud_verified": cloud_verified,
         "cloud_ready_models": (cloud_snapshot or {}).get("ready_models") or {},
         "cloud_probe_error": (cloud_snapshot or {}).get("error"),
+        # 声纹（区分说话人）：云端实测 support 才为 True；未实测时 None（未知，交给现有 asrPlan 协商）
+        "diarize_available": (
+            bool((cloud_snapshot or {}).get("diarize_ok")) if cloud_verified else None
+        ),
         "missing_hint": (
             "设计能力需要 VoiceDesign 模型：本地装 Qwen3-TTS 1.7B，或在「设置 → 云端连接」填云端 VoiceDesign 模型名"
             if "design" in missing

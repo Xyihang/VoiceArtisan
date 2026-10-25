@@ -413,6 +413,8 @@ export interface CapabilitySet {
   cloud_verified?: boolean;
   cloud_ready_models?: Record<string, string>;
   cloud_probe_error?: string | null;
+  /** 云端声纹（区分说话人）实测结果：true=支持，false=不支持，null/undefined=未知（未实测） */
+  diarize_available?: boolean | null;
   missing_hint?: string;
 }
 

@@ -831,7 +831,13 @@ export function WorkbenchPage() {
                     <span className="hint">仅转写文本，不做声纹切分（更快）</span>
                   )}
                 </div>
-                {asrDiarize && diarizePlan ? (
+                {asrDiarize && meta?.capabilities?.diarize_available === false ? (
+              <p className="field-note field-note--warn" role="status">
+                云端实例未安装说话人区分引擎：本次转写会只出整段文本，不会标注说话人。
+                要分说话人请装云端 CAM++（设置 → 云端引擎管理），或改用本地声纹。
+              </p>
+            ) : null}
+            {asrDiarize && diarizePlan ? (
                   <div id="asr-diarize-note">
                     <InlineNote
                       kind={diarizePlan.kind}
