@@ -164,48 +164,39 @@ export function WorkbenchPage() {
     setParams((prev) => (prev ? { ...meta.defaults, ...prev } : meta.defaults));
   }, [meta]);
 
-  // 记忆上次选择
-  // 读取当前引擎能力（切引擎后自动同步，用于页签门禁与文案）
+  // 有效能力：来自后端 /api/meta 的 capabilities（按 run.mode 计算）。
+  // 不能再用本机引擎的 kind_tags —— 否则「云端 1.7B + 本地 0.6B + 纯云端」会把音色设计挡死。
+  const effectiveCaps = meta?.capabilities;
+  const capsList = useMemo(() => effectiveCaps?.caps ?? ['tts', 'clone', 'design'], [effectiveCaps]);
+  const capsMissingHint = effectiveCaps?.missing_hint || '';
+
   useEffect(() => {
-    let alive = true;
-    const read = () => {
-      void api
-        .listEngines()
-        .then((res) => {
-          if (!alive) return;
-          const active = res.items.find((item) => item.id === res.active);
-          if (active) {
-            setEngineCaps({
-              id: active.id,
-              name: active.name,
-              caps: active.kind_tags || ['tts'],
-            });
-          }
-        })
-        .catch(() => {
-          /* 引擎信息拿不到时退回「全部可用」，不阻塞生成 */
-        });
-    };
-    read();
-    const timer = window.setInterval(read, 15000);
-    return () => {
-      alive = false;
-      window.clearInterval(timer);
-    };
-  }, []);
+    if (!effectiveCaps) return;
+    const label =
+      effectiveCaps.source === 'cloud'
+        ? `云端 · ${effectiveCaps.cloud_models || '未配置模型'}`
+        : effectiveCaps.source === 'both'
+          ? `${effectiveCaps.active_engine || '本地'} + 云端`
+          : effectiveCaps.active_engine || '本地默认';
+    setEngineCaps({
+      id: effectiveCaps.active_engine || '',
+      name: label,
+      caps: effectiveCaps.caps,
+    });
+  }, [effectiveCaps]);
 
   // 当前页签被引擎能力禁用时，自动落到可用页签并提示一次
   useEffect(() => {
     const need = tab === 'asr' ? null : tab;
-    if (!need || engineCaps.caps.includes(need)) return;
-    const next: Tab = engineCaps.caps.includes('tts') ? 'tts' : 'clone';
+    if (!need || capsList.includes(need)) return;
+    const next: Tab = capsList.includes('tts') ? 'tts' : 'clone';
     setTab(next);
     pushToast({
       level: 'info',
       title: '已切换到可用页签',
       description: `当前引擎「${engineCaps.name}」不支持${tab === 'design' ? '音色设计' : tab === 'clone' ? '声音克隆' : '语音生成'}`,
     });
-  }, [tab, engineCaps, pushToast]);
+  }, [tab, capsList, engineCaps.name, pushToast]);
 
   useEffect(() => {
     localStorage.setItem(STORE_TAB, tab);
@@ -370,8 +361,15 @@ export function WorkbenchPage() {
     };
   }, [asrPlan, diarizePrefer]);
 
-  /** 当前引擎是否 Qwen 系（Qwen 系必须有音色；其它引擎可以纯文本合成） */
-  const engineIsQwen = useMemo(() => !engineCaps.id || engineCaps.id.startsWith('qwen3-tts'), [engineCaps.id]);
+  /**
+   * 是否"Qwen 系"能力集（必须有音色、支持指令控制 instruct）。
+   * 以前靠本地引擎 id 前缀猜，纯云端时会误判；现在以有效能力 + 来源为准：
+   * 音色设计/克隆都由 Qwen 1.7B 提供，具备其一即视为 Qwen 系。
+   */
+  const engineIsQwen = useMemo(
+    () => capsList.includes('design') || capsList.includes('clone'),
+    [capsList],
+  );
 
   const selectedVoice = useMemo(
     () => [...voiceList.builtin, ...voiceList.custom].find((v) => v.id === voiceId) || null,
@@ -596,8 +594,11 @@ export function WorkbenchPage() {
             </span>
           </span>
           {engineCaps.name ? (
-            <span className="chip" title={`当前引擎能力：${engineCaps.caps.join(' / ') || '未知'}`}>
-              引擎
+            <span
+              className="chip"
+              title={`能力来源：${effectiveCaps?.detail || '未知'}｜可用：${capsList.join(' / ') || '无'}`}
+            >
+              {effectiveCaps?.source === 'cloud' ? '云端' : '引擎'}
               <strong style={{ marginLeft: 2 }}>{engineCaps.name}</strong>
             </span>
           ) : null}
@@ -623,13 +624,16 @@ export function WorkbenchPage() {
             <div className="segmented" role="tablist" aria-label="语音能力">
               {TABS.map((item) => {
                 const Icon = item.icon;
-                // 能力门禁：asr 与 TTS 引擎无关；tts/clone/design 取决于当前引擎
+                // 能力门禁：asr 与 TTS 引擎无关；tts/clone/design 取决于「有效能力」（按运行模式算）
                 const need = item.id === 'asr' ? null : item.id;
-                const blocked = !!need && !engineCaps.caps.includes(need);
+                const blocked = !!need && !capsList.includes(need);
+                const source = effectiveCaps?.source;
                 const why =
                   item.id === 'design'
-                    ? `当前引擎「${engineCaps.name || '未检测'}」不支持音色设计（仅 Qwen3-TTS 1.7B 支持）`
-                    : `当前引擎「${engineCaps.name || '未检测'}」不支持该能力，请到「设置 → 引擎与模型」切换`;
+                    ? source === 'local'
+                      ? `本地引擎「${engineCaps.name || '未检测'}」不支持音色设计；把运行模式切成「仅云端」或装 Qwen3-TTS 1.7B 后可用`
+                      : `未检测到音色设计能力：${capsMissingHint || '请在「设置 → 云端连接」填写 VoiceDesign 模型名'}`
+                    : `当前来源（${engineCaps.name || '未检测'}）不支持该能力：${capsMissingHint || '请检查设置'} `;
                 return (
                   <button
                     key={item.id}

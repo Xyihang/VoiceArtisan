@@ -296,3 +296,19 @@ QWENTTS__TTS__NORMALIZE=false                  # 关闭文本规范化
 QWENTTS__ENGINE__ACTIVE=voxcpm1.5             # 指定当前引擎（优先级最高）
 HF_ENDPOINT=https://hf-mirror.com            # ASR 模型下载镜像（脚本已默认设置）
 ```
+
+### 能力门禁与运行模式（`run.mode`）
+
+任务的可用能力（语音生成 / 声音克隆 / 音色设计 / 转写）按**运行模式**判定，由后端
+`GET /api/meta` 的 `capabilities` 字段给出，前端只消费该结果：
+
+| 模式 | 判定依据 |
+| --- | --- |
+| `cloud`（仅云端） | 只看云端模型名：`cloud.models.base/custom_voice` 非空 → 生成/克隆；`cloud.models.voice_design` 非空 → 音色设计 |
+| `local`（仅本地） | 只看本机 active 引擎的 `kind_tags`（0.6B 只有 tts/clone，因此无音色设计） |
+| `hybrid`（混合） | 两者并集（本地不可用会自动转云端） |
+
+- 以前前端直接读本机引擎能力，导致「云端 1.7B + 本地 0.6B + 仅云端」时音色设计被误禁；
+  现在以 `/api/meta`.`capabilities` 为单一真源
+- 云端模型名留空时，云端合成会直接报 `CLOUD_MODEL_UNSET`（提示去设置里填模型名）
+

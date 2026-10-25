@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.24",
+  "version": "1.1.25",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.25：修「云端 1.7B + 本地仅 0.6B + 纯云端」时音色设计不可用——能力门禁改由后端 /api/meta.capabilities 按运行模式判定；云端模型名留空报 CLOUD_MODEL_UNSET",
     "v1.1.24：新增 MCP 扩展计划 docs/spec/MCP-EXPANSION-1.md（resources/prompts/sampling、批量/说话人/导出字幕/引擎/云端引擎/预热共 ~35 个工具、五阶段里程碑）+ 视频配音可行性评估",
     "v1.1.23：Whisper 加载改逐级降级（cuda 各精度 → cpu），修「Requested int8_float16 … not support」导致 ASR 全挂；实际生效的 device/compute 写入日志与 /api/health",
     "v1.1.22：新增维护者手册 docs/PACKAGING-AND-TRIBAL-KNOWLEDGE.md——打包/发版全流程、打包脚本硬规则、PyInstaller 占用处理、按模块踩坑清单、打包后抽查与排障速查",

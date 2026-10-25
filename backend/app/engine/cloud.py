@@ -286,6 +286,15 @@ class CloudEngine:
             if len(smaller) > 1:
                 chunks = smaller + chunks[1:]
 
+        # 云端模型名必须非空，否则会把空 model 发上去、换来含糊的 400
+        model_kind = req.model_kind()
+        model_name = str(getattr(cfg.models, model_kind, "") or "").strip()
+        if not model_name:
+            raise AppError(
+                "CLOUD_MODEL_UNSET",
+                f"云端未配置 {model_kind} 模型名（任务类型 {req.kind} 需要它）",
+            )
+
         total = len(chunks)
         for index, piece in enumerate(chunks):
             if cancel.is_set():
@@ -300,7 +309,7 @@ class CloudEngine:
                 "ref_asset_id": asset_id,
                 "ref_text": req.ref_text,
                 "params": req.params.to_dict(),
-                "model": getattr(cfg.models, req.model_kind()),
+                "model": model_name,
             }
             pcm, sr, meta = self._post_audio("/v1/engine/synth", payload, cancel)
             yield AudioChunk(
@@ -310,7 +319,7 @@ class CloudEngine:
                 is_last=index == total - 1,
                 text=piece,
                 backend="cloud",
-                model=meta.get("model") or getattr(cfg.models, req.model_kind()),
+                model=meta.get("model") or model_name,
             )
 
     # ---------------- 转写 ----------------

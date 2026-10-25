@@ -212,10 +212,15 @@ def trim_asset(asset_id: str, payload: TrimRequest, state: AppState = Depends(ge
     return state.assets.save_wav(f"{asset_id}-trim.wav", clip, sr)
 
 
-@router.get("/meta", summary="能力与元数据（音色目录、语言、限制）")
+@router.get("/meta", summary="能力与元数据（音色目录、语言、限制、有效能力）")
 def meta(state: AppState = Depends(get_state)):
+    from ..capabilities import effective_capabilities
+
     cfg = state.cfg
     return {
+        # 有效能力：按 run.mode 计算（cloud 只看云端模型，local 只看本地引擎，hybrid 取并集）。
+        # 前端门禁必须用它，不能再用本机引擎的 kind_tags，否则「云端 1.7B + 本地 0.6B + 纯云端」会把设计挡掉。
+        "capabilities": effective_capabilities(cfg),
         "languages": LANGUAGES,
         "builtin_catalog": BUILTIN_VOICES,
         "limits": cfg.limits.model_dump(),

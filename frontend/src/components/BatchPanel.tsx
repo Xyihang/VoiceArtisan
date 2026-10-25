@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
+import { useApp } from '../state/AppContext';
 import type { BatchItemPayload, TaskType, Voice } from '../types';
 import { Modal, ProgressBar, Skeleton, Spinner } from './ui';
 import { VoicePicker } from './VoicePicker';
@@ -56,6 +57,13 @@ function errorText(error: unknown, fallback: string): string {
 export function BatchPanel({ onDone }: { onDone?: () => void }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
+  const { meta } = useApp();
+  /** 有效能力（后端按 run.mode 算）：纯云端时本地 0.6B 不应挡掉音色设计 */
+  const capsList = meta?.capabilities?.caps ?? ['tts', 'clone', 'design'];
+  const availableTypes = useMemo(
+    () => BATCH_TYPES.filter((item) => capsList.includes(item.id)),
+    [capsList],
+  );
   const [type, setType] = useState<TaskType>('tts');
   const [speed, setSpeed] = useState('1.0');
   const [language, setLanguage] = useState('');
@@ -74,6 +82,13 @@ export function BatchPanel({ onDone }: { onDone?: () => void }) {
   const [progress, setProgress] = useState<BatchProgress | null>(null);
 
   const lines = useMemo(() => text.split('\n').map((l) => l.trim()).filter(Boolean), [text]);
+
+  // 能力变化（例如切了运行模式）后，把不可用的类型自动落到可用项
+  useEffect(() => {
+    if (availableTypes.some((item) => item.id === type)) return;
+    const next = availableTypes[0];
+    if (next) setType(next.id);
+  }, [availableTypes, type]);
   const needInstruct = type === 'clone' || type === 'design';
 
   const remember = (id: string | null) => {
@@ -227,9 +242,15 @@ export function BatchPanel({ onDone }: { onDone?: () => void }) {
                 id="batch-type"
                 className="select"
                 value={type}
+                disabled={!availableTypes.length}
+                title={
+                  availableTypes.length
+                    ? undefined
+                    : `当前没有可用能力：${meta?.capabilities?.missing_hint || '请检查运行模式与模型配置'}`
+                }
                 onChange={(e) => setType(e.target.value as TaskType)}
               >
-                {BATCH_TYPES.map((item) => (
+                {availableTypes.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.label}
                   </option>

@@ -26,6 +26,11 @@ ERRORS: dict[str, tuple[str, str]] = {
         "云端模型尚未就绪",
         "云端正在加载模型，请稍候；系统会自动重试并在就绪后继续。",
     ),
+    "CLOUD_MODEL_UNSET": (
+        "云端未配置该能力的模型名",
+        "打开「设置 → 云端连接」，把对应模型名填上（音色设计需要 VoiceDesign，"
+        "克隆/合成需要 Base 或 CustomVoice），或把运行模式切回本地。",
+    ),
     "CLOUD_AUTH_FAILED": (
         "云端鉴权失败",
         "请核对设置页中的云端 API 密钥（X-API-Key）。",

@@ -21,6 +21,8 @@ type AppContextValue = {
   settings: SettingsPayload | null;
   settingsLoading: boolean;
   reloadSettings: () => Promise<void>;
+  /** 重新拉 /api/meta（运行模式变化后能力判定要跟着变） */
+  reloadMeta: () => Promise<void>;
   refreshHealth: () => Promise<Health | null>;
   live: boolean;
   events: WsEvent[] | null;
@@ -121,17 +123,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [describeError, pushToast]);
 
+  const reloadMeta = useCallback(async () => {
+    try {
+      const data = await api.meta();
+      setMeta(data);
+    } catch {
+      /* meta 拿不到时保留旧值，不打断用户操作 */
+    }
+  }, []);
+
   const reloadSettings = useCallback(async () => {
     setSettingsLoading(true);
     try {
-      const data = await api.settings();
+      const [data] = await Promise.all([api.settings(), reloadMeta()]);
       setSettings(data);
     } catch (error) {
       pushToast({ level: 'error', ...describeError(error) });
     } finally {
       setSettingsLoading(false);
     }
-  }, [describeError, pushToast]);
+  }, [describeError, pushToast, reloadMeta]);
 
   // 初始化：健康、元数据、设置
   useEffect(() => {
@@ -199,6 +210,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       settings,
       settingsLoading,
       reloadSettings,
+    reloadMeta,
       refreshHealth,
       live,
       events: null,
@@ -221,6 +233,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       settings,
       settingsLoading,
       reloadSettings,
+    reloadMeta,
       refreshHealth,
       live,
       tasks,

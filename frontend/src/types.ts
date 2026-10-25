@@ -173,6 +173,8 @@ export interface Health {
 
 export interface Meta {
   languages: { id: string; label: string }[];
+  /** 有效能力（按 run.mode 计算，前端门禁只用它） */
+  capabilities?: CapabilitySet;
   limits: {
     max_upload_mb: number;
     max_ref_audio_seconds: number;
@@ -393,6 +395,21 @@ export interface EngineInstallStatus {
   /** 后端 install/status 会返回：线程是否还在跑（轮询兜底用） */
   running?: boolean;
   job_id?: string;
+}
+
+/** 有效能力（后端按 run.mode 计算，前端门禁的唯一真源） */
+export interface CapabilitySet {
+  source: 'local' | 'cloud' | 'both';
+  mode: string;
+  caps: string[];
+  missing: string[];
+  detail: string;
+  local_caps: string[];
+  cloud_caps: string[];
+  cloud_configured: boolean;
+  active_engine?: string;
+  cloud_models?: string;
+  missing_hint?: string;
 }
 
 export interface EngineHealth {
