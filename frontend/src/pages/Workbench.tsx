@@ -596,7 +596,14 @@ export function WorkbenchPage() {
           {engineCaps.name ? (
             <span
               className="chip"
-              title={`能力来源：${effectiveCaps?.detail || '未知'}｜可用：${capsList.join(' / ') || '无'}`}
+              title={
+                `能力来源：${effectiveCaps?.detail || '未知'}｜可用：${capsList.join(' / ') || '无'}` +
+                (effectiveCaps?.source !== 'local'
+                  ? effectiveCaps?.cloud_verified
+                    ? '｜云端模型已实测'
+                    : '｜云端模型按配置推断（连接不上云端，未校验）'
+                  : '')
+              }
             >
               {effectiveCaps?.source === 'cloud' ? '云端' : '引擎'}
               <strong style={{ marginLeft: 2 }}>{engineCaps.name}</strong>

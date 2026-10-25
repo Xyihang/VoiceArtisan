@@ -68,11 +68,18 @@ def effective_capabilities(cfg: Any) -> dict[str, Any]:
         local_caps, _ = _local_caps(active_id)
     else:
         local_caps = {"tts", "asr"}
-    return effective_capabilities_with(cfg, local_caps, active_id)
+    try:
+        from .cloud_models import snapshot as _cloud_snapshot
+
+        snap = _cloud_snapshot(cfg)
+    except Exception:  # noqa: BLE001 - 探测异常绝不能影响 /api/meta
+        logger.debug("云端模型快照异常", exc_info=True)
+        snap = None
+    return effective_capabilities_with(cfg, local_caps, active_id, cloud_snapshot=snap)
 
 
 def effective_capabilities_with(
-    cfg: Any, local_caps: set[str], active_id: str = ""
+    cfg: Any, local_caps: set[str], active_id: str = "", cloud_snapshot: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """纯函数：给定本地能力，按 run.mode 算出有效能力（便于单测）。
 
@@ -85,6 +92,16 @@ def effective_capabilities_with(
     local_missing = [c for c in ALL_CAPS if c not in local_caps]
     cloud_cfg = getattr(cfg, "cloud", None)
     cloud_caps, cloud_missing = _cloud_caps(cloud_cfg)
+
+    # 云端**实际**装了什么，以 /v1/models 探测为准（配置名可能与实际不符）。
+    # 探测不可用时（实例没开/隧道断）退回"按配置名"，并标记 unverified 让界面提示。
+    cloud_verified = False
+    if cloud_snapshot and cloud_snapshot.get("caps"):
+        actual = set(cloud_snapshot["caps"])
+        cloud_verified = True
+        # ASR 与 TTS 模型无关，始终保留
+        cloud_caps = actual | {"asr"}
+        cloud_missing = [c for c in ALL_CAPS if c not in cloud_caps]
     cloud_configured = bool(
         str(getattr(cloud_cfg, "base_url", "") or "").strip()
         and not str(getattr(cloud_cfg, "base_url", "")).startswith("https://your-")
@@ -121,6 +138,9 @@ def effective_capabilities_with(
         "cloud_configured": cloud_configured,
         "active_engine": active_id,
         "cloud_models": _model_summary(cloud_cfg),
+        "cloud_verified": cloud_verified,
+        "cloud_ready_models": (cloud_snapshot or {}).get("ready_models") or {},
+        "cloud_probe_error": (cloud_snapshot or {}).get("error"),
         "missing_hint": (
             "设计能力需要 VoiceDesign 模型：本地装 Qwen3-TTS 1.7B，或在「设置 → 云端连接」填云端 VoiceDesign 模型名"
             if "design" in missing

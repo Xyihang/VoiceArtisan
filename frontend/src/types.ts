@@ -409,6 +409,10 @@ export interface CapabilitySet {
   cloud_configured: boolean;
   active_engine?: string;
   cloud_models?: string;
+  /** 云端模型清单是否已实测（/v1/models）；false 表示按配置名推断，可能不准 */
+  cloud_verified?: boolean;
+  cloud_ready_models?: Record<string, string>;
+  cloud_probe_error?: string | null;
   missing_hint?: string;
 }
 
