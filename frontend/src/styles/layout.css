@@ -409,6 +409,27 @@
   }
 }
 
+/* 工作台两栏栅格：与 .page 一致的 32px 间距（之前没有栅格定义，卡片是紧贴的） */
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.workbench__column {
+  display: grid;
+  gap: var(--space-6);
+  align-content: start;
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* 底部 Dock 容器 */
 .docknav-zone {
   position: fixed;
