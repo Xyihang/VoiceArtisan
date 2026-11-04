@@ -64,6 +64,8 @@
   /* --- 形状 --- */
   --radius-sm: 8px;
   --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-full: 999px;
   --border-width: 1px;
 

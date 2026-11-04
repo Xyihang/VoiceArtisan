@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.35",
+  "version": "1.1.36",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.36：卡片/按钮/输入/胶囊/分段/表格/弹层/设置目录统一改成 demo 的液态玻璃表面；新增 --radius-lg/--radius-xl",
     "v1.1.35：顶栏品牌轮播改为五段式「Made by … · 声匠 · 图标 · VOICESMITH · 保留所有权利 · © 2026 xiyihang」，字号整体调大",
     "v1.1.34：删除页面底部页脚，署名与版权并入顶栏品牌轮播（Made by … ⟡ 图标 ⟡ 保留所有权利 · © 2026 xiyihang）",
     "v1.1.33：页面标题固定到顶栏最左（20px/700），副标题与状态胶囊在顶栏居中并放大一号（13px/12px），轮播改为「品牌 ⟷ 副标题+状态」",
