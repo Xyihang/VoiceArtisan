@@ -64,11 +64,11 @@ export function TopbarCarousel({ subtitle, chips, routeKey }: Props) {
     >
       {/* 品牌 */}
       <div className="topbar-slide topbar-slide--brand" data-active={slide === 0 ? 'true' : 'false'} aria-hidden={slide !== 0}>
-        <span className="topbar-slide__name">声匠</span>
+        <span className="topbar-slide__name">Made by xiyihang360@163.com</span>
         <span className="topbar-slide__mark" aria-hidden="true">
           <AudioLines size={18} strokeWidth={2} />
         </span>
-        <span className="topbar-slide__sub">VoiceSmith</span>
+        <span className="topbar-slide__sub">保留所有权利 · © 2026 xiyihang</span>
       </div>
 
       {/* 当前页面信息 */}

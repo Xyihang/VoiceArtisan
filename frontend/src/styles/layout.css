@@ -321,10 +321,12 @@
 
 /* —— 品牌页 —— */
 .topbar-slide__name {
-  font-size: var(--fs-15);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-tight);
+  font-size: 12px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
   line-height: 1;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .topbar-slide__mark {
@@ -339,11 +341,11 @@
 }
 
 .topbar-slide__sub {
-  font-size: var(--fs-11);
-  letter-spacing: var(--tracking-eyebrow);
+  font-size: 12px;
+  letter-spacing: 0;
   color: var(--color-text-muted);
-  text-transform: uppercase;
   line-height: 1;
+  white-space: nowrap;
 }
 
 /* —— 页面信息页 —— */

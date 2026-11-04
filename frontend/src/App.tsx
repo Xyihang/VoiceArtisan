@@ -174,22 +174,6 @@ function Shell() {
           </div>
         </header>
         <main>{page}</main>
-        <footer className="app-footer">
-          <span>
-            Made by{' '}
-            <a href="mailto:xiyihang360@163.com" className="app-footer__link">
-              xiyihang360@163.com
-            </a>
-          </span>
-          <span className="app-footer__dot" aria-hidden="true">
-            ·
-          </span>
-          <span>保留所有权利</span>
-          <span className="app-footer__dot" aria-hidden="true">
-            ·
-          </span>
-          <span className="num">© 2026 xiyihang</span>
-        </footer>
       </div>
       <DockNav
         routes={ROUTES.map((r) => ({ id: r.id, label: r.label, icon: r.icon }))}

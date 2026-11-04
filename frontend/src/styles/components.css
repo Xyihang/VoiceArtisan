@@ -2961,12 +2961,6 @@ mark.hl {
   min-height: 0;
 }
 
-.main:has(.page--fill) > .app-footer {
-  flex: 0 0 auto;
-  padding-top: var(--space-2);
-  padding-bottom: var(--space-2);
-}
-
 @media (max-width: 760px) {
   .main:has(.page--fill) {
     height: auto;
@@ -3030,18 +3024,7 @@ mark.hl {
   padding-bottom: 0;
 }
 
-.main:has(.page--fill) > .app-footer {
-  padding-top: 2px;
-  padding-bottom: 6px;
-  font-size: var(--fs-11);
-  opacity: 0.75;
-}
-
 /* 娴犺濮熸稉顓炵妇鐠愭潙绨抽敍鍫㈢矒閻楀牞绱氶敍姘舵閽樺繘銆夐懘?+ 妞ゅ爼鍎撮崘鍛扮珶鐠烘繃鏁圭槐褝绱濈拋鈺勩€冮弽鐓庡幢閻楀洤鏁栭柌蹇氬垱閸掓壆鐛ラ崣锝呯俺鏉?*/
-.main:has(.page--fill) > .app-footer {
-  display: none;
-}
-
 .page--fill {
   padding-top: var(--space-3);
   gap: var(--space-3);
