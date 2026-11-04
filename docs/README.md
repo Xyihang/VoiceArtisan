@@ -62,6 +62,7 @@
 | [DEPLOY.md](DEPLOY.md) | 环境要求、venv 安装、systemd / Windows 服务、Nginx 反代、备份升级、端口清单 |
 | [DELIVERY-AND-CLOUD-VERIFY.md](DELIVERY-AND-CLOUD-VERIFY.md) | **发版与云端实证手册**：exe/源码包/便携包怎么打、打包必排项、云端模型直传、diarize 实证命令与踩坑（av.open / 配置覆盖） |
 | 视频配音（规划中） | 见 `spec/MCP-EXPANSION-1.md` 第 8 节：可行性、MVP 范围、工作量与风险 | [spec/MCP-EXPANSION-1.md](spec/MCP-EXPANSION-1.md) |
+| 液态玻璃 Dock（规划中） | 去侧栏 + 底部 Dock + 独立搜索圆钮的规格与验收 | [spec/SPEC-LIQUID-DOCK-1.md](spec/SPEC-LIQUID-DOCK-1.md) |
 | [PACKAGING-AND-TRIBAL-KNOWLEDGE.md](PACKAGING-AND-TRIBAL-KNOWLEDGE.md) | **维护者手册（经验文档）**：打包/发版全流程、打包脚本硬规则、PyInstaller 占用处理、按模块的踩坑清单（依赖与 torch、安装进度、云端、其它历史事故）、打包后抽查清单、排障速查 |
 | [UPGRADE.md](UPGRADE.md) | 独立升级工具 `QWENTTS-Upgrader.exe` 的使用方法与保留/覆盖规则 |
 | [BENCHMARK.md](BENCHMARK.md) | 实测数据：1.7B 在 4GB 卡、流式 vs 非流式、云端链路、验收结论 |
