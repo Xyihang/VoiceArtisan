@@ -130,24 +130,22 @@ function Shell() {
       <div className="main">
         <header className="topbar">
           <span className="topbar__title">{current.title}</span>
+          <div className="topbar__brand">
+            <span className="topbar__brand-mark" aria-hidden="true">
+              <AudioLines size={14} strokeWidth={2} />
+            </span>
+            <span className="topbar__brand-text">
+              <span className="topbar__brand-title">声匠</span>
+              <span className="topbar__brand-sub">VoiceSmith</span>
+            </span>
+          </div>
           <div className="topbar__meta">
             <ModeBadge />
             <BackendStatus />
             <ThemeToggle />
           </div>
         </header>
-        <main>
-          <div className="content-brand">
-            <span className="content-brand__mark" aria-hidden="true">
-              <AudioLines size={16} strokeWidth={2} />
-            </span>
-            <span>
-              <span className="content-brand__title">声匠</span>
-              <span className="content-brand__sub">VoiceSmith</span>
-            </span>
-          </div>
-          {page}
-        </main>
+        <main>{page}</main>
         <footer className="app-footer">
           <span>
             Made by{' '}

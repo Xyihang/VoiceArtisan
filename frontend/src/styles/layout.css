@@ -148,6 +148,47 @@
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
+/* 品牌：顶栏水平居中（与左右两侧内容互不影响） */
+.topbar__brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.topbar__brand-mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  color: #fff;
+  background: linear-gradient(145deg, var(--color-primary), var(--color-accent));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), 0 4px 10px var(--color-primary-soft);
+}
+
+.topbar__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.topbar__brand-title {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.topbar__brand-sub {
+  font-size: 9px;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
 .topbar__title {
   font-size: var(--fs-16);
   font-weight: var(--fw-semibold);
@@ -394,38 +435,6 @@
    侧栏已移除；Dock 固定在底部，胶囊用 SVG 位移贴图做边缘折射。
    ========================================================================= */
 
-/* 内容区品牌块（原来在 rail 顶部） */
-.content-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
-.content-brand__mark {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  color: #fff;
-  background: linear-gradient(145deg, var(--color-primary), var(--color-accent));
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 8px 20px var(--color-primary-soft);
-}
-
-.content-brand__title {
-  font-size: var(--fs-14);
-  font-weight: var(--fw-semibold);
-  line-height: 1.2;
-}
-
-.content-brand__sub {
-  font-size: var(--fs-11);
-  letter-spacing: var(--tracking-eyebrow);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-}
-
 /* 底部 Dock 容器 */
 .docknav-zone {
   position: fixed;
@@ -657,6 +666,12 @@
 
   .docknav__tab svg {
     margin-bottom: 2px;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar__brand-sub {
+    display: none;
   }
 }
 

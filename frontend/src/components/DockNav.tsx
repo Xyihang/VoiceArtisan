@@ -55,6 +55,9 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
   const [immediate, setImmediate] = useState(true);
   const mapRef = useRef({ w: 0, h: 0, strength: 0 });
   const dragRef = useRef({ armed: false, dragging: false, startX: 0, startCenter: 0 });
+  /** 拖拽中离得最近的 tab 下标（松手后才真正切页面） */
+  const pendingIndexRef = useRef<number | null>(null);
+  const settleTimerRef = useRef<number | null>(null);
 
   const activeIndex = Math.max(0, routes.findIndex((r) => r.id === current));
 
@@ -94,6 +97,8 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     canvasRef.current = canvas;
 
     return () => {
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
       svg.remove();
       filterRef.current = null;
       feImageRef.current = null;
@@ -269,7 +274,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     const hi = m.tabsLeft + m.tabsWidth - 30;
     const next = Math.max(lo, Math.min(hi, state.startCenter + (x - state.startX)));
     setCenterX(next);
-    // 拖到哪一格就切到哪一格（松手只做吸附）
+    // 拖拽过程中**不切页面**：只记住离得最近的 tab，松手等动画播完再切
     let best = 0;
     let bd = Infinity;
     m.centers.forEach((c, i) => {
@@ -279,8 +284,40 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
         best = i;
       }
     });
-    const target = routes[best];
-    if (target && target.id !== current) onNavigate(target.id);
+    pendingIndexRef.current = best;
+  };
+
+  /** 松手后：先吸附动画，等它播完再切页面（避免"页面先变、胶囊后到"的割裂感） */
+  const navigateAfterSettle = (index: number) => {
+    if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
+    const target = routes[index];
+    if (!target) return;
+    const done = () => {
+      if (target.id !== current) onNavigate(target.id);
+    };
+    const pill = pillRef.current;
+    if (!pill) {
+      settleTimerRef.current = window.setTimeout(done, 560);
+      return;
+    }
+    let fired = false;
+    const onEnd = (e: TransitionEvent) => {
+      if (e.propertyName !== 'transform' || fired) return;
+      fired = true;
+      pill.removeEventListener('transitionend', onEnd);
+      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+      done();
+    };
+    pill.addEventListener('transitionend', onEnd);
+    // 兜底：某些环境（reduce-motion / 标签页后台）不触发 transitionend
+    settleTimerRef.current = window.setTimeout(() => {
+      pill.removeEventListener('transitionend', onEnd);
+      if (!fired) {
+        fired = true;
+        done();
+      }
+    }, 560);
   };
 
   const endDrag = () => {
@@ -290,19 +327,16 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     const wasDragging = state.dragging;
     dragRef.current = { armed: false, dragging: false, startX: 0, startCenter: 0 };
     setLifted(false);
-    if (!wasDragging) return;
+    if (!wasDragging) {
+      pendingIndexRef.current = null;
+      return;
+    }
     const m = metrics();
     if (!m) return;
-    let best = 0;
-    let bd = Infinity;
-    m.centers.forEach((c, i) => {
-      const d = Math.abs(c - centerX);
-      if (d < bd) {
-        bd = d;
-        best = i;
-      }
-    });
+    const best = pendingIndexRef.current ?? activeIndex;
+    pendingIndexRef.current = null;
     setCenterX(m.centers[best] ?? m.center);
+    navigateAfterSettle(best);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
