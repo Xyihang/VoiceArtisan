@@ -161,9 +161,9 @@ function Shell() {
     <div className="shell">
       <div className="main">
         <header className="topbar">
+          <span className="topbar__page-title">{current.title}</span>
           <TopbarCarousel
             routeKey={route}
-            title={current.title}
             subtitle={PAGE_SUBTITLES[current.id] || ''}
             chips={topbarChips}
           />

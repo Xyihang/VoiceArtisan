@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AudioLines } from 'lucide-react';
 
 type Props = {
-  /** 当前页面标题（如「工作台」） */
-  title: string;
-  /** 页面副标题 / 能力描述 */
+  /** 页面副标题 / 能力描述（标题固定在顶栏最左边，不参与轮播） */
   subtitle: string;
   /** 状态片段：模式、显存、云端详情（已去重的纯文本） */
   chips: string[];
@@ -23,7 +21,7 @@ const BRAND_MS = 3200; // 品牌停留
  * - `prefers-reduced-motion` 下只做淡入淡出，不做位移
  * - 页面头里的标题/副标题/状态都搬到这里，页面本体不再重复
  */
-export function TopbarCarousel({ title, subtitle, chips, routeKey }: Props) {
+export function TopbarCarousel({ subtitle, chips, routeKey }: Props) {
   const [slide, setSlide] = useState<0 | 1>(1); // 1 = 页面信息，0 = 品牌
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -75,7 +73,6 @@ export function TopbarCarousel({ title, subtitle, chips, routeKey }: Props) {
 
       {/* 当前页面信息 */}
       <div className="topbar-slide topbar-slide--page" data-active={slide === 1 ? 'true' : 'false'} aria-hidden={slide !== 1}>
-        <span className="topbar-slide__title">{title}</span>
         <span className="topbar-slide__desc" title={subtitle}>
           {subtitle}
         </span>

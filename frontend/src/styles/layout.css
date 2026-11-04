@@ -263,10 +263,27 @@
   }
 }
 
+/* 顶栏最左：当前页面标题（加粗加大，不参与轮播） */
+.topbar__page-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--color-text);
+  white-space: nowrap;
+  margin-right: var(--space-4);
+}
+
 /* ===== 顶栏轮播：品牌 ⟷ 当前页面信息 ===== */
 .topbar-carousel {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  /* 居中但被左右夹住：左侧给标题留位，右侧给状态留位 */
+  width: min(60vw, 760px);
+  max-width: calc(100vw - var(--topbar-title-w, 200px) - var(--topbar-meta-w, 260px));
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -278,13 +295,19 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  max-width: min(760px, 62vw);
+  max-width: 100%;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(6px) scale(0.985);
   transition:
-    opacity 320ms var(--ease-out),
-    transform 320ms var(--ease-out);
+    opacity 240ms var(--ease-out),
+    transform 300ms var(--ease-out);
   pointer-events: none;
+}
+
+/* 先让旧内容退场、再让新内容进场，避免两页文字叠在一起 */
+.topbar-slide[data-active='true'] {
+  transition-delay: 110ms;
 }
 
 .topbar-slide[data-active='true'] {
@@ -333,10 +356,10 @@
 }
 
 .topbar-slide__desc {
-  font-size: var(--fs-12);
+  font-size: 13px;
   color: var(--color-text-muted);
   line-height: 1.1;
-  max-width: 340px;
+  max-width: min(38vw, 420px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -351,10 +374,10 @@
 .topbar-chip {
   display: inline-flex;
   align-items: center;
-  height: 22px;
-  padding: 0 9px;
+  height: 24px;
+  padding: 0 10px;
   border-radius: var(--radius-full);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-secondary);
   background: var(--color-surface-nested);
   border: 1px solid var(--color-border);
