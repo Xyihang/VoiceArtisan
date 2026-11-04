@@ -320,12 +320,21 @@
 }
 
 /* —— 品牌页 —— */
-.topbar-slide__name {
-  font-size: 12px;
-  font-weight: var(--fw-medium);
+.topbar-slide__credit {
+  font-size: 13px;
+  font-weight: var(--fw-regular);
   letter-spacing: 0;
   line-height: 1;
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.topbar-slide__name {
+  font-size: 15px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+  color: var(--color-text);
   white-space: nowrap;
 }
 
@@ -342,8 +351,9 @@
 
 .topbar-slide__sub {
   font-size: 12px;
-  letter-spacing: 0;
-  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
   line-height: 1;
   white-space: nowrap;
 }
