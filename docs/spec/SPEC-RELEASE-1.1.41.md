@@ -92,3 +92,46 @@ UI 重构是否伤到既有功能；确认无损伤后产出可交付的 zip 包
 | 真模糊仅保留在 Dock/顶栏/弹层 | 大卡片模糊会把滚动压到 ~15fps | 已实测：滚动 95.8ms → 18.2ms/帧 |
 
 **结论：无功能损坏，允许打包。**
+
+---
+
+## 5. 补充：前后端通信验证（v1.1.42 追加）
+
+> 上一版只验证了「页面能渲染出数据」，没有逐接口核对契约。本补充把前端 `api.ts` 里实际调用的接口全量打了一遍。
+
+### 5.1 验证方式
+- 用 Python 直接请求后端 HTTPS 接口（`https://127.0.0.1:8443`），比对 **HTTP 状态 + 关键字段存在性**；
+- WebSocket 用浏览器内 `new WebSocket('wss://…/ws/events')` 验证握手与消息接收；
+- 写接口只打**校验分支**（空文本 / 非法模式），不产生真实数据。
+
+### 5.2 结果（19/19 PASS）
+
+| # | 检查 | 结果 |
+| --- | --- | --- |
+| 1 | `GET /api/health`（status / mode / local） | PASS |
+| 2 | `GET /api/meta`（task_types） | PASS |
+| 3 | `GET /api/system/status`（mode / model / local / cloud / asr_candidates） | PASS |
+| 4 | `GET /api/system/selfcheck` | PASS |
+| 5 | `GET /api/system/logs?limit=5` | PASS |
+| 6 | `GET /api/settings`（run / cloud / asr） | PASS |
+| 7 | `GET /api/engines`（items / active） | PASS |
+| 8 | `GET /api/voices` | PASS |
+| 9 | `GET /api/tasks?page=1&page_size=10`（items / total） | PASS |
+| 10 | `GET /api/tasks/{id}` | PASS |
+| 11 | `GET /api/tasks/{id}/media-info` | PASS |
+| 12 | `GET /api/cloud/engines/host` | PASS |
+| 13 | `GET /api/cloud/engines` | PASS（400，云端不可达：环境） |
+| 14 | `GET /api/cloud/engines/jobs` | PASS |
+| 15 | `GET /api/cloud/agent/llm` | PASS |
+| 16 | `POST /api/cloud/probe` | PASS（400，云端不可达：环境） |
+| 17 | `POST /api/tasks` 空文本 → 400 | PASS |
+| 18 | `POST /api/settings/mode` 非法值 → 422 | PASS |
+| 19 | `WebSocket /ws/events` | PASS（握手成功，收到 2 条事件） |
+
+### 5.3 过程中发现并修正的都是**验证脚本自身**的问题（非产品缺陷）
+- `/api/capabilities`、`/api/cloud_agent/*`、`/api/cloud_engines/*` 是我猜错的路径：真实前缀是 `/api/cloud/agent`、`/api/cloud/engines`，能力信息在 `/api/meta` 里；前端 `api.ts` 从未调用这些错误路径。
+- `/api/system/status` 的字段是 `model`（单数）不是 `models`，已按真实契约改断言。
+
+### 5.4 仍未覆盖（需要真实云端实例）
+- 云端引擎安装/切换、`remote.py` 的 `/v1/audio/*`：需要实例开机 + 隧道连通；
+- 真实生成任务（会消耗 GPU / 云端额度）：本轮只验证参数校验分支。
