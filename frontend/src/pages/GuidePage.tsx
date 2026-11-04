@@ -735,12 +735,6 @@ export function GuidePage() {
   return (
     <div className="page guide-page">
       <div className="page__head">
-        <div>
-          <h1>教程</h1>
-          <p className="page__subtitle">
-            「设置」里每个功能是干什么的、该填什么、坏了怎么修；点分区右侧按钮可直接跳到设置对应位置
-          </p>
-        </div>
         <div className="toolbar">
           <button type="button" className="btn btn--sm" onClick={() => scrollToSection(GUIDE[0].id)}>
             <ArrowUp size={14} strokeWidth={1.75} /> 回到顶部

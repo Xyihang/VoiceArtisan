@@ -184,10 +184,6 @@ export function StatusPage() {
   return (
     <div className="page">
       <div className="page__head">
-        <div>
-          <h1>状态与日志</h1>
-          <p className="page__subtitle">后端健康、显存占用、首包与实时率统计、运行环境自检与最近日志</p>
-        </div>
         <div className="toolbar">
           <button
             type="button"

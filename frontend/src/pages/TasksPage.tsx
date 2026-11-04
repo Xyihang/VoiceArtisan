@@ -513,13 +513,6 @@ export function TasksPage() {
   return (
     <div className="page page--fill">
       <div className="page__head">
-        <div>
-          <h1>任务中心</h1>
-          <p className="page__subtitle">
-            状态实时推送 · 筛选写入地址栏 · <kbd className="kbd">J</kbd>/<kbd className="kbd">K</kbd> 移动 ·{' '}
-            <kbd className="kbd">Enter</kbd> 详情 · <kbd className="kbd">R</kbd> 重试 · <kbd className="kbd">D</kbd> 下载
-          </p>
-        </div>
         <div className="toolbar">
           <BatchPanel onDone={() => void load()} />
           <button type="button" className="btn btn--sm" onClick={() => void load()} title="重新拉取任务列表">

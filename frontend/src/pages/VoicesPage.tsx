@@ -351,13 +351,6 @@ export function VoicesPage() {
   return (
     <div className="page">
       <div className="page__head">
-        <div>
-          <h1>音色库</h1>
-          <p className="page__subtitle">
-            内置 <span className="num">{builtin.length}</span> 个精选音色 + 自定义 <span className="num">{custom.length}</span> 个克隆音色，
-            覆盖不同性别、年龄、语言与方言
-          </p>
-        </div>
         <div className="toolbar">
           <button type="button" className="btn btn--sm" onClick={() => void load()} disabled={loading}>
             <RefreshCw size={14} strokeWidth={1.75} /> 刷新

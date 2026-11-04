@@ -650,12 +650,6 @@ export function SettingsPage() {
   return (
     <div className="page settings-page">
       <div className="page__head">
-        <div>
-          <h1>设置</h1>
-          <p className="page__subtitle">
-            运行模式、云端连接、隧道、模型与参数默认值；保存后立即生效并写入 data/runtime.json
-          </p>
-        </div>
         <div className="toolbar">
           <button type="button" className="btn btn--sm" onClick={() => void reloadSettings()}>
             <RefreshCw size={14} strokeWidth={1.75} /> 重新读取

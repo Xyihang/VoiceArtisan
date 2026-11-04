@@ -13,6 +13,7 @@ import { BackendStatus } from './components/BackendStatus';
 import { ThemeToggle, Toasts } from './components/Chrome';
 import { CommandPalette } from './components/CommandPalette';
 import { DockNav } from './components/DockNav';
+import { TopbarCarousel } from './components/TopbarCarousel';
 import { hasMod } from './lib/shortcuts';
 import { Skeleton } from './components/ui';
 import WorkbenchPage from './pages/Workbench';
@@ -23,6 +24,16 @@ import StatusPage from './pages/StatusPage';
 import GuidePage from './pages/GuidePage';
 
 type RouteId = 'workbench' | 'voices' | 'tasks' | 'settings' | 'status' | 'guide';
+
+/** 每个页面的一句话说明（原页面头的副标题，搬到顶栏轮播里） */
+const PAGE_SUBTITLES: Record<RouteId, string> = {
+  workbench: '文本转语音 · 声音克隆 · 音色设计 · 音频转文字，本地与云端同一套接口',
+  voices: '内置与自定义音色统一管理，支持克隆、试听与重命名',
+  tasks: '状态实时推送 · 筛选写入地址栏 · 批量提交与导出',
+  settings: '运行模式、云端连接、引擎与模型、后期处理等全部配置',
+  status: '后端健康、显存占用、首包与实时率、自检与最近日志',
+  guide: '20 个分区的说明与常见问题，边用边查',
+};
 
 const ROUTES: { id: RouteId; label: string; icon: LucideIcon; title: string }[] = [
   { id: 'workbench', label: '工作台', icon: AudioLines, title: '工作台' },
@@ -89,8 +100,29 @@ function LoadingShell() {
 }
 
 function Shell() {
-  const { health, meta, tasks } = useApp();
+  const { health, meta, tasks, settings } = useApp();
   const [route, navigate] = useHashRoute();
+  // 顶栏轮播里的状态片段：模式 / 显存 / 云端模型（原页面头里那些）
+  const mode = health?.mode || settings?.run.mode || 'hybrid';
+  const modeLabel =
+    mode === 'hybrid' ? '混合' : mode === 'cloud' ? '仅云端' : mode === 'local' ? '仅本地' : String(mode);
+  const vramMb = health?.local?.vram_allocated_mb || 0;
+  const vramLabel = vramMb >= 1024 ? `${(vramMb / 1024).toFixed(1)}GB` : vramMb ? `${Math.round(vramMb)}MB` : '未占用';
+  const cloudModels = (() => {
+    const m = settings?.cloud?.models;
+    if (!m) return '';
+    const parts: string[] = [];
+    if (m.base) parts.push('Base');
+    if (m.custom_voice) parts.push('CustomVoice');
+    if (m.voice_design) parts.push('VoiceDesign');
+    return parts.join(' / ');
+  })();
+  const topbarChips = [
+    `模式 ${modeLabel}`,
+    `显存 ${vramLabel}`,
+    cloudModels ? `云端 ${cloudModels}` : '云端 未配置',
+  ];
+
   const [paletteOpen, setPaletteOpen] = useState(false);
   const current = ROUTES.find((r) => r.id === route) || ROUTES[0];
   const activeTasks = Object.values(tasks).filter((t) => t.status === 'running' || t.status === 'queued').length;
@@ -129,14 +161,12 @@ function Shell() {
     <div className="shell">
       <div className="main">
         <header className="topbar">
-          <span className="topbar__title">{current.title}</span>
-          <div className="topbar__brand">
-            <span className="topbar__brand-title">声匠</span>
-            <span className="topbar__brand-mark" aria-hidden="true">
-              <AudioLines size={18} strokeWidth={2} />
-            </span>
-            <span className="topbar__brand-sub">VoiceSmith</span>
-          </div>
+          <TopbarCarousel
+            routeKey={route}
+            title={current.title}
+            subtitle={PAGE_SUBTITLES[current.id] || ''}
+            chips={topbarChips}
+          />
           <div className="topbar__meta">
             <ModeBadge />
             <BackendStatus />

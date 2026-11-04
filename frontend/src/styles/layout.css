@@ -203,6 +203,7 @@
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+  margin-left: auto; /* 标题搬进轮播后，右侧状态自己顶到最右 */
 }
 
 .page {
@@ -259,6 +260,117 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ===== 顶栏轮播：品牌 ⟷ 当前页面信息 ===== */
+.topbar-carousel {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.topbar-slide {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: min(760px, 62vw);
+  opacity: 0;
+  transform: translateY(6px) scale(0.985);
+  transition:
+    opacity 320ms var(--ease-out),
+    transform 320ms var(--ease-out);
+  pointer-events: none;
+}
+
+.topbar-slide[data-active='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+.topbar-carousel[data-reduced='true'] .topbar-slide {
+  transform: none;
+}
+
+/* —— 品牌页 —— */
+.topbar-slide__name {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+
+.topbar-slide__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(145deg, var(--color-primary), var(--color-accent));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), 0 4px 10px var(--color-primary-soft);
+}
+
+.topbar-slide__sub {
+  font-size: var(--fs-11);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* —— 页面信息页 —— */
+.topbar-slide__title {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.topbar-slide__desc {
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+  line-height: 1.1;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-slide__chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-nested);
+  border: 1px solid var(--color-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+}
+
+@media (max-width: 1280px) {
+  .topbar-slide__desc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar-slide__chips {
+    display: none;
   }
 }
 

@@ -571,47 +571,6 @@ export function WorkbenchPage() {
 
   return (
     <div className="page">
-      <div className="page__head">
-        <div>
-          <h1>工作台</h1>
-          <p className="page__subtitle">文本转语音 · 声音克隆 · 音色设计 · 音频转文字，本地与云端同一套接口</p>
-        </div>
-        <div className="toolbar">
-          <span className="chip">
-            模式
-            <strong style={{ marginLeft: 2 }}>
-              {mode === 'hybrid' ? '混合' : mode === 'cloud' ? '仅云端' : mode === 'local' ? '仅本地' : mode}
-            </strong>
-          </span>
-          <span className="chip">
-            本地显存
-            <span className="num">
-              {(() => {
-                const mb = health?.local?.vram_allocated_mb || 0;
-                if (!mb) return '未占用';
-                return mb >= 1024 ? `${(mb / 1024).toFixed(1)}GB` : `${Math.round(mb)}MB`;
-              })()}
-            </span>
-          </span>
-          {engineCaps.name ? (
-            <span
-              className="chip"
-              title={
-                `能力来源：${effectiveCaps?.detail || '未知'}｜可用：${capsList.join(' / ') || '无'}` +
-                (effectiveCaps?.source !== 'local'
-                  ? effectiveCaps?.cloud_verified
-                    ? '｜云端模型已实测'
-                    : '｜云端模型按配置推断（连接不上云端，未校验）'
-                  : '')
-              }
-            >
-              {effectiveCaps?.source === 'cloud' ? '云端' : '引擎'}
-              <strong style={{ marginLeft: 2 }}>{engineCaps.name}</strong>
-            </span>
-          ) : null}
-        </div>
-      </div>
-
       {offline ? (
         <InlineNote kind="error">
           后端服务离线：无法创建任务。请确认服务已启动（终端执行 python -m app.main），并检查浏览器证书信任。
