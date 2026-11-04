@@ -287,37 +287,38 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     pendingIndexRef.current = best;
   };
 
-  /** 松手后：先吸附动画，等它播完再切页面（避免"页面先变、胶囊后到"的割裂感） */
-  const navigateAfterSettle = (index: number) => {
+  /**
+   * 等胶囊"滑到位"的动画播完再执行 cb。
+   * 触发时机 = 位置到位的那一帧（也就是缩小之前一刻），符合"先滑过去、再切页、再缩小"的顺序。
+   */
+  const whenSettled = (cb: () => void) => {
     if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
-    const target = routes[index];
-    if (!target) return;
-    const done = () => {
-      if (target.id !== current) onNavigate(target.id);
-    };
     const pill = pillRef.current;
     if (!pill) {
-      settleTimerRef.current = window.setTimeout(done, 560);
+      settleTimerRef.current = window.setTimeout(cb, 80);
       return;
     }
     let fired = false;
-    const onEnd = (e: TransitionEvent) => {
-      if (e.propertyName !== 'transform' || fired) return;
-      fired = true;
+    const cleanup = () => {
       pill.removeEventListener('transitionend', onEnd);
-      if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
-      settleTimerRef.current = null;
-      done();
+      if (settleTimerRef.current) {
+        window.clearTimeout(settleTimerRef.current);
+        settleTimerRef.current = null;
+      }
+    };
+    const fire = () => {
+      if (fired) return;
+      fired = true;
+      cleanup();
+      cb();
+    };
+    const onEnd = (e: TransitionEvent) => {
+      if (e.propertyName !== 'transform') return;
+      fire();
     };
     pill.addEventListener('transitionend', onEnd);
-    // 兜底：某些环境（reduce-motion / 标签页后台）不触发 transitionend
-    settleTimerRef.current = window.setTimeout(() => {
-      pill.removeEventListener('transitionend', onEnd);
-      if (!fired) {
-        fired = true;
-        done();
-      }
-    }, 560);
+    // 兜底：位置没变（已经在目标格）或环境不触发 transitionend 时，用短延时立刻收尾
+    settleTimerRef.current = window.setTimeout(fire, 480);
   };
 
   const endDrag = () => {
@@ -326,17 +327,23 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     if (dock) dock.dataset.drag = 'false';
     const wasDragging = state.dragging;
     dragRef.current = { armed: false, dragging: false, startX: 0, startCenter: 0 };
-    setLifted(false);
     if (!wasDragging) {
       pendingIndexRef.current = null;
+      setLifted(false);
       return;
     }
     const m = metrics();
     if (!m) return;
     const best = pendingIndexRef.current ?? activeIndex;
     pendingIndexRef.current = null;
+    const target = routes[best];
+    // 1) 保持放大，先滑到目标格
     setCenterX(m.centers[best] ?? m.center);
-    navigateAfterSettle(best);
+    // 2) 滑到位的那一帧：切页面；紧接着缩回原来大小
+    whenSettled(() => {
+      if (target && target.id !== current) onNavigate(target.id);
+      setLifted(false);
+    });
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {

@@ -157,14 +157,15 @@
   align-items: center;
   gap: var(--space-2);
   pointer-events: none;
+  max-height: calc(var(--shell-topbar) - var(--space-2) * 2);
 }
 
 .topbar__brand-mark {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   color: #fff;
   background: linear-gradient(145deg, var(--color-primary), var(--color-accent));
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), 0 4px 10px var(--color-primary-soft);
@@ -177,13 +178,13 @@
 }
 
 .topbar__brand-title {
-  font-size: var(--fs-13);
+  font-size: var(--fs-15);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-tight);
 }
 
 .topbar__brand-sub {
-  font-size: 9px;
+  font-size: var(--fs-11);
   letter-spacing: var(--tracking-eyebrow);
   color: var(--color-text-muted);
   text-transform: uppercase;
