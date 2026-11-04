@@ -97,6 +97,9 @@
   --dock-shadow: 0 20px 48px rgba(19, 24, 32, 0.18);
   --glass-pill: rgba(255, 255, 255, 0.62);
   --glass-pill-lift: rgba(255, 255, 255, 0.30);
+  /* 卡片「模拟玻璃」填充（不做 backdrop-filter，见 components.css） */
+  --glass-card-fill: linear-gradient(160deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.60));
+  --glass-card-edge: rgba(255, 255, 255, 0.92);
   --dock-height: 76px;
   --dock-bottom: 24px;
   /* 内容最低位置要停在 Dock 上方：Dock 高 + 底部间距 + 一点呼吸位 */
@@ -153,6 +156,8 @@
   --dock-shadow: 0 22px 52px rgba(0, 0, 0, 0.6);
   --glass-pill: rgba(255, 255, 255, 0.24);
   --glass-pill-lift: rgba(255, 255, 255, 0.22);
+  --glass-card-fill: linear-gradient(160deg, rgba(30, 38, 49, 0.88), rgba(17, 23, 31, 0.74));
+  --glass-card-edge: rgba(255, 255, 255, 0.16);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -215,7 +215,7 @@
   width: 100%;
   margin: 0 auto;
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-6);
   align-content: start;
   animation: page-enter var(--duration-slow) var(--ease-out) both;
 }
