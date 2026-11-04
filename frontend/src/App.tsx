@@ -131,13 +131,11 @@ function Shell() {
         <header className="topbar">
           <span className="topbar__title">{current.title}</span>
           <div className="topbar__brand">
+            <span className="topbar__brand-title">声匠</span>
             <span className="topbar__brand-mark" aria-hidden="true">
-              <AudioLines size={14} strokeWidth={2} />
+              <AudioLines size={18} strokeWidth={2} />
             </span>
-            <span className="topbar__brand-text">
-              <span className="topbar__brand-title">声匠</span>
-              <span className="topbar__brand-sub">VoiceSmith</span>
-            </span>
+            <span className="topbar__brand-sub">VoiceSmith</span>
           </div>
           <div className="topbar__meta">
             <ModeBadge />

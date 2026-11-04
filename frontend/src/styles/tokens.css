@@ -97,6 +97,8 @@
   --glass-pill-lift: rgba(255, 255, 255, 0.30);
   --dock-height: 76px;
   --dock-bottom: 24px;
+  /* 内容最低位置要停在 Dock 上方：Dock 高 + 底部间距 + 一点呼吸位 */
+  --dock-safe-bottom: calc(var(--dock-height) + var(--dock-bottom) + var(--space-5));
 
   /* --- 结构 --- */
   --shell-rail: 216px;

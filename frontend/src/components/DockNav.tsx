@@ -60,6 +60,12 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
   const settleTimerRef = useRef<number | null>(null);
 
   const activeIndex = Math.max(0, routes.findIndex((r) => r.id === current));
+  /**
+   * 胶囊的"视觉位置"：与路由分开。
+   * 点 tab 时先让胶囊滑过去，快到目标前一刻才真正切页面，避免"页面先跳、胶囊后到"。
+   */
+  const [pillIndex, setPillIndex] = useState(activeIndex);
+  const navTimerRef = useRef<number | null>(null);
 
   // ---------------- SVG 滤镜（只挂一次） ----------------
   useEffect(() => {
@@ -99,6 +105,8 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     return () => {
       if (settleTimerRef.current) window.clearTimeout(settleTimerRef.current);
       settleTimerRef.current = null;
+      if (navTimerRef.current) window.clearTimeout(navTimerRef.current);
+      navTimerRef.current = null;
       svg.remove();
       filterRef.current = null;
       feImageRef.current = null;
@@ -156,12 +164,12 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
   };
 
   /** 位置换算：所有坐标都相对 .docknav，且把 tabs 的左偏移算进去 */
-  const metrics = () => {
+  const metrics = (index = pillIndex) => {
     const dock = dockRef.current;
     const tabsEl = tabsRef.current;
     if (!dock || !tabsEl) return null;
     const tabNodes = Array.from(tabsEl.querySelectorAll<HTMLElement>('[data-dock-tab]'));
-    const active = tabNodes[activeIndex] || tabNodes[0];
+    const active = tabNodes[index] || tabNodes[0];
     if (!active) return null;
     const tabsLeft = tabsEl.offsetLeft;
     const centers = tabNodes.map((n) => tabsLeft + n.offsetLeft + n.offsetWidth / 2);
@@ -170,7 +178,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
       tabsLeft,
       tabsWidth: tabsEl.offsetWidth,
       tabWidth: active.offsetWidth,
-      center: centers[activeIndex] || centers[0] || 0,
+      center: centers[index] || centers[0] || 0,
       centers,
     };
   };
@@ -187,7 +195,9 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
   }, []);
 
   useEffect(() => {
-    const m = metrics();
+    // 路由变更（点击/拖拽/地址栏/命令面板）后，胶囊索引跟上
+    setPillIndex(activeIndex);
+    const m = metrics(activeIndex);
     if (!m) return;
     setCenterX(m.center);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -216,7 +226,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     const h = baseH * (lifted ? LIFT_H : 1);
     return { w, h, y: m.dockH / 2, tabsLeft: m.tabsLeft, tabsWidth: m.tabsWidth, baseW };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lifted, centerX, routes.length, current]);
+  }, [lifted, centerX, routes.length, pillIndex]);
 
   useEffect(() => {
     if (!sizes) return;
@@ -338,6 +348,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     pendingIndexRef.current = null;
     const target = routes[best];
     // 1) 保持放大，先滑到目标格
+    setPillIndex(best);
     setCenterX(m.centers[best] ?? m.center);
     // 2) 滑到位的那一帧：切页面；紧接着缩回原来大小
     whenSettled(() => {
@@ -346,12 +357,45 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     });
   };
 
+  /** 胶囊滑动时长（与 CSS 的 520ms 对齐）。导航要提前派发：新页面首帧渲染约 200ms，
+   *  提前 330ms 派发后，视觉上大约在胶囊到位前 ~40ms 完成切换 = 「到位前一刻」 */
+  const SLIDE_MS = 520;
+  const NAV_LEAD_MS = 330;
+
+  const prefersReduced = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /** 点 tab：先让胶囊滑过去，快到位时才切页面 */
+  const goTo = (index: number) => {
+    const target = routes[index];
+    if (!target) return;
+    if (navTimerRef.current) {
+      window.clearTimeout(navTimerRef.current);
+      navTimerRef.current = null;
+    }
+    if (index === activeIndex) {
+      // 已经在这一页：只把胶囊拉回正中，不再触发导航
+      setPillIndex(index);
+      const m = metrics(index);
+      if (m) setCenterX(m.center);
+      return;
+    }
+    setPillIndex(index);
+    const m = metrics(index);
+    if (m) setCenterX(m.center);
+    const delay = prefersReduced() ? 0 : Math.max(0, SLIDE_MS - NAV_LEAD_MS);
+    navTimerRef.current = window.setTimeout(() => {
+      navTimerRef.current = null;
+      onNavigate(target.id);
+    }, delay);
+  };
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     e.preventDefault();
     const delta = e.key === 'ArrowRight' ? 1 : -1;
-    const next = routes[(activeIndex + delta + routes.length) % routes.length];
-    if (next) onNavigate(next.id);
+    const nextIndex = (activeIndex + delta + routes.length) % routes.length;
+    goTo(nextIndex);
   };
 
   const left = sizes ? Math.max(sizes.tabsLeft + sizes.baseW / 2, Math.min(sizes.tabsLeft + sizes.tabsWidth - sizes.baseW / 2, centerX)) : 0;
@@ -379,9 +423,9 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
       >
         <div className={`docknav__pill${lifted ? ' docknav__pill--lift' : ''}`} aria-hidden="true" ref={pillRef} style={pillStyle} />
         <div className="docknav__tabs" ref={tabsRef}>
-          {routes.map((item) => {
+          {routes.map((item, index) => {
             const Icon = item.icon;
-            const active = item.id === current;
+            const active = index === pillIndex;
             return (
               <button
                 key={item.id}
@@ -390,7 +434,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
                 data-dock-tab=""
                 aria-selected={active}
                 className="docknav__tab"
-                onClick={() => onNavigate(item.id)}
+                onClick={() => goTo(index)}
               >
                 <Icon size={22} strokeWidth={1.9} />
                 <i>{item.label}</i>
