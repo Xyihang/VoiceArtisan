@@ -261,13 +261,13 @@
 
 .field-row {
   display: grid;
-  /* 等宽列：每列最小 200px，多了自动换行；列与列基线对齐 */
+  /* 等宽列：每列最小 200px，多了自动换行 */
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-4) var(--space-5);
+  gap: 6px var(--space-5);
   align-items: start;
 }
 
-/* 字段内：标签 → 控件 → 说明，间距统一 */
+/* 字段内：标签 → 控件 → 说明 */
 .field {
   display: grid;
   gap: 6px;
@@ -284,11 +284,34 @@
   margin-top: -2px;
 }
 
-/* 网格里的按钮按内容宽度，两侧对齐到左 */
+/*
+ * 关键：同一行里所有字段共用一套行轨道（subgrid）。
+ * 这样「标签可能换行 / 有的字段多一行说明」都不会把控件或按钮推上推下，
+ * 同一行的输入框、下拉、按钮永远在同一水平线上。
+ */
+@supports (grid-template-rows: subgrid) {
+  .field-row > .field {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 4;
+    row-gap: 0;
+    align-content: start;
+  }
+
+  /* 直接放在行里的按钮/工具条：落到「控件行」并与控件底部对齐 */
+  .field-row > .btn,
+  .field-row > .toolbar,
+  .field-row > .segmented,
+  .field-row > .field-error {
+    grid-row: 2;
+    align-self: end;
+  }
+}
+
+/* 网格里的按钮按内容宽度 */
 .field-row > .btn,
 .field-row > .toolbar {
   justify-self: start;
-  align-self: end;
 }
 
 .field-row > .field {
@@ -2467,10 +2490,11 @@ mark.hl {
    ========================================================================= */
 .clone-flow {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(180px, auto);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(200px, auto);
   gap: var(--space-4);
   align-items: start;
 }
+
 
 .clone-step {
   display: grid;
@@ -2484,6 +2508,11 @@ mark.hl {
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-nested);
+  align-content: start;
+}
+
+.clone-step--save > .btn {
+  width: 100%;
 }
 
 .clone-step__label {
