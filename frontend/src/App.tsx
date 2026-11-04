@@ -10,8 +10,9 @@ import {
 } from 'lucide-react';
 import { AppProvider, useApp } from './state/AppContext';
 import { BackendStatus } from './components/BackendStatus';
-import { CommandButton, ThemeToggle, Toasts } from './components/Chrome';
+import { ThemeToggle, Toasts } from './components/Chrome';
 import { CommandPalette } from './components/CommandPalette';
+import { DockNav } from './components/DockNav';
 import { hasMod } from './lib/shortcuts';
 import { Skeleton } from './components/ui';
 import WorkbenchPage from './pages/Workbench';
@@ -31,9 +32,6 @@ const ROUTES: { id: RouteId; label: string; icon: LucideIcon; title: string }[] 
   { id: 'status', label: '状态与日志', icon: Activity, title: '状态与日志' },
   { id: 'guide', label: '教程', icon: BookOpen, title: '教程' },
 ];
-
-/** 「教程」固定在导航栏最下方，与主导航分开渲染 */
-const RAIL_BOTTOM_ROUTES = new Set<RouteId>(['guide']);
 
 /** 解析 `#/tasks?status=failed&page=2`：路径决定路由，查询串留给页面（筛选写进 URL） */
 function readHashRoute(): RouteId {
@@ -129,76 +127,27 @@ function Shell() {
 
   return (
     <div className="shell">
-      <nav className="rail" aria-label="主导航">
-        <div className="rail__brand">
-          <span className="rail__brand-mark" aria-hidden="true">
-            <AudioLines size={16} strokeWidth={2} />
-          </span>
-          <span className="rail__brand-text">
-            <span className="rail__brand-title">声匠</span>
-            <span className="rail__brand-sub">VoiceSmith</span>
-          </span>
-        </div>
-        <div className="rail__nav">
-          {ROUTES.filter((item) => !RAIL_BOTTOM_ROUTES.has(item.id)).map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className="nav-item"
-                aria-current={route === item.id ? 'page' : undefined}
-                onClick={() => navigate(item.id)}
-              >
-                <Icon size={17} strokeWidth={1.75} />
-                <span>{item.label}</span>
-                {item.id === 'tasks' && activeTasks ? <span className="nav-item__badge">{activeTasks}</span> : null}
-              </button>
-            );
-          })}
-          <div className="rail__nav-bottom">
-            {ROUTES.filter((item) => RAIL_BOTTOM_ROUTES.has(item.id)).map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="nav-item"
-                  aria-current={route === item.id ? 'page' : undefined}
-                  onClick={() => navigate(item.id)}
-                >
-                  <Icon size={17} strokeWidth={1.75} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <div className="rail__footer">
-          <span>本地 + 云端双后端</span>
-          <span>{health?.local?.device || '未检测到 GPU'}</span>
-          <span className="rail__credit">
-            Made by{' '}
-            <a href="mailto:xiyihang360@163.com" className="app-footer__link">
-              xiyihang360@163.com
-            </a>
-          </span>
-          <span className="rail__credit">保留所有权利</span>
-          <span className="rail__credit">© 2026 xiyihang</span>
-        </div>
-      </nav>
-
       <div className="main">
         <header className="topbar">
           <span className="topbar__title">{current.title}</span>
           <div className="topbar__meta">
-            <CommandButton onOpen={() => setPaletteOpen(true)} />
             <ModeBadge />
             <BackendStatus />
             <ThemeToggle />
           </div>
         </header>
-        <main>{page}</main>
+        <main>
+          <div className="content-brand">
+            <span className="content-brand__mark" aria-hidden="true">
+              <AudioLines size={16} strokeWidth={2} />
+            </span>
+            <span>
+              <span className="content-brand__title">声匠</span>
+              <span className="content-brand__sub">VoiceSmith</span>
+            </span>
+          </div>
+          {page}
+        </main>
         <footer className="app-footer">
           <span>
             Made by{' '}
@@ -216,6 +165,13 @@ function Shell() {
           <span className="num">© 2026 xiyihang</span>
         </footer>
       </div>
+      <DockNav
+        routes={ROUTES.map((r) => ({ id: r.id, label: r.label, icon: r.icon }))}
+        current={route}
+        onNavigate={(id) => navigate(id as RouteId)}
+        activeTasks={activeTasks}
+        onOpenSearch={() => setPaletteOpen(true)}
+      />
       <Toasts />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onNavigate={navigate} />
     </div>

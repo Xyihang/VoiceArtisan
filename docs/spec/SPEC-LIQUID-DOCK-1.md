@@ -1,6 +1,6 @@
 # 规格：液态玻璃 Dock 主导航 + 去侧栏布局（SPEC-LIQUID-DOCK-1）
 
-> 状态：**待评审（未改生产代码）**
+> 状态：**已实施（v1.1.28）** —— 评审结论：教程进 Dock（共 6 项）、顶栏保留、Dock 常驻悬浮、接受浏览器差异降级
 > 视觉参考：`.cache/preview/glass-dock-demo-liquid.html`（已确认可接受的那版 demo）
 > 影响范围：`frontend/src/App.tsx`（Shell）、`frontend/src/styles/layout.css`、`components.css`、`components/Chrome.tsx`（可选）、新增 `components/DockNav.tsx`
 > 不改：后端、路由表模型、`CommandPalette` 的数据源
@@ -234,3 +234,23 @@ type DockNavProps = {
 5. 清理 `Chrome.tsx` 的 `CommandButton` 引用（若确认移除）；教程入口按待确认项 1 落地
 6. 验证：tsc / build / 真机三态（深浅主题 + 窄屏）+ 采样脚本回归
 7. 文档：`docs/API.md` 无需改；`docs/PROJECT_HISTORY` 记一条；`docs/spec` 保留本文件
+
+---
+
+## 10. 实施记录（v1.1.28）
+
+| 文件 | 改动 |
+| --- | --- |
+| `frontend/src/styles/tokens.css` | 新增玻璃 token（浅/深两套）：`--glass-bg/-strong/-border/-edge/-sheen/-shadow`、`--dock-bg/-shadow`、`--glass-pill/-pill-lift`、`--dock-height`、`--dock-bottom` |
+| `frontend/src/styles/layout.css` | `.main` 去掉侧栏偏移并加底部留白；`.page` 加 `scroll-padding-bottom`；新增 `.content-brand`、`.docknav*` 全套样式（胶囊/玻璃边/色散/圆钮/窄屏/动效降级） |
+| `frontend/src/components/DockNav.tsx`（新增） | 6 项 tablist、SVG 位移贴图（边缘折射）、按住放大、只认胶囊的拖拽、方向键、`prefers-reduced-motion` |
+| `frontend/src/App.tsx` | 删除 `rail` 与 `RAIL_BOTTOM_ROUTES`；品牌块迁入内容区；接入 `DockNav`；顶栏移除 `CommandButton` |
+
+**实测（1440×900，https://127.0.0.1:8443）**
+- 无侧栏；Dock 572×76，悬浮在底部 876px 处；6 个 tab；`fabLabel = 搜索（Ctrl K）`
+- 胶囊 `backdrop-filter = url("#qwentts-dock-liquid") blur(0.2px) contrast(1.18) brightness(1.06) saturate(1.18)`
+- 点最右 tab：胶囊 x `12 → 34 → 74 → 137 → 212 → 306 → 352 → 400 → 423 → 447 → 462`（连续滑动）
+- 按住胶囊：`118×105`（上下各凸出 15px），图标 `22×22` 不变（无缩放、无重影）
+- 深浅主题 + 搜索面板正常，控制台 0 error；`tsc` 0 错、`vite build` 通过、`pytest` 103 passed
+
+**环境坑（非本次改动）**：本机 SoX 14.4.2 的 `sox -h` 不再输出 `AUDIO FILE FORMATS:`，python `sox` 包在 import 时硬解析该标记 → 后端启动 `IndexError`。绕过：把空输出的 `.cache/soxshim/sox.bat` 放到 PATH 最前，让 `NO_SOX=True` 跳过解析（项目本身已有 `app/soxfree.py` 不依赖真实 SoX）。

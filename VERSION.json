@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.27",
+  "version": "1.1.28",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.28：前端布局改为「无侧栏 + 底部液态玻璃 Dock」（6 项含教程）+ 独立搜索圆钮；胶囊滑动 / 按住放大 / 边缘折射与色散",
     "v1.1.27：ASR 与声纹（区分说话人）也改成云端实测——/v1/models 判 ASR、/v1/health 的 asr.diarize 判声纹；云端没装声纹时界面提前提示，不再\"提交后才知道\"",
     "v1.1.26：能力判定改为「云端实际装了什么」——探测云端 /v1/models（60s 缓存 + 后台刷新，不阻塞 /api/meta），修「设置里填了 VoiceDesign、云端其实没装」时界面显示可用的问题；探测失败退回配置名并标记未校验",
     "v1.1.25：修「云端 1.7B + 本地仅 0.6B + 纯云端」时音色设计不可用——能力门禁改由后端 /api/meta.capabilities 按运行模式判定；云端模型名留空报 CLOUD_MODEL_UNSET",
