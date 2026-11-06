@@ -533,13 +533,17 @@ const GUIDE: GuideSection[] = [
     steps: [
       '启动后端服务（MCP 会通过本机接口调用它）。',
       '在 backend 目录执行：python -m app.mcp_server（stdio 传输，行分隔 JSON-RPC）。',
-      '在支持 MCP 的客户端里把它配成 stdio server，即可看到 4 个工具。',
+      '在支持 MCP 的客户端里把它配成 stdio server，即可看到 9 个工具（合成 / 转写 / 提交 / 取消 / 查任务 / 音色）。',
     ],
     fields: [
       { name: 'tts_synthesize', desc: '给文本 + 音色，返回 task_id、状态与下载地址。', suggest: '—' },
       { name: 'asr_transcribe', desc: '给本机音频路径，可选 diarize/max_speakers，返回 transcript 与 segments。', suggest: '—' },
       { name: 'task_status', desc: '查任务状态、进度、错误码与结果文件。', suggest: '—' },
-      { name: 'voice_list', desc: '列出内置与自定义音色。', suggest: '—' },
+      { name: 'voice_list', desc: '列出内置与自定义音色（含 language / gender / available）。', suggest: '—' },
+      { name: 'tts_submit / asr_submit', desc: '提交后立刻返回 task_id，不阻塞；再用 task_status 轮询。', suggest: '—' },
+      { name: 'task_cancel', desc: '取消排队中或运行中的任务。', suggest: '—' },
+      { name: 'voice_clone', desc: '参考音频克隆自定义音色，返回 voice_id。', suggest: '—' },
+      { name: 'voice_design', desc: '自然语言描述音色并直接合成。', suggest: '—' },
     ],
     tips: [
       'MCP 进程不自己加载模型（4GB 卡会被吃满显存），而是复用本机 8443 的服务，排队/取消/日志都跟界面一致。',
@@ -557,7 +561,7 @@ const GUIDE: GuideSection[] = [
       '先让「声匠」后端跑起来（浏览器打开 https://localhost:8443 能出界面即可）：MCP 进程只当“翻译官”，真正干活的是这个服务。',
       '找到本机 python.exe 的绝对路径，以及 backend 目录的绝对路径（下面的示例按本机情况填好，换成你自己的即可）。',
       '在 AI 客户端里新增一个 stdio 类型（命令启动）的 MCP Server，把 command / args / cwd 三项填进去，然后重启客户端。',
-      '接上之后你应该能看到 4 个工具：tts_synthesize、asr_transcribe、task_status、voice_list；直接对 AI 说“用 tts_synthesize 把这段合成语音”就会调过来。',
+      '接上之后你应该能看到 9 个工具：tts_synthesize、tts_submit、asr_transcribe、asr_submit、task_status、task_cancel、voice_list、voice_clone、voice_design；直接对 AI 说“用 tts_synthesize 把这段合成语音”就会调过来。',
     ],
     snippets: [
       {
@@ -648,7 +652,7 @@ env:
       },
       {
         title: '先在命令行自测（确认能握手再配客户端）',
-        note: '粘进去按回车，应立刻返回一行带 "serverInfo" 和 4 个工具名的 JSON；报错就先解决这一步。',
+        note: '粘进去按回车，应立刻返回一行带 "serverInfo" 的 JSON；再用 tools/list 看 9 个工具名。报错就先解决这一步。',
         code: `cd E:\\trae_projects\\QWENTTS\\backend
 echo {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}} | python -m app.mcp_server`,
       },
@@ -660,6 +664,7 @@ asr_transcribe  { "audio_path": "E:\\trae_projects\\QWENTTS\\data\\demo.wav", "d
       },
     ],
     tips: [
+      '自检命令：cd backend 后跑 python -m app.mcp_server --selftest（initialize → tools/list → health → voice_list → 真实合成 → 转写回环，6 步应全 PASS）。',
       'MCP 进程**不自己加载模型**（4GB 卡会被吃满显存），它只是通过本机 https://127.0.0.1:8443 调接口；所以「声匠」必须开着。',
       '服务不在默认地址时用环境变量改：QWENTTS_MCP_BASE_URL（默认 https://127.0.0.1:8443）；开了 API Key 鉴权再设 QWENTTS_MCP_API_KEY。',
       '长任务等待时间由 QWENTTS_MCP_TIMEOUT 控制（默认 600s）；单次 HTTP 请求超时是 QWENTTS_MCP_REQUEST_TIMEOUT（默认 300s）。',
