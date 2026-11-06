@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.49",
+  "version": "1.1.50",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.50：教程页新增「用其它 AI 调用」章节（DSH / Claude Desktop / Cursor / Cline 接入 MCP 的可复制配置 + 命令行自测 + 常见报错）",
     "v1.1.49：设置页左栏恢复 sticky（玻璃表面层里的 position:relative 把 sticky 覆盖了），滚动时目录固定在顶栏下方",
     "v1.1.48：进入任务中心不再卡——整页滚动页关闭入场动画、表格行 content-visibility、骨架只在首屏、WS 补拉合并 300ms",
     "v1.1.46：修任务中心四个阻断缺陷——取消立即生效、重试可选用本地/云端且默认沿用原后端、任务表格高度不再被二次扣减（1080p 可见 8 行）、工作台生成中保留「追加生成」+「停止」",

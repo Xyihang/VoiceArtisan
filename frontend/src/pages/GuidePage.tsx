@@ -41,12 +41,15 @@ type SectionId =
   | 'duration'
   | 'batch'
   | 'mcp'
+  | 'mcpConnect'
   | 'defaults'
   | 'license'
   | 'errors';
 
 type GuideField = { name: string; desc: string; suggest?: string };
 type GuideFaq = { q: string; a: string };
+/** 可直接复制的配置片段（JSON / 命令行） */
+type GuideSnippet = { title: string; code: string; note?: string };
 
 type GuideSection = {
   id: SectionId;
@@ -59,6 +62,7 @@ type GuideSection = {
   fields?: GuideField[];
   tips?: string[];
   faq?: GuideFaq[];
+  snippets?: GuideSnippet[];
 };
 
 /**
@@ -544,6 +548,94 @@ const GUIDE: GuideSection[] = [
     ],
   },
   {
+    id: 'mcpConnect',
+    label: '用其它 AI 调用',
+    icon: Terminal,
+    summary: '让 DSH / Claude Desktop / Cursor 这类 AI 客户端接上本机 MCP，直接让它帮你合成与转写',
+    settingsAnchor: undefined,
+    steps: [
+      '先让「声匠」后端跑起来（浏览器打开 https://localhost:8443 能出界面即可）：MCP 进程只当“翻译官”，真正干活的是这个服务。',
+      '找到本机 python.exe 的绝对路径，以及 backend 目录的绝对路径（下面的示例按本机情况填好，换成你自己的即可）。',
+      '在 AI 客户端里新增一个 stdio 类型（命令启动）的 MCP Server，把 command / args / cwd 三项填进去，然后重启客户端。',
+      '接上之后你应该能看到 4 个工具：tts_synthesize、asr_transcribe、task_status、voice_list；直接对 AI 说“用 tts_synthesize 把这段合成语音”就会调过来。',
+    ],
+    snippets: [
+      {
+        title: 'DSH / 通用 MCP 客户端（mcpServers 写法）',
+        note: 'DSH 及各客户端字段名可能略有差异（mcpServers / mcp.servers / servers），把 command、args、cwd、env 四项对应填进去即可。',
+        code: `{
+  "mcpServers": {
+    "qwentts": {
+      "type": "stdio",
+      "command": "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "args": ["-m", "app.mcp_server"],
+      "cwd": "E:\\trae_projects\\QWENTTS\\backend",
+      "env": {
+        "QWENTTS_MCP_BASE_URL": "https://127.0.0.1:8443",
+        "QWENTTS_MCP_TIMEOUT": "600"
+      }
+    }
+  }
+}`,
+      },
+      {
+        title: 'Claude Desktop（claude_desktop_config.json）',
+        note: 'Windows 路径：%APPDATA%\\Claude\\claude_desktop_config.json；改完完全退出 Claude 再启动。',
+        code: `{
+  "mcpServers": {
+    "qwentts": {
+      "command": "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "args": ["-m", "app.mcp_server"],
+      "cwd": "E:\\trae_projects\\QWENTTS\\backend"
+    }
+  }
+}`,
+      },
+      {
+        title: 'Cursor / Cline / Continue（MCP 设置里的 JSON）',
+        note: '这三家都用同一套 mcpServers 结构；如果界面是表单式，就按 command / args / cwd 三个框分别填。',
+        code: `{
+  "mcpServers": {
+    "qwentts": {
+      "command": "python",
+      "args": ["-m", "app.mcp_server"],
+      "cwd": "E:\\trae_projects\\QWENTTS\\backend"
+    }
+  }
+}`,
+      },
+      {
+        title: '先在命令行自测（确认能握手再配客户端）',
+        note: '粘进去按回车，应立刻返回一行带 "serverInfo" 和 4 个工具名的 JSON；报错就先解决这一步。',
+        code: `cd E:\\trae_projects\\QWENTTS\\backend
+echo {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}} | python -m app.mcp_server`,
+      },
+      {
+        title: '让它干活的两个典型请求（对 AI 说，或直接 tools/call）',
+        note: 'audio_path 必须是本机绝对路径；合成会返回任务 id 与下载地址，长文本会自动排队。',
+        code: `tts_synthesize  { "text": "欢迎使用声匠。", "voice_id": "builtin-vivian", "speed": 1.0 }
+asr_transcribe  { "audio_path": "E:\\trae_projects\\QWENTTS\\data\\demo.wav", "diarize": true, "max_speakers": 3 }`,
+      },
+    ],
+    tips: [
+      'MCP 进程**不自己加载模型**（4GB 卡会被吃满显存），它只是通过本机 https://127.0.0.1:8443 调接口；所以「声匠」必须开着。',
+      '服务不在默认地址时用环境变量改：QWENTTS_MCP_BASE_URL（默认 https://127.0.0.1:8443）；开了 API Key 鉴权再设 QWENTTS_MCP_API_KEY。',
+      '长任务等待时间由 QWENTTS_MCP_TIMEOUT 控制（默认 600s）；单次 HTTP 请求超时是 QWENTTS_MCP_REQUEST_TIMEOUT（默认 300s）。',
+      '客户端里看到“找不到 python”就换成 python.exe 的绝对路径；看到 401/403 就是服务端开了鉴权但没配 QWENTTS_MCP_API_KEY。',
+      '自签证书不需要额外配置：MCP 内部已忽略证书校验，只连本机。',
+    ],
+    faq: [
+      {
+        q: '为什么不在 MCP 里直接加载模型？',
+        a: '同一张显卡上再起一套推理进程会直接把显存吃满；走本机 HTTP 还能复用界面的排队、取消、日志与进度。',
+      },
+      {
+        q: 'AI 说工具调用超时怎么办？',
+        a: '先看任务中心里这条任务是否还在跑：还在跑说明模型慢，把 QWENTTS_MCP_TIMEOUT 调大；如果任务已失败，按错误码查「常见错误」。',
+      },
+    ],
+  },
+  {
     id: 'defaults',
     label: '默认参数',
     icon: ServerCog,
@@ -620,6 +712,7 @@ function haystack(section: GuideSection): string {
   const parts: string[] = [section.label, section.summary];
   if (section.steps) parts.push(...section.steps);
   if (section.tips) parts.push(...section.tips);
+  section.snippets?.forEach((sn) => parts.push(sn.title, sn.note || '', sn.code));
   section.fields?.forEach((f) => parts.push(f.name, f.desc, f.suggest || ''));
   section.faq?.forEach((f) => parts.push(f.q, f.a));
   return parts.join(' ').toLowerCase();
@@ -862,6 +955,32 @@ export function GuidePage() {
                       <li key={index}>{step}</li>
                     ))}
                   </ol>
+                ) : null}
+
+                {section.snippets?.length ? (
+                  <div className="guide-snippets">
+                    {section.snippets.map((sn, index) => (
+                      <div className="guide-snippet" key={index}>
+                        <div className="guide-snippet__head">
+                          <span className="guide-snippet__title">{sn.title}</span>
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--sm"
+                            onClick={() => {
+                              void navigator.clipboard?.writeText(sn.code);
+                            }}
+                            title="复制这段配置"
+                          >
+                            复制
+                          </button>
+                        </div>
+                        {sn.note ? <p className="guide-snippet__note">{sn.note}</p> : null}
+                        <pre className="guide-code">
+                          <code>{sn.code}</code>
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
                 ) : null}
 
                 {section.fields?.length ? (

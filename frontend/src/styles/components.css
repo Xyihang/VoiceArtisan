@@ -3342,6 +3342,56 @@ mark.hl {
   margin-top: var(--space-2);
 }
 
+/* 教程页：可复制的配置代码块（MCP 接入示例） */
+.guide-snippets {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.guide-snippet {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-nested);
+  overflow: hidden;
+}
+
+.guide-snippet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.guide-snippet__title {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-medium);
+}
+
+.guide-snippet__note {
+  margin: 0;
+  padding: var(--space-2) var(--space-3) 0;
+  font-size: var(--fs-12);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.guide-code {
+  margin: 0;
+  padding: var(--space-3);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  line-height: 1.65;
+  color: var(--color-text);
+  white-space: pre;
+  tab-size: 2;
+}
+
+
+
 /* =========================================================================
    液态玻璃表面层（对齐 .cache/preview/glass-dock-demo-liquid.html）
    —— 只覆写"表面"（卡片 / 按钮 / 输入 / 胶囊 / 分段 / 表格 / 弹层 / 侧栏），
