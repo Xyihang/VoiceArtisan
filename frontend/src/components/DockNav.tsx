@@ -51,7 +51,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
   const filterRef = useRef<SVGFilterElement | null>(null);
 
   const [lifted, setLifted] = useState(false);
-  /** 果冻：随鼠标上下做轻微位移 + 拉伸（按住时生效） */
+  /** 果冻：按住时随鼠标上下轻微位移 + 拉伸（sy>1 纵向拉长、<1 压扁） */
   const [jelly, setJelly] = useState({ dy: 0, sy: 1 });
   const [centerX, setCenterX] = useState(0);
   const [immediate, setImmediate] = useState(true);
@@ -277,11 +277,12 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     const state = dragRef.current;
     if (!state.armed) return;
 
-    // —— 果冻：按住时随鼠标上下轻微形变（不改变胶囊位置，只拉伸 + 小幅跟手）——
+    // 果冻：按住时随鼠标上下做轻微形变（不改胶囊中心位置，只拉伸 + 小位移）
     const rect = dock.getBoundingClientRect();
     const relY = e.clientY - (rect.top + rect.height / 2);
     const clamped = Math.max(-70, Math.min(70, relY));
     setJelly({ dy: clamped * 0.12, sy: 1 - clamped / 700 });
+
     const x = e.clientX - dock.getBoundingClientRect().left;
     if (!state.dragging && Math.abs(x - state.startX) < 4) return;
     if (!state.dragging) {

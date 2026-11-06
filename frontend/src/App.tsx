@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Activity,
   AudioLines,
@@ -14,7 +14,6 @@ import { ThemeToggle, Toasts } from './components/Chrome';
 import { CommandPalette } from './components/CommandPalette';
 import { DockNav } from './components/DockNav';
 import { TopbarCarousel } from './components/TopbarCarousel';
-import { PageSlide } from './components/PageSlide';
 import { hasMod } from './lib/shortcuts';
 import { Skeleton } from './components/ui';
 import WorkbenchPage from './pages/Workbench';
@@ -125,19 +124,6 @@ function Shell() {
   ];
 
   const [paletteOpen, setPaletteOpen] = useState(false);
-  /** 切页前的旧页快照：给 PageSlide 做滑动起点（React 卸载后就没 DOM 了） */
-  const [frozen, setFrozen] = useState<{ html: string; from: number } | null>(null);
-  const stageRef = useRef<HTMLDivElement | null>(null);
-
-  /** 所有切页都必须走这里：先抓旧页快照，再导航 */
-  const go = (id: RouteId) => {
-    const live = stageRef.current?.querySelector('[data-page-live]');
-    const fromIndex = ROUTES.findIndex((r) => r.id === route);
-    if (live && id !== route) {
-      setFrozen({ html: live.innerHTML, from: fromIndex });
-    }
-    navigate(id);
-  };
   const current = ROUTES.find((r) => r.id === route) || ROUTES[0];
   const activeTasks = Object.values(tasks).filter((t) => t.status === 'running' || t.status === 'queued').length;
 
@@ -187,26 +173,17 @@ function Shell() {
             <ThemeToggle />
           </div>
         </header>
-        <main ref={stageRef}>
-          <PageSlide
-            index={ROUTES.findIndex((r) => r.id === route)}
-            labels={ROUTES.map((r) => r.label)}
-            frozen={frozen}
-            onFrozenConsumed={() => setFrozen(null)}
-          >
-            {page}
-          </PageSlide>
-        </main>
+        <main>{page}</main>
       </div>
       <DockNav
         routes={ROUTES.map((r) => ({ id: r.id, label: r.label, icon: r.icon }))}
         current={route}
-        onNavigate={(id) => go(id as RouteId)}
+        onNavigate={(id) => navigate(id as RouteId)}
         activeTasks={activeTasks}
         onOpenSearch={() => setPaletteOpen(true)}
       />
       <Toasts />
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onNavigate={go} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onNavigate={navigate} />
     </div>
   );
 }
