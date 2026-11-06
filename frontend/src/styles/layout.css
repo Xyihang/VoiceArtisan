@@ -124,6 +124,11 @@
   gap: var(--space-1);
 }
 
+/* 整页滚动页自己算高度，main 不要再垫 Dock 安全区（否则二次扣减） */
+.main:has(.page--fill) {
+  padding-bottom: 0;
+}
+
 .main {
   flex: 1;
   min-width: 0;
@@ -230,8 +235,9 @@
 }
 
 .shell .page--fill {
-  padding-bottom: var(--space-4);
-  scroll-padding-bottom: var(--space-4);
+  /* 整页自己滚（表格内部滚动），底部只留 Dock 需要的空间，不再加 padding */
+  padding-bottom: 0;
+  scroll-padding-bottom: 0;
 }
 
 @keyframes page-enter {
@@ -243,6 +249,13 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* 任务中心这类整页滚动页不做入场动画：
+   大表格做 opacity/transform 动画每一帧都要重绘整层，是"切过去卡一下"的主因 */
+.page--fill,
+.page--fill > .card {
+  animation: none !important;
 }
 
 /* 卡片错峰入场：只在顶层卡片上生效 */

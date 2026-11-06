@@ -780,6 +780,9 @@ input[type='range'] {
 }
 
 .table tbody tr {
+  /* 离屏行跳过布局与绘制，进入大列表时更快 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 44px;
   transition: background var(--duration-fast) var(--ease-out);
 }
 
@@ -2929,8 +2932,8 @@ mark.hl {
 
 /* 娴犺濮熸稉顓炵妇閿涙碍鏆ｆい鍨劀婵傝棄宕板锛勭崶閸欙綇绱濈悰銊︾壐閸栧搫鍞撮柈銊︾泊閸旑煉绱濋崚鍡涖€夐崶鍝勭暰閸︺劌宕遍悧鍥х俺闁?*/
 .page--fill {
-  height: calc(100vh - var(--shell-topbar) - var(--space-5) * 2 - var(--dock-safe-bottom));
-  max-height: calc(100vh - var(--shell-topbar) - var(--space-5) * 2 - var(--dock-safe-bottom));
+  height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2 - var(--dock-height) - var(--dock-bottom));
+  max-height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2 - var(--dock-height) - var(--dock-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -3029,7 +3032,7 @@ mark.hl {
 
 /* 閸欘亝婀侀妴灞斤綖閸忓懎鐎锋い鐢告桨閵嗗秵澧犻幎濠佸瘜閸栨椽鏀ｉ幋鎰鐏炲繘鐝敍灞藉従鐎瑰啴銆夐棃銏㈠弾鐢憡绮撮崝?*/
 .main:has(.page--fill) {
-  height: calc(100vh - var(--shell-topbar) - var(--dock-safe-bottom));
+  height: calc(100vh - var(--shell-topbar) - calc(var(--dock-height) + var(--dock-bottom)));
   overflow: hidden;
 }
 
@@ -3064,8 +3067,8 @@ mark.hl {
   position: sticky;
   top: calc(var(--shell-topbar) + var(--space-4));
   align-self: start;
-  height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2 - var(--dock-safe-bottom));
-  max-height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2 - var(--dock-safe-bottom));
+  height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2 - calc(var(--dock-height) + var(--dock-bottom)));
+  max-height: calc(100vh - var(--shell-topbar) - var(--space-4) * 2 - calc(var(--dock-height) + var(--dock-bottom)));
   display: flex;
   flex-direction: column;
   min-height: 280px;
@@ -3112,16 +3115,16 @@ mark.hl {
 /* 娴犺濮熸稉顓炵妇閿涙氨鏁ら弰鎯х础妤傛ê瀹崇划鍓р€樼拹鏉戠俺閿涘牐绐涚粣妤€褰涙惔?8px閿涘绱濇稉宥勭贩鐠?shell 閻ㄥ嫬澧挎担娆掝吀缁?*/
 .main:has(.page--fill) > .page--fill {
   flex: 0 0 auto;
-  height: calc(100vh - var(--shell-topbar) - 8px - var(--dock-safe-bottom));
-  max-height: calc(100vh - var(--shell-topbar) - 8px - var(--dock-safe-bottom));
+  height: calc(100vh - var(--shell-topbar) - 8px - calc(var(--dock-height) + var(--dock-bottom)));
+  max-height: calc(100vh - var(--shell-topbar) - 8px - calc(var(--dock-height) + var(--dock-bottom)));
   min-height: 0;
   overflow: hidden;
 }
 
 /* 娴犺濮熸稉顓炵妇鐠愭潙绨抽敍鍫滄叏濮濓綁鈧瀚ㄩ崳顭掔窗.page 閻ㄥ嫮鍩楃痪褎妲?<main>閿涘奔绗夐弰?.main閿?*/
 .main .page--fill {
-  height: calc(100vh - var(--shell-topbar) - 8px - var(--dock-safe-bottom));
-  max-height: calc(100vh - var(--shell-topbar) - 8px - var(--dock-safe-bottom));
+  height: calc(100vh - var(--shell-topbar) - 8px - calc(var(--dock-height) + var(--dock-bottom)));
+  max-height: calc(100vh - var(--shell-topbar) - 8px - calc(var(--dock-height) + var(--dock-bottom)));
   flex: 0 0 auto;
   overflow: hidden;
 }
@@ -3142,7 +3145,7 @@ mark.hl {
 
 /* 娴犺濮熸稉顓炵妇鐠愭潙绨抽敍鍫㈢矒閻?閿涘绱伴幎?.main 閹炬垵鍩岀粣妤€褰涙妯哄閿涘矂銆夐棃銏㈡暏 100% 婵夘偅寮ч崗璺哄敶鐎瑰湱娲呴敍宀勪缉閸忓秷顫︾€涙劗楠囩憗浣稿 */
 .main:has(.page--fill) {
-  height: calc(100vh - 8px - var(--dock-safe-bottom));
+  height: calc(100vh - 8px - calc(var(--dock-height) + var(--dock-bottom)));
   min-height: 0;
   overflow: hidden;
 }

@@ -110,6 +110,8 @@ export function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  /** 筛选面板是否展开（默认收起，优先给列表让出高度） */
+  const [filterOpen, setFilterOpen] = useState(false);
   const [detail, setDetail] = useState<Task | null>(null);
   const [media, setMedia] = useState<Record<string, {
     sample_rate: number | null;
@@ -189,9 +191,11 @@ export function TasksPage() {
     if (Object.keys(liveTasks).length === 0) return;
     const known = new Set(items.map((i) => i.id));
     const unknown = Object.keys(liveTasks).filter((id) => !known.has(id));
-    if (unknown.length && page === 1 && (status === 'all' || status === 'queued' || status === 'running')) {
-      void load();
-    }
+    if (!unknown.length) return;
+    if (page !== 1 || (status !== 'all' && status !== 'queued' && status !== 'running')) return;
+    // 合并 300ms 内的多次推送，只补拉一次（进入页面时不会连发请求卡住）
+    const timer = window.setTimeout(() => void load(), 300);
+    return () => window.clearTimeout(timer);
   }, [liveTasks, items, page, status, load]);
 
   useEffect(() => {
@@ -535,11 +539,23 @@ export function TasksPage() {
       <SectionCard
         title="筛选"
         actions={
-          <span className="card__hint">
+          <span className="card__hint" style={{ display: 'inline-flex', gap: 'var(--space-2)', alignItems: 'center' }}>
             共 <span className="num">{total}</span> 个任务
+            <button
+              type="button"
+              className="btn btn--sm btn--ghost"
+              onClick={() => setFilterOpen((v) => !v)}
+              aria-expanded={filterOpen}
+              title={filterOpen ? '收起筛选，给列表腾地方' : '展开筛选'}
+            >
+              {filterOpen ? '收起' : '筛选'}
+            </button>
           </span>
         }
+        className={filterOpen ? undefined : 'card--compact'}
       >
+        {filterOpen ? (
+        <>
         <div className="toolbar">
           <div className="segmented" role="tablist" aria-label="状态筛选">
             {STATUS_TABS.map(([value, label]) => (
@@ -612,6 +628,8 @@ export function TasksPage() {
             </button>
           </div>
         ) : null}
+        </>
+        ) : null}
       </SectionCard>
 
       {selected.length ? (
@@ -671,7 +689,7 @@ export function TasksPage() {
               </tr>
             </thead>
             <tbody>
-              {loading
+              {loading && !merged.length
                 ? [0, 1, 2, 3, 4, 5].map((i) => (
                     <tr key={`sk-${i}`} className="table__skeleton" aria-hidden="true">
                       <td>
