@@ -3534,7 +3534,11 @@ mark.hl {
 }
 
 .shell .settings-nav {
-  position: relative;
+  /* 玻璃层用 ::before 定位，但外层必须保持 sticky —— 之前写成 relative，
+     优先级又高于 .settings-nav，导致设置页左栏滚动时跟着跑（sticky 失效） */
+  position: sticky;
+  top: calc(var(--shell-topbar) + var(--space-3));
+  align-self: start;
   border-radius: var(--radius-xl);
   background: transparent;
   border: 1px solid var(--color-border);
