@@ -51,6 +51,8 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
   const filterRef = useRef<SVGFilterElement | null>(null);
 
   const [lifted, setLifted] = useState(false);
+  /** 果冻：随鼠标上下做轻微位移 + 拉伸（按住时生效） */
+  const [jelly, setJelly] = useState({ dy: 0, sy: 1 });
   const [centerX, setCenterX] = useState(0);
   const [immediate, setImmediate] = useState(true);
   const mapRef = useRef({ w: 0, h: 0, strength: 0 });
@@ -274,6 +276,12 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     if (!dock || !m) return;
     const state = dragRef.current;
     if (!state.armed) return;
+
+    // —— 果冻：按住时随鼠标上下轻微形变（不改变胶囊位置，只拉伸 + 小幅跟手）——
+    const rect = dock.getBoundingClientRect();
+    const relY = e.clientY - (rect.top + rect.height / 2);
+    const clamped = Math.max(-70, Math.min(70, relY));
+    setJelly({ dy: clamped * 0.12, sy: 1 - clamped / 700 });
     const x = e.clientX - dock.getBoundingClientRect().left;
     if (!state.dragging && Math.abs(x - state.startX) < 4) return;
     if (!state.dragging) {
@@ -337,6 +345,7 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     if (dock) dock.dataset.drag = 'false';
     const wasDragging = state.dragging;
     dragRef.current = { armed: false, dragging: false, startX: 0, startCenter: 0 };
+    setJelly({ dy: 0, sy: 1 });
     if (!wasDragging) {
       pendingIndexRef.current = null;
       setLifted(false);
@@ -403,7 +412,9 @@ export function DockNav({ routes, current, onNavigate, activeTasks, onOpenSearch
     ? {
         width: `${sizes.w}px`,
         height: `${sizes.h}px`,
-        transform: `translate(${left - sizes.w / 2}px, ${sizes.y - sizes.h / 2}px)`,
+        transform:
+          `translate(${left - sizes.w / 2}px, ${sizes.y - sizes.h / 2 + jelly.dy}px) ` +
+          `scale(${(2 - jelly.sy).toFixed(4)}, ${jelly.sy.toFixed(4)})`,
         transition: immediate ? 'none' : undefined,
       }
     : undefined;

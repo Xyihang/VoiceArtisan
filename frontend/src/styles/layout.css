@@ -707,3 +707,47 @@
     transition-duration: 120ms;
   }
 }
+/* =========================================================================
+   页面切换：方案 2 · 轨道连续滑动（跨多档时中间页是骨架）
+   —— 四角保持圆角，滑动过程中不会出现直角闪一下
+   ========================================================================= */
+.page-stage {
+  position: relative;
+  /* 圆角 + 裁剪：滑动的“视口”本身是圆角，内容不会被切成直角 */
+  border-radius: var(--radius-xl);
+  /* 用 clip 而不是 hidden：hidden 会让它变成滚动容器，破坏页内 sticky（设置目录/表头） */
+  overflow: clip;
+  contain: layout paint;
+}
+
+.page-track {
+  display: flex;
+  align-items: flex-start;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  min-height: 520px;
+}
+
+.page-track > .page-slot {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  contain: content;
+}
+
+/* 中间页骨架：静态占位，滑动时不产生额外重绘 */
+.page-slot--ghost .card {
+  min-height: 220px;
+}
+
+.page-slot--ghost .ghost-line {
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--color-hairline), var(--color-border));
+  margin-top: 10px;
+}
+
+/* 页面内容本身再上一档圆角，和卡片语言一致 */
+.page-stage > .page-track > .page-slot > .page {
+  border-radius: var(--radius-xl);
+}
