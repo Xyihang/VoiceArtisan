@@ -720,6 +720,11 @@
   contain: layout paint;
 }
 
+/* 空闲态容器：不参与 flex，页面靠自己 max-width + margin:auto 居中 */
+.page-live {
+  width: 100%;
+}
+
 .page-track {
   display: flex;
   align-items: flex-start;

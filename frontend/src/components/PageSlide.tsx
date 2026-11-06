@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 type Props = {
   /** 当前路由在导航里的下标（决定滑动方向与距离） */
@@ -78,10 +78,13 @@ export function PageSlide({ index, labels, children, stepMs = 140, frozen, onFro
 
     // 3) 收尾：不重建 DOM，只清掉多余槽位（目标页正好占满视口）
     const timer = window.setTimeout(() => {
+      // 落地的这一帧只做最轻的事：关过渡 + transform 归零
       track.style.transition = 'none';
       track.style.transform = 'translate3d(0, 0, 0)';
-      track.style.width = 'auto';
-      setSlots(null);
+      // 拆掉快照/骨架很费时，挪到落地之后的一帧、并用 transition 降优先级
+      requestAnimationFrame(() => {
+        startTransition(() => setSlots(null));
+      });
     }, dur + 60);
 
     return () => {
@@ -95,60 +98,63 @@ export function PageSlide({ index, labels, children, stepMs = 140, frozen, onFro
 
   return (
     <div className="page-stage" ref={hostRef}>
-      <div
-        className="page-track"
-        ref={trackRef}
-        style={
-          slots
-            ? { width: (max - min + 1) * slots.slotW + (max - min) * GAP, columnGap: GAP }
-            : undefined
-        }
-      >
-        {slots
-          ? Array.from({ length: max - min + 1 }, (_, i) => {
-              const pageIndex = min + i;
-              const key = `slot-${pageIndex}`;
-              if (pageIndex === slots.to) {
-                return (
-                  <div className="page-slot" key="live" data-page-live="" style={{ width: slots.slotW }}>
-                    {children}
-                  </div>
-                );
-              }
-              if (pageIndex === slots.from) {
-                return (
-                  <div
-                    className="page-slot"
-                    key={key}
-                    style={{ width: slots.slotW }}
-                    dangerouslySetInnerHTML={{ __html: slots.fromHTML }}
-                  />
-                );
-              }
+      {slots ? (
+        <div
+          className="page-track"
+          ref={trackRef}
+          style={{
+            width: (max - min + 1) * slots.slotW + (max - min) * GAP,
+            columnGap: GAP,
+          }}
+        >
+          {Array.from({ length: max - min + 1 }, (_, i) => {
+            const pageIndex = min + i;
+            if (pageIndex === slots.to) {
               return (
-                <div className="page-slot page-slot--ghost" key={key} style={{ width: slots.slotW }}>
-                  <div className="page">
-                    <section className="card">
-                      <div className="card__head">
-                        <span className="card__title">{labels[pageIndex] || ''}</span>
-                      </div>
-                      <div className="card__body">
-                        <div className="ghost-line" style={{ width: '42%' }} />
-                        <div className="ghost-line" style={{ width: '78%' }} />
-                        <div className="ghost-line" style={{ width: '64%' }} />
-                        <div className="ghost-line" style={{ width: '71%' }} />
-                      </div>
-                    </section>
-                  </div>
+                <div className="page-slot" key="live" data-page-live="" style={{ width: slots.slotW }}>
+                  {children}
                 </div>
               );
-            })
-          : (
-              <div className="page-slot" key="live" data-page-live="">
-                {children}
+            }
+            if (pageIndex === slots.from) {
+              return (
+                <div
+                  className="page-slot"
+                  key={`slot-${pageIndex}`}
+                  style={{ width: slots.slotW }}
+                  dangerouslySetInnerHTML={{ __html: slots.fromHTML }}
+                />
+              );
+            }
+            return (
+              <div
+                className="page-slot page-slot--ghost"
+                key={`slot-${pageIndex}`}
+                style={{ width: slots.slotW }}
+              >
+                <div className="page">
+                  <section className="card">
+                    <div className="card__head">
+                      <span className="card__title">{labels[pageIndex] || ''}</span>
+                    </div>
+                    <div className="card__body">
+                      <div className="ghost-line" style={{ width: '42%' }} />
+                      <div className="ghost-line" style={{ width: '78%' }} />
+                      <div className="ghost-line" style={{ width: '64%' }} />
+                      <div className="ghost-line" style={{ width: '71%' }} />
+                    </div>
+                  </section>
+                </div>
               </div>
-            )}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        // 空闲态：直接渲染页面本身（不套 flex 槽位），保证 max-width + margin:auto 正常居中
+        <div className="page-live" data-page-live="">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
