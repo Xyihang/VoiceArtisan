@@ -9,6 +9,8 @@ import {
   PackageOpen,
   RefreshCw,
   RotateCcw,
+  HardDrive,
+  Cloud,
   Scissors,
   Trash2,
   Users,
@@ -223,13 +225,14 @@ export function TasksPage() {
   );
 
   const retry = useCallback(
-    async (task: Task, forceCloud = false) => {
+    async (task: Task, backend?: 'local' | 'cloud') => {
       try {
-        const created = await api.retryTask(task.id, forceCloud ? 'cloud' : undefined);
+        const created = await api.retryTask(task.id, backend);
         pushToast({
           level: 'success',
           title: `已创建重试任务 #${created.id}`,
-          description: forceCloud ? '本次将在云端执行' : '使用原路由策略',
+          description:
+            backend === 'cloud' ? '本次将在云端执行' : backend === 'local' ? '本次将在本地执行' : '沿用原任务的后端',
         });
         await load();
       } catch (error) {
@@ -243,7 +246,15 @@ export function TasksPage() {
     async (task: Task) => {
       try {
         await api.cancelTask(task.id);
-        pushToast({ level: 'info', title: `已请求取消 #${task.id}`, description: '已生成的片段会保留并标注「已截断」。' });
+        pushToast({
+          level: 'info',
+          title: task.status === 'queued' ? `已取消排队任务 #${task.id}` : `取消中… #${task.id}`,
+          description:
+            task.status === 'queued'
+              ? '任务已从队列移除。'
+              : '正在收尾：已生成的片段会保留并标注「已截断」，通常在一个分块内停下。',
+        });
+        await load();
       } catch (error) {
         pushToast({ level: 'error', ...describeError(error) });
       }
@@ -473,7 +484,7 @@ export function TasksPage() {
       }
       if (event.key === 'r') {
         event.preventDefault();
-        void retry(current, current.error_code === 'VRAM_INSUFFICIENT');
+        void retry(current, current.error_code === 'VRAM_INSUFFICIENT' ? 'cloud' : undefined);
         return;
       }
       if (event.key === 'd') {
@@ -772,11 +783,20 @@ export function TasksPage() {
                               <button
                                 type="button"
                                 className="table__row-btn"
-                                onClick={() => void retry(task, task.error_code === 'VRAM_INSUFFICIENT')}
-                                aria-label={`重试任务 ${task.id}`}
-                                title={task.error_code === 'VRAM_INSUFFICIENT' ? '一键切换到云端重试（R）' : '重试（R）'}
+                                onClick={() => void retry(task, 'local')}
+                                aria-label={`本地重试 ${task.id}`}
+                                title="本地重试（用本机 GPU/CPU 再跑一次）"
                               >
-                                <RotateCcw size={14} strokeWidth={1.75} />
+                                <HardDrive size={14} strokeWidth={1.75} />
+                              </button>
+                              <button
+                                type="button"
+                                className="table__row-btn"
+                                onClick={() => void retry(task, 'cloud')}
+                                aria-label={`云端重试 ${task.id}`}
+                                title="云端重试（走云端 GPU，需实例在线）"
+                              >
+                                <Cloud size={14} strokeWidth={1.75} />
                               </button>
                               {task.status === 'running' || task.status === 'queued' ? (
                                 <button

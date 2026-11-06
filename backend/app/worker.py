@@ -95,6 +95,7 @@ class TaskManager:
                 row = self.db.get_task(task_id)
                 if row is None or row.status in ("completed", "failed", "canceled"):
                     return False
+                # 排队中：直接落库为已取消，并推事件让界面立刻更新
                 self.db.update_task(
                     task_id,
                     status="canceled",
@@ -104,8 +105,13 @@ class TaskManager:
                     finished_at=time.time(),
                 )
                 self._publish_task(task_id)
+                bus.publish("task." + task_id, "task.canceled", {"task_id": task_id, "stage": "queued"})
                 return True
+            # 运行中：置事件 + 立刻给界面一个"取消中"的反馈（不再静默等分块结束）
             event.set()
+        self._log(task_id, "已请求取消，正在收尾（已生成的片段会保留并标注「已截断」）")
+        bus.publish("task." + task_id, "task.cancel_requested", {"task_id": task_id, "stage": "running"})
+        self._publish_task(task_id)
         return True
 
     def pending(self) -> int:
@@ -130,7 +136,9 @@ class TaskManager:
 
     def _execute(self, task_id: str) -> None:
         row = self.db.get_task(task_id)
+        # 排队期间可能已被取消/删除，这里必须复查，否则"取消"对排队任务无效
         if row is None or row.status != "queued":
+            logger.info("任务 %s 状态为 %s，跳过执行", task_id, getattr(row, "status", "missing"))
             return
         cancel = threading.Event()
         with self._cancel_lock:

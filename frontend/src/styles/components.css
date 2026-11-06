@@ -2993,7 +2993,24 @@ mark.hl {
   scroll-padding-bottom: var(--space-5);
 }
 
+/* 工作台主操作行：生成中「追加生成」+「停止」并排 */
+.primary-action__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.primary-action__row > .btn:first-child {
+  flex: 1 1 auto;
+}
+
+.primary-action__row > .btn + .btn {
+  flex: 0 0 auto;
+}
+
 .card--fill .table-wrap {
+  /* 兜底：窗口再小也能看到几行（旧版被高度公式挤到 1 行） */
+  min-height: clamp(220px, 40vh, 320px);
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;

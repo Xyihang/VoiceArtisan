@@ -377,7 +377,8 @@ export function WorkbenchPage() {
   );
 
   const canSubmit = useMemo(() => {
-    if (submitting || stream.streaming) return false;
+    // 注意：生成中**不禁用** —— 允许"追加生成"再提交一个任务，只挡重复点击
+    if (submitting) return false;
     if (tab === 'asr') return !!asrAsset;
     if (!text.trim() || !params) return false;
     if (tab === 'tts') return !!voiceId || !engineIsQwen;
@@ -914,25 +915,27 @@ export function WorkbenchPage() {
           )}
 
           <div className={tab !== 'asr' ? 'primary-action primary-action--sticky' : 'primary-action'}>
-            {stream.streaming ? (
-              <button type="button" className="btn btn--danger btn--cta btn--block" onClick={cancel}>
-                <Square size={16} strokeWidth={2} /> 取消生成
-                <LiveElapsed active={stream.streaming} />
-              </button>
-            ) : (
+            <div className="primary-action__row">
+              {/* 生成中也可点击：用当前表单再建一个任务（追加），不打断当前流 */}
               <button
                 type="button"
-                className="btn btn--primary btn--cta btn--block"
+                className="btn btn--primary btn--cta"
                 onClick={() => void submit()}
                 disabled={!canSubmit}
                 title={disabledReason || '开始生成（Ctrl / ⌘ + Enter）'}
                 aria-describedby="submit-reason"
               >
                 {submitting ? <Spinner size={16} /> : <Sparkles size={18} strokeWidth={1.75} />}
-                {tab === 'asr' ? '开始转写' : '开始生成'}
+                {stream.streaming ? (tab === 'asr' ? '追加转写' : '追加生成') : tab === 'asr' ? '开始转写' : '开始生成'}
                 <ArrowRight size={16} strokeWidth={1.75} />
               </button>
-            )}
+              {stream.streaming ? (
+                <button type="button" className="btn btn--danger" onClick={cancel} title="停止当前生成流">
+                  <Square size={16} strokeWidth={2} /> 停止
+                  <LiveElapsed active={stream.streaming} />
+                </button>
+              ) : null}
+            </div>
             {!stream.streaming && disabledReason ? (
               <p className="submit-reason" id="submit-reason">
                 {disabledReason}

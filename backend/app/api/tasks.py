@@ -778,7 +778,8 @@ def retry_task(task_id: str, payload: RetryRequest = None, state: AppState = Dep
         instruct=row.instruct,
         design=row.design,
         params=json.dumps(params, ensure_ascii=False),
-        backend="cloud" if force == "cloud" else "local",
+        # 默认沿用原任务的后端；只有显式 force_backend 才改变
+        backend=(force or getattr(row, "backend", "") or "local"),
         model="",
         progress=0.0,
         output_format=row.output_format,
