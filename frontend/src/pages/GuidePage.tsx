@@ -561,6 +561,48 @@ const GUIDE: GuideSection[] = [
     ],
     snippets: [
       {
+        title: '把这段直接发给你的 AI（它会自己配好接入）',
+        note: '复制下面整段发给任意支持 MCP 的 AI（DSH / Claude / Cursor / Cline 都行），它会自己完成配置；里面的 python 与 backend 路径可按你机器改，不改通常也能用。',
+        code: `你正在和我机器上的「声匠 VoiceSmith」语音工作台对接，请按下面的信息把它的 MCP Server 配到你自己身上，然后告诉我可以调用哪些能力。
+
+【它是什么】
+- 本机已运行的语音工作台：语音生成（TTS）、声音克隆、音色设计、音频转文字（ASR）
+- 对外暴露一个 MCP Server：stdio 传输、JSON-RPC 2.0、协议版本 2024-11-05
+- MCP 进程本身不加载模型，只是通过本机 HTTPS 接口调用工作台，所以模型与显存都在工作台那边管理
+
+【连接参数（stdio）】
+command: C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe
+args:    ["-m", "app.mcp_server"]
+cwd:     E:\\trae_projects\\QWENTTS\\backend
+env:
+  QWENTTS_MCP_BASE_URL = https://127.0.0.1:8443
+  QWENTTS_MCP_TIMEOUT = 600
+（如工作台开了 API Key，再加 QWENTTS_MCP_API_KEY=<key>；证书是自签的，MCP 内部已忽略校验）
+
+【可用工具】
+1) tts_synthesize —— 文本转语音
+   参数：text(必填)、voice_id(音色 id，可先用 voice_list 查)、language(默认 Auto)、speed(1.0 原速)、target_duration_s(0 表示不控制)
+   返回：task_id、status、duration_sec、backend、download_url
+2) asr_transcribe —— 音频转文字
+   参数：audio_path(必填，本机音频绝对路径)、language(默认 auto)、diarize(是否区分说话人)、max_speakers(默认 4)
+   返回：transcript、segments（含说话人与时间轴）
+3) task_status —— 查询任务状态
+   参数：task_id
+   返回：状态、进度、错误码、结果文件
+4) voice_list —— 列出内置与自定义音色
+
+【使用建议】
+- 合成/转写都是排队任务，工具会等待完成再返回；长文本可能几十秒到几分钟，超时就调大 QWENTTS_MCP_TIMEOUT
+- 需要按说话人分段时，先 asr_transcribe 时把 diarize 打开，再读 segments
+- 拿到 download_url 后可直接播放或下载
+
+【你现在要做的事】
+1) 把上面的 MCP Server 配到你自己的 MCP 客户端配置里（stdio 类型），并重启/重载使配置生效
+2) 连接成功后列出你能看到的工具名，确认是上面 4 个
+3) 用 voice_list 取一个音色，再用 tts_synthesize 合成一句「你好，我是声匠」作为连通性验证
+4) 把结果（任务 id、耗时、下载地址）回报给我`,
+      },
+      {
         title: 'DSH / 通用 MCP 客户端（mcpServers 写法）',
         note: 'DSH 及各客户端字段名可能略有差异（mcpServers / mcp.servers / servers），把 command、args、cwd、env 四项对应填进去即可。',
         code: `{
