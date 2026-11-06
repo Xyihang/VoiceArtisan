@@ -559,26 +559,45 @@ const GUIDE: GuideSection[] = [
     settingsAnchor: undefined,
     steps: [
       '先让「声匠」后端跑起来（浏览器打开 https://localhost:8443 能出界面即可）：MCP 进程只当“翻译官”，真正干活的是这个服务。',
-      '找到本机 python.exe 的绝对路径，以及 backend 目录的绝对路径（下面的示例按本机情况填好，换成你自己的即可）。',
+      '下面所有配置里的 <PYTHON_EXE> 与 <QWENTTS_BACKEND> 都是占位符：把第一段「发给 AI」的文本贴给 AI，它会自己探测这两个路径并填好。',
       '在 AI 客户端里新增一个 stdio 类型（命令启动）的 MCP Server，把 command / args / cwd 三项填进去，然后重启客户端。',
       '接上之后你应该能看到 9 个工具：tts_synthesize、tts_submit、asr_transcribe、asr_submit、task_status、task_cancel、voice_list、voice_clone、voice_design；直接对 AI 说“用 tts_synthesize 把这段合成语音”就会调过来。',
     ],
     snippets: [
       {
-        title: '把这段直接发给你的 AI（它会自己配好接入）',
-        note: '复制下面整段发给任意支持 MCP 的 AI（DSH / Claude / Cursor / Cline 都行），它会自己完成配置；里面的 python 与 backend 路径可按你机器改，不改通常也能用。',
-        code: `你正在和我机器上的「声匠 VoiceSmith」语音工作台对接，请按下面的信息把它的 MCP Server
-配到你自己身上，然后告诉我可以调用哪些能力。
+        title: '把这段直接发给你的 AI（它会自己探测路径并接好）',
+        note: '复制整段发给任意支持 MCP 的 AI（DSH / Claude / Cursor / Cline 都行）。它不需要你提供任何路径——第一步会自己探测。',
+        code: `你正在和我机器上的「声匠 VoiceSmith」语音工作台对接。请**自己探测本机环境**，把它的 MCP Server
+配到你自己身上，然后告诉我可以调用哪些能力。不要问我要路径，按下面的方法自己找。
+
+【第一步：自己探测这两个路径】
+A. Python 解释器（3.10+，也就是跑「声匠」后端用的那个）
+   Windows:      where python
+                 或 python -c "import sys; print(sys.executable)"
+   macOS/Linux:  which python3
+                 或 python3 -c "import sys; print(sys.executable)"
+   若装了虚拟环境，优先用 <项目根>\\.venv\\Scripts\\python.exe（Windows）或 <项目根>/.venv/bin/python
+B. 项目根目录（找到后 backend 目录 = 项目根\\backend）
+   判定标准（满足任一即可认定是根）：
+   - 目录里有 VERSION.json，且里面 name 字段包含 VoiceSmith
+   - 目录里有 start.bat 或 scripts/start.ps1 或 scripts/start.sh
+   - 目录里有 backend/app/mcp_server.py
+   找法（按顺序试，找到就停）：
+   1) 先看当前工作目录及其上一级
+   2) Windows: dir /s /b %USERPROFILE%\\mcp_server.py  ；或 Get-ChildItem -Recurse -Filter mcp_server.py
+   3) macOS/Linux: find ~ -name mcp_server.py 2>/dev/null
+   4) 仍找不到再问我一句"声匠装在哪"，并把我给你的路径记下来
+   记下结果：PYTHON_EXE=<A 的绝对路径>，QWENTTS_BACKEND=<B>\\backend
 
 【它是什么】
 - 本机已运行的语音工作台：语音生成（TTS）、声音克隆、音色设计、音频转文字（ASR）
 - 对外暴露一个 MCP Server：stdio 传输、JSON-RPC 2.0、协议版本 2024-11-05
 - MCP 进程本身不加载模型，只是通过本机 HTTPS 接口调用工作台；排队、取消、进度都由工作台管
 
-【连接参数（stdio）】
-command: C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe
+【连接参数（stdio）—— 把 <> 换成你探测到的真实路径】
+command: <PYTHON_EXE>
 args:    ["-m", "app.mcp_server"]
-cwd:     E:\\trae_projects\\QWENTTS\\backend
+cwd:     <QWENTTS_BACKEND>
 env:
   QWENTTS_MCP_BASE_URL = https://127.0.0.1:8443
   QWENTTS_MCP_TIMEOUT = 600
@@ -598,34 +617,34 @@ env:
 9) voice_design —— 自然语言描述音色并合成（design 必填，可带 text）
 
 【返回语义（重要）】
-- 合成/转写成功：ok=true、status=completed，并给出
-  task_id、duration_sec、elapsed_ms、first_packet_ms、rtf、
-  output_file、output_path（本机绝对路径，优先用它读文件）、download_url
-- 失败/超时/被取消：isError=true、ok=false，并带 error_code 与 error_message —— 请按失败处理，不要当成功
-- output_path 形如 E:\\trae_projects\\QWENTTS\\data\\outputs\\<task_id>\\<task_id>.wav
+- 成功：ok=true、status=completed，并给出 task_id、duration_sec、elapsed_ms、
+  first_packet_ms、rtf、output_file、output_path（本机绝对路径，优先用它读文件）、download_url
+- 失败/超时/被取消：isError=true、ok=false，并带 error_code 与 error_message —— 请按失败处理
+- output_path 形如 <QWENTTS_BACKEND>\\..\\data\\outputs\\<task_id>\\<task_id>.wav
 
 【使用建议】
-- language 可以写别名（zh / en / ja），服务端会映射成 chinese / english / japanese；写错会在建任务前就报错
+- language 可以写别名（zh / en / ja），服务端会映射成 chinese / english / japanese；写错会在建任务前报错
 - 长文本先用 tts_submit 拿 task_id，再用 task_status 轮询，避免单个调用等太久
 - 需要按说话人分段时，asr_transcribe 把 diarize 打开，读 segments（时间字段是 start_s / end_s）
 - 想用自定义音色：先 voice_clone 拿 voice_id，再 tts_synthesize 时指定它
 
 【你现在要做的事】
-1) 把上面的 MCP Server 配到你自己的 MCP 客户端配置里（stdio 类型），并重启/重载使配置生效
-2) 连接成功后用 tools/list 确认能看到上面 9 个工具
-3) 用 voice_list 取一个音色，再用 tts_synthesize 合成一句「你好，我是声匠」作为连通性验证
-4) 把结果（task_id、耗时、output_path）回报给我`,
+1) 按第一步探测出 PYTHON_EXE 与 QWENTTS_BACKEND，并把结果告诉我
+2) 用这两个真实路径把 MCP Server 配到你自己的客户端配置里（stdio 类型），重启/重载生效
+3) 用 tools/list 确认能看到上面 9 个工具
+4) 用 voice_list 取一个音色，再用 tts_synthesize 合成「你好，我是声匠」做连通性验证
+5) 把结果（task_id、耗时、output_path）回报给我`,
       },
       {
         title: 'DSH / 通用 MCP 客户端（mcpServers 写法）',
-        note: 'DSH 及各客户端字段名可能略有差异（mcpServers / mcp.servers / servers），把 command、args、cwd、env 四项对应填进去即可。',
+        note: 'DSH 及各客户端字段名可能略有差异（mcpServers / mcp.servers / servers），把 command、args、cwd、env 四项对应填进去；两个 <...> 占位符换成你自己探测到的路径。',
         code: `{
   "mcpServers": {
     "qwentts": {
       "type": "stdio",
-      "command": "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "command": "<PYTHON_EXE>",
       "args": ["-m", "app.mcp_server"],
-      "cwd": "E:\\trae_projects\\QWENTTS\\backend",
+      "cwd": "<QWENTTS_BACKEND>",
       "env": {
         "QWENTTS_MCP_BASE_URL": "https://127.0.0.1:8443",
         "QWENTTS_MCP_TIMEOUT": "600"
@@ -640,39 +659,49 @@ env:
         code: `{
   "mcpServers": {
     "qwentts": {
-      "command": "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "command": "<PYTHON_EXE>",
       "args": ["-m", "app.mcp_server"],
-      "cwd": "E:\\trae_projects\\QWENTTS\\backend"
+      "cwd": "<QWENTTS_BACKEND>"
     }
   }
 }`,
       },
       {
         title: 'Cursor / Cline / Continue（MCP 设置里的 JSON）',
-        note: '这三家都用同一套 mcpServers 结构；如果界面是表单式，就按 command / args / cwd 三个框分别填。',
+        note: '这三家都用同一套 mcpServers 结构；如果界面是表单式，就按 command / args / cwd 三个框分别填。command 直接写 python 也行（走 PATH）。',
         code: `{
   "mcpServers": {
     "qwentts": {
       "command": "python",
       "args": ["-m", "app.mcp_server"],
-      "cwd": "E:\\trae_projects\\QWENTTS\\backend"
+      "cwd": "<QWENTTS_BACKEND>"
     }
   }
 }`,
       },
       {
+        title: '装成命令后最省事（不用写 cwd 和 python 路径）',
+        note: '在项目根目录执行一次即可，之后客户端配置里只需要 command 一项。',
+        code: `cd <项目根目录>
+pip install -e backend
+
+# 客户端配置变成：
+# { "mcpServers": { "qwentts": { "command": "qwentts-mcp" } } }`,
+      },
+      {
         title: '先在命令行自测（确认能握手再配客户端）',
-        note: '粘进去按回车，应立刻返回一行带 "serverInfo" 的 JSON；再用 tools/list 看 9 个工具名。报错就先解决这一步。',
-        code: `cd E:\\trae_projects\\QWENTTS\\backend
+        note: '先 cd 到 backend 目录再粘第二行；应立刻返回一行带 "serverInfo" 的 JSON。再用 tools/list 看 9 个工具名。',
+        code: `cd <QWENTTS_BACKEND>
 echo {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}} | python -m app.mcp_server`,
       },
       {
         title: '让它干活的两个典型请求（对 AI 说，或直接 tools/call）',
-        note: 'audio_path 必须是本机绝对路径；合成会返回任务 id 与下载地址，长文本会自动排队。',
+        note: 'audio_path 必须是本机绝对路径（把 <...> 换成你机器上的真实文件）；合成会返回任务 id 与 output_path，长文本会自动排队。',
         code: `tts_synthesize  { "text": "欢迎使用声匠。", "voice_id": "builtin-vivian", "speed": 1.0 }
-asr_transcribe  { "audio_path": "E:\\trae_projects\\QWENTTS\\data\\demo.wav", "diarize": true, "max_speakers": 3 }`,
+asr_transcribe  { "audio_path": "<本机音频绝对路径>", "diarize": true, "max_speakers": 3 }`,
       },
     ],
+
     tips: [
       '自检命令：cd backend 后跑 python -m app.mcp_server --selftest（initialize → tools/list → health → voice_list → 真实合成 → 转写回环，6 步应全 PASS）。',
       'MCP 进程**不自己加载模型**（4GB 卡会被吃满显存），它只是通过本机 https://127.0.0.1:8443 调接口；所以「声匠」必须开着。',

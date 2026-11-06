@@ -73,7 +73,7 @@ Windows `Compress-Archive` 用反斜杠当分隔符，Linux `unzip` 会解出一
 ```python
 # 在你自己的机器上执行
 import zipfile, pathlib
-root = pathlib.Path(r"E:\trae_projects\QWENTTS")
+root = pathlib.Path(__file__).resolve().parents[1]  # 换成你自己的声匠项目根目录
 with zipfile.ZipFile("qwentts-linux.zip", "w", zipfile.ZIP_DEFLATED) as zf:
     for p in root.rglob("*"):
         if p.is_file() and not {"node_modules", "__pycache__", "dist"} & set(p.parts):

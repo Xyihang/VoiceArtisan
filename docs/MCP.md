@@ -72,9 +72,9 @@ pip install -e backend
   "mcpServers": {
     "qwentts": {
       "type": "stdio",
-      "command": "C:\\Users\\<你>\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+      "command": "<PYTHON_EXE>",
       "args": ["-m", "app.mcp_server"],
-      "cwd": "E:\\trae_projects\\QWENTTS\\backend",
+      "cwd": "<QWENTTS_BACKEND>",
       "env": {
         "QWENTTS_MCP_BASE_URL": "https://127.0.0.1:8443",
         "QWENTTS_MCP_TIMEOUT": "600"
@@ -139,7 +139,7 @@ pip install -e backend
   "first_packet_ms": 1830,
   "rtf": 0.36,
   "output_file": "49e8882a2ccd.wav",
-  "output_path": "E:\\trae_projects\\QWENTTS\\data\\outputs\\49e8882a2ccd\\49e8882a2ccd.wav",
+  "output_path": "<QWENTTS_BACKEND>\\..\\data\\outputs\\49e8882a2ccd\\49e8882a2ccd.wav",
   "download_url": "https://127.0.0.1:8443/api/tasks/49e8882a2ccd/download"
 }
 ```

@@ -4,9 +4,10 @@ from __future__ import annotations
 import importlib.util
 import sys
 import time
+from pathlib import Path
 
-LAUNCHER = r"E:\trae_projects\QWENTTS\launcher\qwentts_launcher.py"
-ROOT = r"E:\trae_projects\QWENTTS"
+ROOT = Path(__file__).resolve().parents[1]
+LAUNCHER = str(ROOT / "launcher" / "qwentts_launcher.py")
 
 spec = importlib.util.spec_from_file_location("qwentts_launcher", LAUNCHER)
 mod = importlib.util.module_from_spec(spec)
