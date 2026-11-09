@@ -3,12 +3,8 @@ import react from '@vitejs/plugin-react';
 
 const target = process.env.QWENTTS_BACKEND || 'https://127.0.0.1:8443';
 
-const obf = process.env.OBF === '1';
-
 export default defineConfig({
   plugins: [react()],
-  // 混淆版：构建时去掉 console / debugger，减小体积并少暴露调试信息
-  esbuild: obf ? { drop: ['console', 'debugger'] } : undefined,
   server: {
     port: 5173,
     strictPort: false,
