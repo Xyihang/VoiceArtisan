@@ -75,9 +75,13 @@ def get_host(state: AppState = Depends(get_state)):
         if saved and saved.get(key):
             prefill[key] = saved[key]
             sources[key] = "saved"
+    # 全新安装（没有任何云端配置）时 defaults 里可能没有这些键，统一兜底成空串
+    filled = {k: prefill.get(k, "") for k in ("host", "ssh_port", "username", "project_dir", "python")}
+    for key in filled:
+        sources.setdefault(key, "default")
     return {
         **data,
-        **{k: prefill[k] for k in ("host", "ssh_port", "username", "project_dir", "python")},
+        **filled,
         "prefill": prefill,
         "sources": sources,
     }
