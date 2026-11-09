@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>声匠 · VoiceSmith — 本地与云端双跑的语音工作台</title>
+<meta name="description" content="声匠 VoiceSmith：一套界面搞定语音生成、声音克隆、音色设计、音频转文字。支持本地 GPU / 云端 GPU / 混合三种跑法。" />
+<style>
+  :root {
+    --accent: #1f6feb;
+    --accent-deep: #1859c4;
+    --teal: #0d9488;
+    --bg: #f6f7f9;
+    --ink: #131820;
+    --ink-2: #5a6672;
+    --ink-3: #8b96a3;
+    --line: rgba(19, 24, 32, 0.08);
+    --line-strong: rgba(19, 24, 32, 0.14);
+    --glass: rgba(255, 255, 255, 0.66);
+    --glass-solid: #fff;
+    --shadow-sm: 0 1px 2px rgba(19, 24, 32, 0.05), 0 8px 24px -18px rgba(19, 24, 32, 0.4);
+    --shadow-md: 0 2px 6px rgba(19, 24, 32, 0.06), 0 24px 48px -32px rgba(19, 24, 32, 0.45);
+    --radius: 24px;
+    --radius-sm: 14px;
+    --mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(720px 420px at 12% -6%, rgba(31, 111, 235, 0.13), transparent 60%),
+      radial-gradient(600px 380px at 92% 4%, rgba(13, 148, 136, 0.11), transparent 62%);
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- 顶栏 ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    background: rgba(246, 247, 249, 0.78);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav { display: flex; align-items: center; gap: 28px; height: 64px; }
+
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.02em; }
+
+  .brand__mark {
+    width: 28px; height: 28px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 14px -8px rgba(31, 111, 235, 0.9);
+    position: relative;
+  }
+
+  .brand__mark::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 1.6px, transparent 2px) 0 0/100% 100%,
+      linear-gradient(90deg, transparent 22%, rgba(255,255,255,.9) 22%, rgba(255,255,255,.9) 26%, transparent 26%),
+      linear-gradient(90deg, transparent 46%, rgba(255,255,255,.9) 46%, rgba(255,255,255,.9) 50%, transparent 50%),
+      linear-gradient(90deg, transparent 70%, rgba(255,255,255,.9) 70%, rgba(255,255,255,.9) 74%, transparent 74%);
+    opacity: .85;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 64%);
+            mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 64%);
+  }
+
+  .nav__links { display: flex; gap: 20px; margin-left: auto; font-size: 14px; }
+
+  .nav__links a { color: var(--ink-2); text-decoration: none; transition: color .18s; }
+  .nav__links a:hover { color: var(--accent); }
+
+  .nav__cta {
+    padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    color: #fff; text-decoration: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    box-shadow: 0 10px 22px -14px rgba(31, 111, 235, 1), inset 0 1px 0 rgba(255,255,255,.3);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 86px 0 40px; display: grid; grid-template-columns: 1.02fr 0.98fr; gap: 56px; align-items: center; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 999px; font-size: 12.5px; color: var(--accent);
+    background: rgba(31, 111, 235, 0.08); border: 1px solid rgba(31, 111, 235, 0.16);
+  }
+
+  h1 { font-size: 46px; line-height: 1.18; letter-spacing: -0.02em; margin: 20px 0 16px; }
+
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  .lead { font-size: 16.5px; color: var(--ink-2); max-width: 520px; }
+
+  .hero__cta { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 12px; font-size: 15px; font-weight: 600;
+    border: 1px solid transparent; cursor: pointer; text-decoration: none;
+    transition: transform .18s, box-shadow .18s, background .18s;
+  }
+
+  .btn:active { transform: translateY(1px); }
+
+  .btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    box-shadow: 0 16px 32px -20px rgba(31, 111, 235, 1), inset 0 1px 0 rgba(255,255,255,.28);
+  }
+
+  .btn--ghost {
+    color: var(--ink); background: var(--glass-solid);
+    border-color: var(--line-strong); box-shadow: var(--shadow-sm);
+  }
+
+  .hero__meta { display: flex; gap: 26px; margin-top: 34px; }
+
+  .hero__meta div { font-size: 13px; color: var(--ink-3); }
+  .hero__meta strong { display: block; font-size: 22px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* ---------- 模拟应用窗口 ---------- */
+  .app {
+    border-radius: var(--radius);
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.9);
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .app__bar { display: flex; align-items: center; gap: 8px; padding: 2px 4px 14px; }
+  .app__dots { display: flex; gap: 6px; }
+  .app__dots i { width: 9px; height: 9px; border-radius: 50%; background: rgba(19,24,32,.13); }
+  .app__title { font-size: 12.5px; color: var(--ink-3); margin-left: 6px; }
+
+  .app__body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; }
+
+  .pane {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 12px; box-shadow: var(--shadow-sm);
+  }
+
+  .pane__label { font-size: 11.5px; color: var(--ink-3); letter-spacing: .04em; margin-bottom: 8px; }
+
+  .pane__text { font-size: 13px; color: var(--ink-2); min-height: 54px; }
+
+  .chiprow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .chip {
+    font-size: 11.5px; padding: 4px 9px; border-radius: 999px;
+    background: rgba(31,111,235,.07); color: var(--accent); border: 1px solid rgba(31,111,235,.14);
+  }
+  .chip--teal { background: rgba(13,148,136,.08); color: var(--teal); border-color: rgba(13,148,136,.18); }
+
+  .wave { display: flex; align-items: flex-end; gap: 3px; height: 46px; margin: 6px 0 10px; }
+  .wave i {
+    flex: 1; border-radius: 3px; background: linear-gradient(180deg, var(--accent), rgba(31,111,235,.35));
+    height: 20%; transition: height .12s linear;
+  }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: rgba(19,24,32,.03); border-radius: 10px; padding: 7px 9px; }
+  .stat span { display: block; font-size: 10.5px; color: var(--ink-3); }
+  .stat strong { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  .dock {
+    margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px; border-radius: 999px;
+    background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.9);
+    box-shadow: 0 12px 28px -18px rgba(19,24,32,.5), inset 0 1px 0 #fff;
+  }
+  .dock span { font-size: 11px; color: var(--ink-3); padding: 4px 9px; border-radius: 999px; }
+  .dock span.on { color: var(--accent); background: rgba(31,111,235,.1); font-weight: 600; }
+
+  /* ---------- 通用 section ---------- */
+  section { padding: 72px 0; }
+
+  .sec-head { max-width: 640px; margin-bottom: 34px; }
+  .sec-head h2 { font-size: 30px; letter-spacing: -0.015em; margin: 0 0 10px; }
+  .sec-head p { margin: 0; color: var(--ink-2); font-size: 15px; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid--4 { grid-template-columns: repeat(4, 1fr); }
+  .grid--3 { grid-template-columns: repeat(3, 1fr); }
+  .grid--2 { grid-template-columns: repeat(2, 1fr); }
+
+  .card {
+    position: relative;
+    background: var(--glass-solid);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  }
+
+  .card::after {
+    content: "";
+    position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+  }
+
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+
+  .card h3 { font-size: 16.5px; margin: 12px 0 6px; }
+  .card p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+
+  .icon {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: linear-gradient(135deg, rgba(31,111,235,.13), rgba(13,148,136,.13));
+    color: var(--accent); font-size: 16px;
+  }
+
+  .icon--teal { color: var(--teal); }
+
+  /* ---------- 演示区 ---------- */
+  .demo {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    background: var(--glass); border: 1px solid rgba(255,255,255,.8);
+    border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow-md), inset 0 1px 0 #fff;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; color: var(--ink-3); margin-bottom: 6px; }
+
+  textarea, select {
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink);
+    padding: 11px 13px; border-radius: 12px; border: 1px solid var(--line-strong);
+    background: #fff; outline: none; transition: border-color .18s, box-shadow .18s;
+  }
+
+  textarea { resize: vertical; min-height: 98px; line-height: 1.6; }
+
+  textarea:focus, select:focus {
+    border-color: rgba(31,111,235,.55);
+    box-shadow: 0 0 0 3px rgba(31,111,235,.13);
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .console {
+    background: #0c1017; border-radius: var(--radius-sm); padding: 14px;
+    color: #c8d3e0; font-family: var(--mono); font-size: 12.2px; line-height: 1.75;
+    min-height: 214px; overflow: hidden; border: 1px solid rgba(255,255,255,.08);
+  }
+
+  .console__line { white-space: pre-wrap; word-break: break-all; }
+  .console .ok { color: #4ade80; }
+  .console .warn { color: #fbbf24; }
+  .console .dim { color: #64748b; }
+
+  .note { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; padding: 3px 9px; border-radius: 999px;
+    background: rgba(13,148,136,.09); color: var(--teal); border: 1px solid rgba(13,148,136,.2);
+  }
+
+  /* ---------- 引擎 ---------- */
+  .engines { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .engine {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 11px 15px; border-radius: 14px; background: #fff;
+    border: 1px solid var(--line); box-shadow: var(--shadow-sm); min-width: 168px;
+  }
+
+  .engine strong { font-size: 13.5px; }
+  .engine span { font-size: 11.5px; color: var(--ink-3); }
+
+  /* ---------- 定价 ---------- */
+  .price {
+    display: flex; flex-direction: column;
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 26px; box-shadow: var(--shadow-sm);
+  }
+
+  .price--hi {
+    border-color: rgba(31,111,235,.35);
+    box-shadow: 0 24px 48px -32px rgba(31,111,235,.55), inset 0 1px 0 #fff;
+  }
+
+  .price h3 { margin: 0 0 4px; font-size: 17px; }
+  .price .tag { font-size: 12px; color: var(--ink-3); }
+  .price .num { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; margin: 14px 0 2px; }
+  .price .num small { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: 4px; }
+  .price ul { list-style: none; margin: 16px 0 22px; padding: 0; font-size: 13.5px; color: var(--ink-2); }
+  .price li { padding-left: 20px; position: relative; margin-bottom: 8px; }
+  .price li::before {
+    content: "✓"; position: absolute; left: 0; color: var(--teal); font-weight: 700;
+  }
+  .price .btn { margin-top: auto; justify-content: center; }
+
+  /* ---------- 页脚 ---------- */
+  footer {
+    border-top: 1px solid var(--line); padding: 34px 0 56px;
+    color: var(--ink-3); font-size: 13px;
+  }
+
+  .footer__inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+  .disclaimer {
+    margin-top: 18px; font-size: 12px; color: var(--ink-3);
+    background: rgba(255,255,255,.7); border: 1px dashed var(--line-strong);
+    border-radius: 12px; padding: 10px 14px;
+  }
+
+  /* ---------- 滚动出现 ---------- */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; gap: 36px; padding-top: 56px; }
+    h1 { font-size: 34px; }
+    .grid--4 { grid-template-columns: repeat(2, 1fr); }
+    .grid--3 { grid-template-columns: 1fr; }
+    .grid--2, .demo, .app__body { grid-template-columns: 1fr; }
+    .nav__links { display: none; }
+  }
+
+  @media (max-width: 560px) {
+    .grid--4 { grid-template-columns: 1fr; }
+    .hero__meta { gap: 16px; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="brand__mark"></span>声匠 · VoiceSmith</div>
+    <nav class="nav__links">
+      <a href="#capability">能力</a>
+      <a href="#demo">在线演示</a>
+      <a href="#mode">三种跑法</a>
+      <a href="#engine">引擎</a>
+      <a href="#deliver">交付能力</a>
+      <a href="#price">获取方式</a>
+    </nav>
+    <a class="nav__cta" href="#price">获取试用</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div>
+      <span class="eyebrow">本地 GPU / 云端 GPU / 混合，一套界面</span>
+      <h1>没有高配显卡，<br />也能用上<em>顶配语音模型</em></h1>
+      <p class="lead">
+        声匠把「语音生成、声音克隆、音色设计、音频转文字」装进一个桌面工作台：
+        模型跑在你自己的机器上，素材不出本地；机器带不动时，一键切到云端 GPU。
+      </p>
+      <div class="hero__cta">
+        <a class="btn btn--primary" href="#demo">先看 30 秒演示 <span aria-hidden="true">→</span></a>
+        <a class="btn btn--ghost" href="#price">获取方式</a>
+      </div>
+      <div class="hero__meta">
+        <div><strong>13</strong>本地引擎可切换</div>
+        <div><strong>4</strong>类核心能力</div>
+        <div><strong>3</strong>种运行模式</div>
+        <div><strong>0</strong>素材上传云端<small style="font-size:12px;color:var(--ink-3)">（本地模式）</small></div>
+      </div>
+    </div>
+
+    <!-- 模拟应用窗口 -->
+    <div class="app" aria-hidden="true">
+      <div class="app__bar">
+        <span class="app__dots"><i></i><i></i><i></i></span>
+        <span class="app__title">声匠 · 工作台</span>
+      </div>
+      <div class="app__body">
+        <div class="pane">
+          <div class="pane__label">待合成文本</div>
+          <div class="pane__text">把这段文字变成可以听的声音。选好音色、写下文案，点一下就开始。</div>
+          <div class="chiprow">
+            <span class="chip">Vivian · 温柔女声</span>
+            <span class="chip chip--teal">中文</span>
+            <span class="chip">wav</span>
+          </div>
+        </div>
+        <div class="pane">
+          <div class="pane__label">结果</div>
+          <div class="wave" id="heroWave"></div>
+          <div class="stats">
+            <div class="stat"><span>首包</span><strong>0.9s</strong></div>
+            <div class="stat"><span>实时率</span><strong>0.31</strong></div>
+            <div class="stat"><span>显存</span><strong>3.8G</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="dock">
+        <span class="on">工作台</span><span>音色库</span><span>任务中心</span>
+        <span>设置</span><span>状态与日志</span><span>教程</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 能力 -->
+  <section id="capability">
+    <div class="sec-head reveal">
+      <h2>四类能力，一个工作台</h2>
+      <p>不用在四个网站之间倒腾：配音、克隆、做有声书、会议转写，全在同一个界面里完成。</p>
+    </div>
+    <div class="grid grid--4">
+      <div class="card reveal">
+        <div class="icon">♪</div>
+        <h3>文本转语音</h3>
+        <p>长文本自动分块、边生成边播，首包到达即可试听；支持语速、目标时长、输出格式。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">◍</div>
+        <h3>声音克隆</h3>
+        <p>3–10 秒参考音频即可克隆，自动转写参考文本；克隆音色可命名、可复用、可导出。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">✧</div>
+        <h3>音色设计</h3>
+        <p>用人话描述想要的声音：「低沉磁性的中年男声，语速偏慢」，直接生成并试听。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">≣</div>
+        <h3>音频转文字</h3>
+        <p>Whisper 五档模型可选，支持按说话人分段、字幕导出（srt / vtt / ass）。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 在线演示 -->
+  <section id="demo">
+    <div class="sec-head reveal">
+      <h2>在线试一下（模拟演示）</h2>
+      <p>这是一个纯前端演示：按钮、进度、日志、结果卡片都是真实交互，只是<strong>不出真实音频</strong>。</p>
+    </div>
+
+    <div class="demo reveal">
+      <div>
+        <div class="field">
+          <label for="txt">待合成文本</label>
+          <textarea id="txt">把这段文字变成可以听的声音。选好音色、写下文案，点一下就开始。</textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="voice">音色</label>
+            <select id="voice">
+              <option>Vivian · 温柔女声</option>
+              <option>Dylan · 北京话男声</option>
+              <option>Serena · 知性女声</option>
+              <option>Aiden · 英文青年</option>
+              <option>我的克隆音色（示例）</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mode">运行模式</label>
+            <select id="mode">
+              <option>仅本地（本机 GPU）</option>
+              <option>仅云端（云端 GPU）</option>
+              <option>混合（自动挑选）</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn--primary" id="run" style="width:100%;justify-content:center">
+          开始生成
+        </button>
+        <p class="note">演示数据：真实产品会显示实测的首包延迟、实时率 RTF 与显存占用。</p>
+      </div>
+
+      <div>
+        <div class="console" id="console">
+          <div class="console__line dim">等待开始…</div>
+        </div>
+        <div class="stats" style="margin-top:12px">
+          <div class="stat"><span>首包延迟</span><strong id="mFirst">—</strong></div>
+          <div class="stat"><span>实时率 RTF</span><strong id="mRtf">—</strong></div>
+          <div class="stat"><span>本次耗时</span><strong id="mCost">—</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 三种跑法 -->
+  <section id="mode">
+    <div class="sec-head reveal">
+      <h2>有卡用卡，没卡上云，不用你手动挑</h2>
+      <p>同一份配置切三种跑法：任务路由按文本长度、显存余量、任务类型自动选路，失败自动回退。</p>
+    </div>
+    <div class="grid grid--3">
+      <div class="card reveal">
+        <div class="icon">▤</div>
+        <h3>仅本地</h3>
+        <p>模型、音色、素材全在本机，断网可用。推荐独显 ≥ 8GB；4GB 卡也能用 float16 直跑或退到小模型。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon icon--teal">☁</div>
+        <h3>仅云端</h3>
+        <p>本地只当界面，推理走云端 GPU。一键接入向导自动建隧道，任务结束可自动停机，只为你真正生成的几分钟付费。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">⇄</div>
+        <h3>混合</h3>
+        <p>长文本、重任务优先云端，短句本地跑；云端不可用时自动回退本地，界面里能看到每一次选路原因。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 引擎 -->
+  <section id="engine">
+    <div class="sec-head reveal">
+      <h2>13 个本地引擎，不绑定单一模型</h2>
+      <p>可热切换、可预加载/卸载，带显存保护与低显存模式；谁效果好就换谁。</p>
+    </div>
+    <div class="engines reveal">
+      <div class="engine"><strong>Qwen3-TTS 1.7B</strong><span>高质量 · 三件套</span></div>
+      <div class="engine"><strong>Qwen3-TTS 0.6B</strong><span>低显存友好</span></div>
+      <div class="engine"><strong>CosyVoice3 0.5B</strong><span>克隆 / 多语种</span></div>
+      <div class="engine"><strong>CosyVoice2 0.5B</strong><span>稳定克隆</span></div>
+      <div class="engine"><strong>CosyVoice 300M-SFT</strong><span>轻量内置音色</span></div>
+      <div class="engine"><strong>VoxCPM 1.5</strong><span>表现力强</span></div>
+      <div class="engine"><strong>IndexTTS2</strong><span>韵律自然</span></div>
+      <div class="engine"><strong>Whisper tiny / base</strong><span>快速转写</span></div>
+      <div class="engine"><strong>Whisper small / medium</strong><span>平衡精度</span></div>
+      <div class="engine"><strong>Whisper large-v3</strong><span>最高精度</span></div>
+      <div class="engine"><strong>CAM++ 声纹</strong><span>说话人区分</span></div>
+    </div>
+  </section>
+
+  <!-- 交付能力 -->
+  <section id="deliver">
+    <div class="sec-head reveal">
+      <h2>不只是 demo：批量、字幕、分轨、接口都齐了</h2>
+      <p>面向真实交付场景：一次交 12 条任务、按说话人分轨、字幕三种格式、成品规格自动读文件头。</p>
+    </div>
+    <div class="grid grid--3">
+      <div class="card reveal">
+        <div class="icon">⇉</div>
+        <h3>批量与队列</h3>
+        <p>批量提交、实时进度推送、失败重试与续做；任务可取消、可删除、可导出。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">⌗</div>
+        <h3>字幕与分轨</h3>
+        <p>srt / vtt / ass 导出，按说话人拆分、合并、改名；片段级时间轴可核对。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon icon--teal">⌁</div>
+        <h3>OpenAI 兼容 API</h3>
+        <p><code style="font-family:var(--mono);font-size:12.5px">/v1/audio/speech</code>、
+           <code style="font-family:var(--mono);font-size:12.5px">/v1/audio/transcriptions</code>，
+           现有代码改个 base_url 就能接。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon icon--teal">◈</div>
+        <h3>给 AI 用的 MCP</h3>
+        <p>内置 MCP Server（9 个工具），DSH / Claude / Cursor 等客户端配上就能让 AI 直接合成与转写。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">▣</div>
+        <h3>成品规格与导出</h3>
+        <p>采样率 / 声道 / 位深 / 编码 / 体积自动读出；支持多档导出与批量下载。</p>
+      </div>
+      <div class="card reveal">
+        <div class="icon">◐</div>
+        <h3>隐私优先</h3>
+        <p>本地模式下文本与参考音频不出机器；切云端前二次确认，日志与产物都在本机。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 定价 -->
+  <section id="price">
+    <div class="sec-head reveal">
+      <h2>获取方式</h2>
+      <p>源码不随包分发，按版本授权使用；升级、模型适配与私有部署可单独谈。</p>
+    </div>
+    <div class="grid grid--3">
+      <div class="price reveal">
+        <h3>个人版</h3>
+        <span class="tag">单机 · 非商用</span>
+        <div class="num">¥ ___ <small>/ 版本买断</small></div>
+        <ul>
+          <li>完整功能，单台机器激活</li>
+          <li>含当前大版本内的更新</li>
+          <li>教程与常见错误速查</li>
+          <li>邮件支持</li>
+        </ul>
+        <a class="btn btn--ghost" href="#contact">咨询购买</a>
+      </div>
+
+      <div class="price price--hi reveal">
+        <h3>商业版</h3>
+        <span class="tag">商用授权 · 推荐</span>
+        <div class="num">¥ ___ <small>/ 年</small></div>
+        <ul>
+          <li>可商用出片、可对客户交付</li>
+          <li>含新模型适配与版本更新</li>
+          <li>批量 / 字幕 / API / MCP 全开</li>
+          <li>优先支持（远程协助）</li>
+        </ul>
+        <a class="btn btn--primary" href="#contact">咨询商业授权</a>
+      </div>
+
+      <div class="price reveal">
+        <h3>私有部署 / OEM</h3>
+        <span class="tag">团队 · 白标</span>
+        <div class="num">按需报价</div>
+        <ul>
+          <li>内网部署，断网可用</li>
+          <li>可换品牌 / 换 UI 主题</li>
+          <li>对接自有业务系统与账号</li>
+          <li>含部署与培训</li>
+        </ul>
+        <a class="btn btn--ghost" href="#contact">聊聊方案</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" style="padding-top:0">
+    <div class="card reveal" style="text-align:center;padding:34px">
+      <h3 style="font-size:20px;margin-top:0">想看完整界面？</h3>
+      <p style="max-width:520px;margin:0 auto 18px">
+        留个联系方式，我可以给你发一段实机录屏，或按你的场景（配音 / 有声书 / 会议转写 / 私有部署）做一次演示。
+      </p>
+      <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
+        <a class="btn btn--primary" href="mailto:__EMAIL__">邮件联系</a>
+        <a class="btn btn--ghost" href="__LINK__">查看详情</a>
+      </div>
+      <p class="note">联系方式：__EMAIL__ · __WECHAT__</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer__inner">
+      <div>声匠 · VoiceSmith — 本地与云端双跑的语音工作台</div>
+      <div>保留所有权利 · © 2026 __OWNER__</div>
+    </div>
+    <div class="disclaimer">
+      本页是<strong>纯前端功能演示页</strong>：所有数据、日志、进度均为模拟，不产生真实音频；
+      模型权重不随软件分发，需自行获取并遵守各模型许可。
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ---------- 顶部示意波形：静态随机高度，避免动效干扰阅读 ---------- */
+  (function () {
+    const wave = document.getElementById('heroWave');
+    for (let i = 0; i < 26; i++) {
+      const bar = document.createElement('i');
+      bar.style.height = (18 + Math.random() * 74) + '%';
+      wave.appendChild(bar);
+    }
+  })();
+
+  /* ---------- 滚动出现 ---------- */
+  (function () {
+    const items = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      items.forEach((el) => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+    );
+    items.forEach((el) => io.observe(el));
+  })();
+
+  /* ---------- 模拟生成 ---------- */
+  (function () {
+    const runBtn = document.getElementById('run');
+    const txt = document.getElementById('txt');
+    const voice = document.getElementById('voice');
+    const mode = document.getElementById('mode');
+    const consoleEl = document.getElementById('console');
+    const mFirst = document.getElementById('mFirst');
+    const mRtf = document.getElementById('mRtf');
+    const mCost = document.getElementById('mCost');
+    let running = false;
+
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    function line(text, cls) {
+      const div = document.createElement('div');
+      div.className = 'console__line' + (cls ? ' ' + cls : '');
+      div.textContent = text;
+      consoleEl.appendChild(div);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function reset() {
+      consoleEl.innerHTML = '';
+      mFirst.textContent = '—';
+      mRtf.textContent = '—';
+      mCost.textContent = '—';
+    }
+
+    async function run() {
+      if (running) return;
+      const text = txt.value.trim();
+      if (!text) {
+        txt.focus();
+        return;
+      }
+      running = true;
+      runBtn.textContent = '生成中…';
+      runBtn.style.opacity = '.75';
+      reset();
+
+      const isCloud = mode.value.indexOf('云端') === 0;
+      const isHybrid = mode.value.indexOf('混合') === 0;
+      const t0 = performance.now();
+
+      line('任务已创建 · type=tts · ' + voice.value);
+      await sleep(180);
+      line('运行模式：' + mode.value + (isHybrid ? '（云端余量不足 → 本地）' : ''));
+      await sleep(160);
+
+      const chunks = Math.max(2, Math.min(6, Math.ceil(text.length / 22)));
+      line('文本分块：' + chunks + ' 块（每块约 ' + Math.round(text.length / chunks) + ' 字）');
+
+      const firstPacket = isCloud ? 0.6 + Math.random() * 0.4 : 0.9 + Math.random() * 0.6;
+      await sleep(firstPacket * 1000);
+      mFirst.textContent = firstPacket.toFixed(2) + 's';
+      line('首包到达：' + Math.round(firstPacket * 1000) + 'ms（' + (isCloud ? 'cloud' : 'local') + '）', 'ok');
+
+      for (let i = 1; i <= chunks; i++) {
+        await sleep(isCloud ? 220 : 330);
+        const pct = Math.round((i / chunks) * 100);
+        line('chunk ' + i + '/' + chunks + ' 完成 · 进度 ' + pct + '%');
+      }
+
+      const total = (performance.now() - t0) / 1000;
+      const rtf = (total / Math.max(2, text.length / 6)).toFixed(2);
+      mRtf.textContent = rtf;
+      mCost.textContent = total.toFixed(1) + 's';
+      line('任务完成：status=completed · 输出 24kHz / wav', 'ok');
+      line('演示数据：真实产品此处会给出 output_path 与下载地址', 'dim');
+
+      runBtn.textContent = '再试一次';
+      runBtn.style.opacity = '1';
+      running = false;
+    }
+
+    runBtn.addEventListener('click', run);
+    txt.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run();
+    });
+  })();
+</script>
+</body>
+</html>
