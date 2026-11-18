@@ -435,7 +435,27 @@ def find_python_candidates():
     return ordered
 
 
+def _normalize_python_info(info):
+    """JSON 往返会把 tuple 变成 list，这里还原成 tuple（check_python 用 %d 格式化）。"""
+    if not isinstance(info, dict):
+        return info
+    chosen = info.get("chosen")
+    if isinstance(chosen, dict) and isinstance(chosen.get("version"), list):
+        chosen["version"] = tuple(chosen["version"])
+    for cand in info.get("candidates") or []:
+        if isinstance(cand, dict) and isinstance(cand.get("version"), list):
+            cand["version"] = tuple(cand["version"])
+    return info
+
+
 def detect_python():
+    """找可用 Python（带缓存：要起子进程跑 -V，约 360ms，10 分钟内不重复）。"""
+    return _normalize_python_info(
+        cached_json("python:detect", _detect_python_uncached, ttl=PROBE_CACHE_TTL)
+    )
+
+
+def _detect_python_uncached():
     candidates = find_python_candidates()
     best = None
     for exe in candidates:
@@ -499,6 +519,12 @@ def check_python(info) -> Check:
 
 
 def detect_pip(python_exe):
+    """pip 体检（带缓存：起 pip 子进程约 450ms，版本很少变）。"""
+    key = "pip:" + str(python_exe or "")
+    return cached_json(key, lambda: _detect_pip_uncached(python_exe))
+
+
+def _detect_pip_uncached(python_exe):
     if not python_exe:
         return Check(
             key="pip",
@@ -612,7 +638,7 @@ def detect_python_deps(python_exe: str | None) -> Check:
             fix_hint="先安装 Python 3.10+，再点「安装依赖」",
             critical=True,
         )
-    info = probe_python_deps(python_exe)
+    info = probe_python_deps_cached(python_exe)
     if not info:
         return Check(
             key="pydeps",
@@ -804,7 +830,7 @@ def detect_model(root: Path, model_name: str) -> Check:
             command=f'python scripts/download_models.py --size 1.7B --out "{root / "models"}"',
             extra={"path": str(mdir), "size_bytes": 0},
         )
-    size = dir_size(mdir)
+    size = cached_dir_size(mdir)
     if not (main_file.is_file() and tokenizer.is_file()):
         lacking = "model.safetensors" if not main_file.is_file() else "speech_tokenizer/model.safetensors"
         return Check(
@@ -921,6 +947,58 @@ def detect_venv(root: Path, env_choice: str = ENV_SYSTEM) -> Check:
         command=command,
         extra=extra,
     )
+
+
+FAST_CHECKS_HINT = ("python", "pip", "venv", "disk", "config", "dist")
+
+
+def collect_checks_fast(root: Path, env_choice: str = ENV_SYSTEM):
+    """快检（≤300ms）：Python / pip / venv / 磁盘 / 配置 / 前端产物。"""
+    python_info = detect_python()
+    py_check = check_python(python_info)
+    python_exe = py_check.extra.get("exe") if py_check.ok else None
+    checks = [
+        py_check,
+        detect_pip(python_exe),
+        detect_venv(root, env_choice),
+        detect_disk(root),
+        detect_config(root),
+        detect_dist(root),
+    ]
+    return checks, python_exe
+
+
+def collect_checks_slow(root: Path, python_exe: str | None):
+    """慢检（依赖 / GPU / Node / ffmpeg / 模型体积）。
+
+    这些项彼此独立且各自要起子进程/读目录，串行要 1 秒多；这里用线程池并发跑，
+    再按固定顺序逐项 yield，界面仍然是「一项一项补进来」的观感。
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    jobs = [
+        ("deps", lambda: detect_python_deps(python_exe)),
+        ("gpu", detect_gpu),
+        ("node", detect_node),
+        ("ffmpeg", detect_ffmpeg),
+    ]
+    for model_name in MODEL_DIRS + MODEL_DIRS_06B:
+        jobs.append((f"model:{model_name}", (lambda name=model_name: detect_model(root, name))))
+
+    with ThreadPoolExecutor(max_workers=4, thread_name_prefix="chk") as pool:
+        futures = [(key, pool.submit(fn)) for key, fn in jobs]
+        for key, future in futures:
+            try:
+                yield future.result()
+            except Exception as exc:  # noqa: BLE001 - 单项失败不影响其它项
+                yield Check(
+                    key=key.replace(":", "_"),
+                    name=key,
+                    status=STATUS_WARN,
+                    ok=False,
+                    detail=f"检测异常：{type(exc).__name__}: {exc}",
+                    fix_hint="可点「刷新检测」重试；持续失败请反馈",
+                )
 
 
 def collect_checks(root: Path, env_choice: str = ENV_SYSTEM):
@@ -1100,6 +1178,132 @@ def load_saved_env() -> str:
 def save_root(root: str) -> None:
     save_config(root=root)
 
+# --------------------------------------------------------------------------- #
+# 结果缓存：模型体积 / 依赖探测（避免每次体检都全量遍历 13GB 目录、重复 import torch）
+# --------------------------------------------------------------------------- #
+SIZE_CACHE_TTL = 600.0
+DEPS_CACHE_TTL = 600.0
+
+
+def _write_config(data: dict) -> None:
+    path = _config_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def cached_dir_size(path: Path, ttl: float = SIZE_CACHE_TTL) -> int:
+    """目录体积（带缓存）：mtime 未变且未过期就直接用缓存值。"""
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return 0
+    data = load_saved_config()
+    cache = data.get("model_sizes") or {}
+    entry = cache.get(str(path)) or {}
+    try:
+        same = float(entry.get("mtime") or 0) == float(mtime)
+        fresh = same and (time.time() - float(entry.get("checked_at") or 0) < ttl)
+    except (TypeError, ValueError):
+        fresh = False
+    if fresh:
+        try:
+            return int(entry.get("size") or 0)
+        except (TypeError, ValueError):
+            pass
+    size = dir_size(path)
+    cache[str(path)] = {"size": size, "mtime": mtime, "checked_at": time.time()}
+    data["model_sizes"] = cache
+    _write_config(data)
+    return size
+
+
+def probe_python_deps_cached(python_exe: str | None, ttl: float = DEPS_CACHE_TTL) -> dict:
+    """依赖探测（带缓存）：同一解释器 10 分钟内不重复起进程 import torch。"""
+    if not python_exe:
+        return {}
+    key = str(python_exe)
+    data = load_saved_config()
+    cache = data.get("deps_probe") or {}
+    entry = cache.get(key) or {}
+    try:
+        ts = float(entry.get("ts") or 0)
+    except (TypeError, ValueError):
+        ts = 0.0
+    if ts and (time.time() - ts < ttl) and isinstance(entry.get("info"), dict):
+        return dict(entry["info"])
+    info = probe_python_deps(python_exe)
+    if info:
+        cache[key] = {"ts": time.time(), "info": info}
+        data["deps_probe"] = cache
+        _write_config(data)
+    return info
+
+
+PROBE_CACHE_TTL = 600.0
+
+
+def cached_json(key: str, producer, ttl: float = PROBE_CACHE_TTL):
+    """把「贵但很少变」的探测结果缓存进 launcher.json（Python 版本、pip 版本等）。"""
+    data = load_saved_config()
+    cache = data.get("probes") or {}
+    entry = cache.get(key) or {}
+    try:
+        ts = float(entry.get("ts") or 0)
+    except (TypeError, ValueError):
+        ts = 0.0
+    if ts and (time.time() - ts < ttl) and "value" in entry:
+        return entry["value"]
+    value = producer()
+    try:
+        cache[key] = {"ts": time.time(), "value": value}
+        data["probes"] = cache
+        _write_config(data)
+    except Exception:  # noqa: BLE001 - 缓存写失败不影响主流程
+        pass
+    return value
+
+
+def clear_probe_cache(python_exe: str | None = None) -> None:
+    """「重新检测」时清掉依赖缓存。"""
+    data = load_saved_config()
+    if python_exe:
+        cache = data.get("deps_probe") or {}
+        cache.pop(str(python_exe), None)
+        data["deps_probe"] = cache
+        probes = data.get("probes") or {}
+        probes.pop("pip:" + str(python_exe), None)
+        probes.pop("python:detect", None)
+        data["probes"] = probes
+    else:
+        data.pop("deps_probe", None)
+    _write_config(data)
+
+
+
+# 步骤条定义：(key, 显示名, 对应任务标签)
+STEP_DEFS = (
+    ("select", "选目录", None),
+    ("checks", "体检", "环境体检"),
+    ("deps", "装依赖", "安装依赖"),
+    ("frontend", "构建前端", "构建前端"),
+    ("config", "生成配置", "生成配置"),
+    ("service", "启动服务", "启动服务"),
+    ("done", "完成", None),
+)
+STEP_INDEX = {key: idx for idx, (key, _label, _task) in enumerate(STEP_DEFS)}
+TASK_TO_STEP = {task: key for key, _label, task in STEP_DEFS if task}
+STEP_STATE_COLOR = {
+    "idle": "#9aa4b2",
+    "running": "#1f6feb",
+    "ok": "#0a7d28",
+    "failed": "#c00000",
+    "skipped": "#b6bec9",
+}
+STEP_STATE_MARK = {"idle": "○", "running": "◐", "ok": "●", "failed": "✕", "skipped": "·"}
+
 
 class LauncherApp:
     """tkinter 单窗口应用。所有长任务在后台线程跑，界面只由主线程更新。"""
@@ -1122,11 +1326,17 @@ class LauncherApp:
         self.log_handle = None
         self.log_path: Path | None = None
         self.root_dir = Path(root_dir) if root_dir else Path("")
+        # 进度状态（步骤条 + 进度条）
+        self.step_states: dict[str, str] = {key: "idle" for key, _l, _t in STEP_DEFS}
+        self.progress_started = 0.0
+        self.progress_done = 0
+        self.progress_total = 0
+        self.last_action = None
 
         self.win = tk.Tk()
         self.win.title(f"{APP_TITLE} v{APP_VERSION}")
-        self.win.geometry("900x640")
-        self.win.minsize(780, 560)
+        self.win.geometry("960x720")
+        self.win.minsize(820, 620)
         self.win.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self._build_ui()
@@ -1165,8 +1375,8 @@ class LauncherApp:
         outer = ttk.Frame(self.win, padding=10)
         outer.pack(fill=tk.BOTH, expand=True)
         outer.columnconfigure(0, weight=1)
-        outer.rowconfigure(4, weight=3)
-        outer.rowconfigure(6, weight=2)
+        outer.rowconfigure(6, weight=3)
+        outer.rowconfigure(8, weight=2)
 
         header = ttk.Frame(outer)
         header.grid(row=0, column=0, sticky="ew")
@@ -1185,14 +1395,46 @@ class LauncherApp:
         self.root_entry = ttk.Entry(dirbar, textvariable=self.root_var)
         self.root_entry.grid(row=0, column=1, sticky="ew", padx=(0, 6))
         ttk.Button(dirbar, text="浏览…", command=self.browse_root).grid(row=0, column=2, padx=2)
-        ttk.Button(dirbar, text="刷新检测", command=self.run_checks).grid(row=0, column=3, padx=2)
+        ttk.Button(dirbar, text="刷新检测", command=self.refresh_checks_force).grid(row=0, column=3, padx=2)
+
+        # 步骤条：让用户知道"现在走到哪一步"
+        steps = ttk.Frame(outer)
+        steps.grid(row=2, column=0, sticky="ew", pady=(6, 2))
+        self.step_labels = {}
+        for idx, (key, label, _task) in enumerate(STEP_DEFS):
+            lbl = tk.Label(
+                steps,
+                text=f"{STEP_STATE_MARK['idle']} {idx + 1}.{label}",
+                fg=STEP_STATE_COLOR["idle"],
+                font=("Microsoft YaHei UI", 9),
+                padx=6,
+            )
+            lbl.pack(side=tk.LEFT)
+            self.step_labels[key] = lbl
+            if idx < len(STEP_DEFS) - 1:
+                tk.Label(steps, text="→", fg="#c7ced8", padx=2).pack(side=tk.LEFT)
+
+        # 进度区：进度条 + 当前动作 + 已用/预计
+        progress_box = ttk.LabelFrame(outer, text="当前进度", padding=6)
+        progress_box.grid(row=3, column=0, sticky="ew", pady=(2, 2))
+        progress_box.columnconfigure(0, weight=1)
+        self.progress_bar = ttk.Progressbar(progress_box, mode="determinate", maximum=100, value=0)
+        self.progress_bar.grid(row=0, column=0, sticky="ew")
+        self.pct_var = tk.StringVar(value="等待开始")
+        self.time_var = tk.StringVar(value="")
+        ttk.Label(progress_box, textvariable=self.pct_var, font=("Microsoft YaHei UI", 9, "bold")).grid(
+            row=1, column=0, sticky="w", pady=(4, 0)
+        )
+        ttk.Label(progress_box, textvariable=self.time_var, foreground="#5A6572").grid(
+            row=2, column=0, sticky="w"
+        )
 
         # 运行环境（系统 Python / 项目内 venv）
         self.env_var = tk.StringVar(value=ENV_SYSTEM)
         env_frame = ttk.LabelFrame(
             outer, text="运行环境（依赖装进哪里 / 用哪个解释器跑后端）", padding=6
         )
-        env_frame.grid(row=2, column=0, sticky="ew", pady=(2, 2))
+        env_frame.grid(row=4, column=0, sticky="ew", pady=(2, 2))
         ttk.Radiobutton(
             env_frame, text=ENV_LABELS[ENV_SYSTEM], value=ENV_SYSTEM,
             variable=self.env_var, command=self.on_env_change,
@@ -1210,11 +1452,11 @@ class LauncherApp:
         env_frame.columnconfigure(3, weight=1)
 
         self.root_hint = ttk.Label(outer, text="", foreground="#c00000")
-        self.root_hint.grid(row=3, column=0, sticky="w")
+        self.root_hint.grid(row=5, column=0, sticky="w")
 
         # 体检列表
         table_frame = ttk.LabelFrame(outer, text="环境体检", padding=6)
-        table_frame.grid(row=4, column=0, sticky="nsew", pady=(4, 6))
+        table_frame.grid(row=6, column=0, sticky="nsew", pady=(4, 6))
         table_frame.columnconfigure(0, weight=1)
         table_frame.rowconfigure(0, weight=1)
 
@@ -1242,7 +1484,7 @@ class LauncherApp:
 
         # 操作按钮
         actions = ttk.LabelFrame(outer, text="操作（长任务在后台执行，日志实时滚动）", padding=6)
-        actions.grid(row=5, column=0, sticky="ew", pady=(0, 6))
+        actions.grid(row=7, column=0, sticky="ew", pady=(0, 6))
         ttk.Label(
             actions,
             text="模型下载已移至界面：启动服务后到「设置 → 引擎与模型 → Qwen3-TTS 1.7B」点「安装」（约 12.6GB，支持断点续传）",
@@ -1270,9 +1512,15 @@ class LauncherApp:
             self.button_map[text] = button
         for col in range(5):
             actions.columnconfigure(col, weight=1)
+        self.retry_button = ttk.Button(
+            actions, text="重试上一步", command=self.task_retry_last, width=14
+        )
+        self.retry_button.grid(row=2, column=0, padx=3, pady=(4, 0), sticky="w")
+        self.retry_button.configure(state=self.tk.DISABLED)
+
         self.manual_var = self.tk.StringVar(value="")
         manual_row = ttk.Frame(actions)
-        manual_row.grid(row=2, column=0, columnspan=5, sticky="ew", pady=(4, 0))
+        manual_row.grid(row=3, column=0, columnspan=5, sticky="ew", pady=(4, 0))
         manual_row.columnconfigure(1, weight=1)
         ttk.Label(manual_row, text="等价手动命令：").grid(row=0, column=0, sticky="w")
         manual_entry = ttk.Entry(manual_row, textvariable=self.manual_var, state="readonly")
@@ -1281,7 +1529,7 @@ class LauncherApp:
 
         # 日志
         log_frame = ttk.LabelFrame(outer, text="日志", padding=6)
-        log_frame.grid(row=6, column=0, sticky="nsew")
+        log_frame.grid(row=8, column=0, sticky="nsew")
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
         self.log_text = self.tk.Text(log_frame, height=8, wrap="none", state=self.tk.DISABLED,
@@ -1322,9 +1570,77 @@ class LauncherApp:
         except OSError:
             self.log_handle, self.log_path = None, None
 
+    # ---------------- 进度上报（后台线程只投消息） ----------------
+    def progress(self, phase: str, done=None, total=None, text: str = "") -> None:
+        self.q.put(("progress", {"phase": phase, "done": done, "total": total, "text": text}))
+
+    def stage(self, key: str, state: str) -> None:
+        self.q.put(("stage", {"key": key, "state": state}))
+
+    def _set_step_state(self, key: str, state: str) -> None:
+        if key not in self.step_labels:
+            return
+        self.step_states[key] = state
+        idx = STEP_INDEX.get(key, 0)
+        label = STEP_DEFS[idx][1]
+        self.step_labels[key].configure(
+            text=f"{STEP_STATE_MARK.get(state, '○')} {idx + 1}.{label}",
+            fg=STEP_STATE_COLOR.get(state, "#9aa4b2"),
+        )
+
+    def _apply_progress(self, payload: dict) -> None:
+        phase = str(payload.get("phase") or "")
+        done = payload.get("done")
+        total = payload.get("total")
+        text = str(payload.get("text") or "")
+        if not self.progress_started:
+            self.progress_started = time.time()
+        show_total = isinstance(done, int) and isinstance(total, int) and total > 0
+        if show_total:
+            self.progress_done, self.progress_total = int(done), int(total)
+            pct = max(0, min(100, int(round(done * 100 / total))))
+            self.progress_bar.configure(mode="determinate")
+            try:
+                self.progress_bar.stop()
+            except Exception:  # noqa: BLE001
+                pass
+            self.progress_bar["value"] = pct
+            self.pct_var.set(f"{phase}：{pct}%（{done}/{total}）" + (f" · {text}" if text else ""))
+            self.win.title(f"{APP_TITLE} · {phase} {pct}%")
+        else:
+            self.progress_bar.configure(mode="indeterminate")
+            try:
+                self.progress_bar.start(60)
+            except Exception:  # noqa: BLE001
+                pass
+            self.pct_var.set(f"{phase}：" + (text or "处理中…"))
+            self.win.title(f"{APP_TITLE} · {phase}")
+
+        elapsed = time.time() - self.progress_started
+        parts = [f"已用 {int(elapsed // 60):02d}:{int(elapsed % 60):02d}"]
+        if show_total and self.progress_done > 0:
+            guess = elapsed / self.progress_done * (self.progress_total - self.progress_done)
+            parts.append(f"预计还需 ≈ {int(guess // 60):02d}:{int(guess % 60):02d}")
+        self.time_var.set(" ｜ ".join(parts))
+
+    def _reset_progress(self, phase: str = "等待开始") -> None:
+        self.progress_started = 0.0
+        self.progress_done = 0
+        self.progress_total = 0
+        try:
+            self.progress_bar.stop()
+        except Exception:  # noqa: BLE001
+            pass
+        self.progress_bar.configure(mode="determinate", value=0)
+        self.pct_var.set(phase)
+        self.time_var.set("")
+        self.win.title(f"{APP_TITLE} v{APP_VERSION}")
+
     def log(self, message: str) -> None:
         """线程安全：后台线程只把内容塞进队列。"""
         self.q.put(("log", str(message)))
+
+    MAX_LOG_LINES = 2000
 
     def _log_now(self, message: str) -> None:
         stamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -1335,9 +1651,22 @@ class LauncherApp:
                 self.log_handle.flush()
             except OSError:
                 pass
+        # 仅在用户停在底部时自动滚动：往上翻看日志时不打扰
+        try:
+            at_bottom = self.log_text.yview()[1] >= 0.999
+        except Exception:  # noqa: BLE001
+            at_bottom = True
         self.log_text.configure(state=self.tk.NORMAL)
         self.log_text.insert(self.tk.END, text + "\n")
-        self.log_text.see(self.tk.END)
+        # 限行：长任务（pip 十几分钟）下 Text 不能无限增长，否则滚动越来越卡
+        try:
+            total = int(self.log_text.index("end-1c").split(".")[0])
+            if total > self.MAX_LOG_LINES:
+                self.log_text.delete("1.0", f"{total - self.MAX_LOG_LINES}.0")
+        except Exception:  # noqa: BLE001
+            pass
+        if at_bottom:
+            self.log_text.see(self.tk.END)
         self.log_text.configure(state=self.tk.DISABLED)
 
     def _drain_queue(self) -> None:
@@ -1359,6 +1688,32 @@ class LauncherApp:
                         self._finish_task(payload)
                     elif kind == "checks":
                         self._render_checks(payload)
+                    elif kind == "checks_append":
+                        self._render_checks_append(payload)
+                    elif kind == "progress":
+                        self._apply_progress(payload)
+                    elif kind == "stage":
+                        self._set_step_state(payload.get("key", ""), payload.get("state", "idle"))
+                    elif kind == "ready":
+                        btn = self.button_map.get("打开界面")
+                        if btn is not None:
+                            btn.configure(text="打开界面 →")
+                        self._set_step_state("service", "ok")
+                        self._set_step_state("done", "ok")
+                    elif kind == "checks_done":
+                        checks = list(self.checks.values())
+                        fails = [c for c in checks if c.status == STATUS_FAIL]
+                        warns = [c for c in checks if c.status == STATUS_WARN]
+                        self.step_var.set(
+                            f"当前步骤：体检完成（{len(checks)} 项，失败 {len(fails)}，提醒 {len(warns)}）"
+                        )
+                        if fails:
+                            self.tip_var.set("提示：红色项必须先解决（多数需要你手动安装 Python/Node 等系统软件）。")
+                        elif warns:
+                            self.tip_var.set("提示：黄色项属于可选/可后补（如模型、前端产物），按需处理即可。")
+                        else:
+                            self.tip_var.set("提示：全部通过，可点「启动服务」。")
+                        self._update_env_ui()
                     elif kind == "env":
                         self.env_var.set(normalize_env_choice(payload))
                         self.on_env_change()
@@ -1552,6 +1907,16 @@ class LauncherApp:
         self.root_hint.configure(text="")
         save_config(root=chosen, env=self.env_var.get())
         self._update_env_ui()
+        self._set_step_state("select", "ok")
+        self.run_checks()
+
+    def refresh_checks_force(self) -> None:
+        """强制重检：清掉依赖探测缓存（模型体积缓存靠 mtime 自动失效）。"""
+        try:
+            clear_probe_cache(self.python_exe)
+        except Exception:  # noqa: BLE001
+            pass
+        self._log_now("已清除依赖探测缓存，重新体检…")
         self.run_checks()
 
     def run_checks(self) -> None:
@@ -1571,6 +1936,7 @@ class LauncherApp:
         save_config(root=raw, env=self.env_var.get())
         self._ensure_log_file(root)
         self._update_env_ui()
+        self._set_step_state("select", "ok")
         self._start_task("环境体检", lambda: self._do_checks(root))
 
     def _auto_checks_once(self, attempt: int = 0) -> None:
@@ -1584,33 +1950,87 @@ class LauncherApp:
         self.run_checks()
 
     def _do_checks(self, root: Path) -> None:
-        self.log("开始体检（Python / pip / venv / 磁盘 / GPU / Node / ffmpeg / 模型 / 配置 / 前端产物）…")
+        """两段式体检：快检逐项上屏（毫秒级），慢检并发跑完逐行补。"""
+        self.log("开始体检：先做快检（Python / pip / venv / 磁盘 / 配置 / 前端产物）…")
         choice = normalize_env_choice(self.env_var.get())
-        checks, python_exe = collect_checks(root, choice)
-        self.python_exe = python_exe
         self.log(f"当前运行环境：{env_label(choice)}")
+
+        # ---- 第一阶段：快检，逐项渲染（Python 一出就上屏，不等 pip/磁盘）----
+        python_info = detect_python()
+        py_check = check_python(python_info)
+        python_exe = py_check.extra.get("exe") if py_check.ok else None
+        self.python_exe = python_exe
+        self.q.put(("checks", [py_check]))
+        self.progress("环境体检", 1, 20, "Python 已就绪，检查 pip / venv / 磁盘…")
+        fast_rest = [
+            detect_pip(python_exe),
+            detect_venv(root, choice),
+            detect_disk(root),
+            detect_config(root),
+            detect_dist(root),
+        ]
+        self.q.put(("checks_append", fast_rest))
+        self.log(f"快检完成：{1 + len(fast_rest)} 项")
+
+        # ---- 第二阶段：慢检（依赖 / GPU / Node / ffmpeg / 模型体积），并发跑、逐行补 ----
+        slow = list(collect_checks_slow(root, python_exe))
+        total = len(slow)
+        for idx, check in enumerate(slow, 1):
+            self.q.put(("checks_append", [check]))
+            self.progress("环境体检", 5 + idx, 20, check.name)
+        self.log(f"慢检完成：{total} 项")
+        self.progress("环境体检", 20, 20, "完成")
+
+        # ---- 总结：模型规格与关键项 ----
+        checks = list(self.checks.values())
         marks = {STATUS_OK: "OK  ", STATUS_WARN: "WARN", STATUS_FAIL: "FAIL"}
         for check in checks:
             self.log(f"[{marks.get(check.status, '?')}] {check.name}：{check.detail}")
-        # 模型规格小结：1.7B / 0.6B 任一套齐全即可开工
-        ready_17 = all(
-            c.ok for c in checks if c.name.startswith("模型 1.7B")
-        ) and any(c.name.startswith("模型 1.7B") for c in checks)
-        ready_06 = all(
-            c.ok for c in checks if c.name.startswith("模型 0.6B")
-        ) and any(c.name.startswith("模型 0.6B") for c in checks)
+        ready_17 = bool(checks) and all(c.ok for c in checks if c.name.startswith("模型 1.7B")) \
+            and any(c.name.startswith("模型 1.7B") for c in checks)
+        ready_06 = bool(checks) and all(c.ok for c in checks if c.name.startswith("模型 0.6B")) \
+            and any(c.name.startswith("模型 0.6B") for c in checks)
         if ready_17 or ready_06:
             specs = "、".join(s for s, ok in (("1.7B", ready_17), ("0.6B", ready_06)) if ok)
             self.log(f"已检测到可用模型规格：{specs}（另一套可选，不影响使用）")
         else:
             self.log("尚未检测到完整模型：到界面「设置 → 引擎与模型」点「安装」下载（1.7B≈12.6GB / 0.6B≈3GB）")
-
         critical_failed = [c.name for c in checks if c.critical and not c.ok]
         if critical_failed:
             self.log("致命项未通过：" + "、".join(critical_failed) + "（请按提示手动安装系统级前置）")
         else:
             self.log("关键项全部通过，可以继续后续步骤。")
-        self.q.put(("checks", checks))
+        self.q.put(("checks_done", None))
+
+    def _render_checks_append(self, checks) -> None:
+        """把结果逐行补进表格（不整表重刷，避免闪烁与丢选中）。"""
+        icons = {STATUS_OK: "✓", STATUS_WARN: "!", STATUS_FAIL: "✕"}
+        for check in checks:
+            key = str(getattr(check, "key", "") or "check")
+            base = key
+            seq = 1
+            while key in self.checks:
+                seq += 1
+                key = f"{base}#{seq}"
+            check.key = key
+            self.checks[key] = check
+            self.check_order.append(key)
+            detail = check.detail
+            if not check.ok and check.fix_hint:
+                detail = f"{detail} → {check.fix_hint}"
+            try:
+                self.tree.insert(
+                    "", self.tk.END, iid=key,
+                    values=(icons.get(check.status, "?"), check.name, detail),
+                    tags=(check.status,),
+                )
+            except Exception:  # noqa: BLE001
+                self.tree.insert(
+                    "", self.tk.END,
+                    values=(icons.get(check.status, "?"), check.name, detail),
+                    tags=(check.status,),
+                )
+        self._update_env_ui()
 
     def _refresh_checks_quietly(self, raw: str | None = None, env_choice: str | None = None) -> None:
         """后台刷新体检结果。
@@ -1846,6 +2266,22 @@ class LauncherApp:
             f'{py} -m pip install --no-cache-dir -r requirements.pins.txt -i {PYPI_MIRROR}'
         )
         self._start_task("安装依赖", worker)
+
+    def task_retry_last(self) -> None:
+        """失败后一键重试上一步（按钮只在失败时可用）。"""
+        label = self.last_action
+        handler = {
+            "安装依赖": self.task_install_deps,
+            "构建前端": self.task_build_frontend,
+            "生成配置": self.task_generate_config,
+            "启动服务": self.task_start_service,
+            "环境体检": self.run_checks,
+        }.get(str(label or ""))
+        if handler is None:
+            self._log_now("没有可重试的上一步。")
+            return
+        self._log_now(f"重试上一步：{label}")
+        handler()
 
     def task_verify_models(self) -> None:
         def worker():

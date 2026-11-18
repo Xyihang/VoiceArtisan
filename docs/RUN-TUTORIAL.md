@@ -85,6 +85,29 @@
 
 `launcher/dist/QWENTTS-Setup.exe` —— 与方式 A 完全一样，适合做桌面快捷方式。
 
+### 方式 A+：PySide6 版启动器（新界面，推荐）
+
+除了 `launcher/dist/QWENTTS-Setup.exe`（tkinter 版），项目里还有重写过的 Qt 版：
+
+```
+launcher/qwentts_launcher_qt.py     # 源码
+launcher/build-qt.ps1               # 打包成 exe（输出 launcher/dist-qt/QWENTTS-Setup-Qt/）
+```
+
+界面差别（同一套探测逻辑）：
+
+| 项 | tkinter 版 | PySide6 版 |
+| --- | --- | --- |
+| 布局 | 表格 + 一排按钮 | 左步骤栏 + 中间进度/体检 + 底部「下一步」单一主按钮 |
+| 进度 | 文字 + 进度条 | 大号百分比 + 阶段 + 已用/预计 + 取消进度（不确定时） |
+| 已装好的机器 | 要自己判断先点哪步 | 体检后自动把已满足的步骤标绿，主按钮直接变「下一步：启动服务」 |
+| 主题 | 跟随系统浅色 | 浅色 / 深色可切换（跟随系统默认） |
+| 日志 | 常驻 | 抽屉式，默认收起，需要时展开 |
+| 窗口尺寸 | 固定 960×720 | 按屏幕可用区域自适应并居中（125%/150% 缩放不裁切） |
+
+启动：`python launcher\qwentts_launcher_qt.py --root <解压目录>`，或先跑 `build-qt.ps1` 生成 exe。
+命令行体检仍可用：`python launcher\qwentts_launcher_qt.py --self-test <目录>`。
+
 ### 方式 C：命令行（排查问题、或没有 exe 时）
 
 ```powershell
