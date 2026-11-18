@@ -4,6 +4,25 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 ERRORS: dict[str, tuple[str, str]] = {
+    "SSH_AUTH_FAILED": (
+        "云端 SSH 登录失败（密码或密钥可能已变更）",
+        "到云厂商控制台复制最新登录命令，点「修改」更新密码后重试；"
+        "也可先点「测试连接」单独验证。实例重装后密码会变，属正常现象。",
+    ),
+    "SSH_UNREACHABLE": (
+        "连不上云端 SSH",
+        "确认实例已开机、SSH 端口正确、安全组放行：22 或自定义端口；"
+        "本机需能访问公网。AutoDL 的端口在实例详情页可见。",
+    ),
+    "SSH_HOSTKEY_CHANGED": (
+        "云端主机指纹变了",
+        "实例重装或迁移后属正常。勾选「信任新主机指纹」后重试。",
+    ),
+    "REMOTE_PROJECT_MISSING": (
+        "云端项目目录里没有声匠源码",
+        "「已装好」模式只会启动服务、不会上传源码：请确认填的项目目录正确，"
+        "且目录下存在 backend/app/main.py；若还没装，请改用「完整安装」模式。",
+    ),
     "VRAM_INSUFFICIENT": (
         "本地显存不足",
         "四条路：①换更小规格引擎（Qwen3-TTS 0.6B 约 2GB 显存即可，需 ≥2.5GB 空闲）；"

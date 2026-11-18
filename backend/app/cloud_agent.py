@@ -33,6 +33,8 @@ _SECRET_RE = re.compile(
     r"(?i)(password|passwd|passphrase|api[_-]?key|x-api-key|secret)\s*[:=]\s*\S+"
 )
 _STEPS = ("S0", "S1", "S2", "S3", "S4", "S4B", "S5", "S6", "S7", "S8")
+# 「已装好」模式：环境/依赖/模型都已在云端，只做连通 + 启动 + 探测 + 写本地配置
+ATTACH_SKIP = ("S3", "S4", "S4B")
 STEP_TITLES = {
     "S0": "参数校验",
     "S1": "SSH 连通",
@@ -646,9 +648,16 @@ class CloudAgent:
             ("S8", self._s8_verify),
         )
         ctx: dict = {}
+        mode = str((job.get("options") or {}).get("mode") or "full").lower()
+        attach = mode in ("attach", "reuse", "already_installed")
+        if attach:
+            self._log(job, "模式：已装好，仅连通并启动服务（跳过上传源码/装依赖/下模型）")
         for step_id, handler in handlers:
             if self._cancel.is_set():
                 raise AppError("CANCELLED", "任务已取消")
+            if attach and step_id in ATTACH_SKIP:
+                self._mark_skipped(job, step_id)
+                continue
             if job.get("resume") and self._state_of(job, step_id) == "ok":
                 self._mark_skipped(job, step_id)
                 continue
@@ -997,6 +1006,17 @@ class CloudAgent:
     def _s5_start(self, job, payload, ssh, ctx) -> None:
         opts = job.get("options") or {}
         remote_dir = job["remote"].get("path") or "~/qwentts"
+        mode = str(opts.get("mode") or "full").lower()
+        if mode in ("attach", "reuse", "already_installed"):
+            rc, out = ssh.run(
+                "test -f " + remote_dir + "/backend/app/main.py && echo OK || echo MISSING", timeout=30
+            )
+            if "OK" not in out:
+                raise AppError(
+                    "REMOTE_PROJECT_MISSING",
+                    "云端目录 " + remote_dir + " 里没有 backend/app/main.py",
+                )
+            self._log(job, "已确认云端项目目录：" + remote_dir)
         remote_port = int(opts.get("remote_port") or 8443)
         api_key = uuid.uuid4().hex
         self._pending_key = api_key

@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.54",
+  "version": "1.1.55",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.55：修云端引擎「请求失败」只显示四个字（补 SSH 错误文案 + 前端显示 hint）；一键接入新增「已装好，只连通并启动」模式（跳过上传源码/装依赖/下模型，并校验云端项目目录）",
     "v1.1.54：去掉教程页/文档里的本机绝对路径——配置示例改用 <PYTHON_EXE>/<QWENTTS_BACKEND> 占位符，「发给你的 AI」改为让 AI 自己探测路径；scripts/launcher_gui_check.py 与云接入文档改为相对解析",
     "v1.1.53：教程页「发给你的 AI」文本同步到 9 个工具与新返回语义（output_path / isError / tts_submit / voice_clone / voice_design / language 别名）",
     "v1.1.52：MCP Server 按外部 Agent 反馈整体加固——修 Content-Type 导致的 422（P0）、语言别名与建任务前校验（P1）、任务失败 isError=true（P1）、新增 tts_submit/asr_submit 非阻塞 + voice_clone/voice_design/task_cancel、返回 output_path、voice_list 补 language/gender/available、新增 --selftest 与 qwentts-mcp console script",

@@ -59,8 +59,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       /* ignore */
     }
     const payload = detail?.detail ?? detail ?? {};
-    const message = typeof payload === 'string' ? payload : payload.message || `请求失败（HTTP ${response.status}）`;
-    throw new ApiError(message, payload.code || 'REQUEST_FAILED', payload.hint || '', response.status);
+    const rawMessage = typeof payload === 'string' ? payload : payload.message || `请求失败（HTTP ${response.status}）`;
+    const hint = typeof payload === 'string' ? '' : payload.hint || '';
+    // 后端返回的 hint 是「怎么修」，直接拼进 message：否则界面只剩「请求失败」四个字
+    const message = hint && !String(rawMessage).includes(hint) ? `${rawMessage}｜${hint}` : rawMessage;
+    throw new ApiError(message, (typeof payload === 'string' ? '' : payload.code) || 'REQUEST_FAILED', hint, response.status);
   }
   if (response.status === 204) return undefined as T;
   const type = response.headers.get('content-type') || '';

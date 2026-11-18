@@ -31,6 +31,8 @@ export function CloudAgentWizard() {
   const [password, setPassword] = useState('');
   const [keyPath, setKeyPath] = useState('');
   const [remotePort, setRemotePort] = useState('8443');
+  /** 云端项目目录（「已装好」模式下直接复用，不再上传源码） */
+  const [remoteDir, setRemoteDir] = useState('~/qwentts');
   const [localPort, setLocalPort] = useState('18443');
   const [pipIndex, setPipIndex] = useState('https://pypi.tuna.tsinghua.edu.cn/simple');
   const [job, setJob] = useState<Job | null>(null);
@@ -40,6 +42,8 @@ export function CloudAgentWizard() {
   const [aiMode, setAiMode] = useState(false);
   const [downloadModels, setDownloadModels] = useState(true);
   const [prepareOnly, setPrepareOnly] = useState(false);
+  /** 接入模式：full=完整安装；attach=云端已装好，只建隧道并启动服务 */
+  const [attachMode, setAttachMode] = useState(false);
   const [trustHostkey, setTrustHostkey] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [llm, setLlm] = useState<any>(null);
@@ -215,7 +219,7 @@ export function CloudAgentWizard() {
             authType === 'password'
               ? { type: 'password', password }
               : { type: 'key', key_path: keyPath.trim() },
-          options: { remote_port: Number(remotePort) || 8443, local_port: Number(localPort) || 18443, pip_index: pipIndex, ai_mode: aiMode, download_models: downloadModels, prepare_only: prepareOnly, allow_no_gpu: prepareOnly, trust_hostkey: trustHostkey },
+          options: { remote_port: Number(remotePort) || 8443, local_port: Number(localPort) || 18443, pip_index: pipIndex, ai_mode: aiMode, download_models: attachMode ? false : downloadModels, prepare_only: attachMode ? false : prepareOnly, allow_no_gpu: prepareOnly, trust_hostkey: trustHostkey, mode: attachMode ? 'attach' : 'full', remote_dir: remoteDir || undefined },
         }),
       });
       const data = await res.json();
@@ -357,6 +361,9 @@ export function CloudAgentWizard() {
             <input className="input" value={keyPath} onChange={(e) => setKeyPath(e.target.value)} />
           </Field>
         )}
+        <Field label="云端项目目录" hint="云端已装好时填它，会直接复用；默认 ~/qwentts">
+          <input className="input" value={remoteDir} onChange={(e) => setRemoteDir(e.target.value)} />
+        </Field>
         <Field label="云端服务端口">
           <input className="input" value={remotePort} onChange={(e) => setRemotePort(e.target.value)} />
         </Field>
@@ -403,6 +410,30 @@ export function CloudAgentWizard() {
         重置主机指纹（实例重装/迁移过，确认主机可信时勾选）
       </label>
 
+      <div className="field" style={{ marginTop: 8 }}>
+        <label>接入模式</label>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input type="radio" name="attach-mode" checked={!attachMode} onChange={() => setAttachMode(false)} />
+            完整安装（首装：上传源码 + 装依赖 + 下模型 + 起服务）
+          </label>
+          <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input type="radio" name="attach-mode" checked={attachMode} onChange={() => setAttachMode(true)} />
+            已装好，只连通并启动（跳过上传/装依赖/下模型）
+          </label>
+        </div>
+        {attachMode ? (
+          <p className="hint" style={{ marginTop: 4 }}>
+            适用于云端已经有声匠（依赖与模型都装好）的情况：只做 SSH 连通 → 复用
+            <code style={{ margin: '0 4px' }}>{remoteDir || '~/qwentts'}</code>
+            → 写入云端配置 → 启动服务 → 建隧道 → 写本地云端配置。
+            如果该目录里没有 <code style={{ margin: '0 4px' }}>backend/app/main.py</code>，会直接报错提醒你换目录或改用完整安装。
+          </p>
+        ) : null}
+      </div>
+
+      {!attachMode ? (
+        <>
       <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
         <input type="checkbox" checked={prepareOnly} onChange={(e) => setPrepareOnly(e.target.checked)} />
         仅准备环境（无卡模式：只上传/装依赖/下模型，不启动云端服务；开机后点「续做」接着跑）
@@ -412,6 +443,8 @@ export function CloudAgentWizard() {
         <input type="checkbox" checked={downloadModels} onChange={(e) => setDownloadModels(e.target.checked)} />
         云端缺模型时自动下载（ModelScope 国内源，1.7B 三件套约 12.6GB，可中断续传）
       </label>
+        </>
+      ) : null}
 
       <label className="hint" style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
         <input type="checkbox" checked={aiMode} onChange={(e) => setAiMode(e.target.checked)} />
