@@ -47,10 +47,13 @@ def normalize(profile: dict) -> dict:
         "python": str(profile.get("python") or DEFAULT_PYTHON).strip(),
         "updated_at": float(profile.get("updated_at") or time.time()),
     }
-    if profile.get("password_enc"):
-        out["password_enc"] = str(profile["password_enc"])
-    elif profile.get("password"):
+    # 注意顺序：明文密码（用户刚填的）必须优先于旧密文。
+    # 历史 bug：这里先判断 password_enc，导致「保存并连接」永远写回旧密码，
+    # 云主机换了密码后怎么改都连不上。
+    if profile.get("password"):
         out["password_enc"] = _protect(str(profile["password"]))
+    elif profile.get("password_enc"):
+        out["password_enc"] = str(profile["password_enc"])
     return out
 
 
@@ -62,6 +65,7 @@ def save(data_dir: Path | str, profile: dict) -> dict:
     merged = {**current, **{k: v for k, v in profile.items() if v is not None}}
     if profile.get("password"):
         merged["password"] = profile["password"]
+        merged.pop("password_enc", None)  # 新密码生效，旧密文作废
     elif not profile.get("password"):
         merged.pop("password", None)
         if "password_enc" not in profile:

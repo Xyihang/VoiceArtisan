@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Cloud, Download, PlugZap, RefreshCw, Trash2, Check } from 'lucide-react';
 import { api } from '../lib/api';
+import { parseSshCommand } from '../lib/sshcmd';
 import type { CloudEngineJob, CloudEngineList, CloudHostProfile } from '../types';
 import { ProgressBar, Skeleton, Spinner } from './ui';
 
@@ -38,6 +39,8 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
     python: '/root/miniconda3/bin/python',
   });
   const [editing, setEditing] = useState(false);
+  /** 直接粘贴云厂商给的登录命令，一键填 host/端口/用户 */
+  const [pasteText, setPasteText] = useState('');
   const [busy, setBusy] = useState('');
   const [list, setList] = useState<CloudEngineList | null>(null);
   const [error, setError] = useState('');
@@ -263,6 +266,47 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
                 </p>
               );
             })()}
+            <div className="field">
+              <label className="label" htmlFor="cloud-paste">
+                粘贴登录命令（可选）
+              </label>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <input
+                  id="cloud-paste"
+                  className="input"
+                  placeholder="ssh -p 41425 root@connect.nmb1.seetacloud.com"
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn btn--sm"
+                  disabled={!pasteText.trim()}
+                  onClick={() => {
+                    const parsed = parseSshCommand(pasteText);
+                    if (!parsed.host) {
+                      setError('没解析出主机地址，请检查这条命令');
+                      return;
+                    }
+                    setForm((prev) => ({
+                      ...prev,
+                      host: parsed.host,
+                      ssh_port: parsed.port || prev.ssh_port,
+                      username: parsed.username || prev.username,
+                      password: parsed.password || prev.password,
+                    }));
+                    setError('');
+                  }}
+                >
+                  填入
+                </button>
+              </div>
+              <p className="hint" style={{ marginTop: 4 }}>
+                从云厂商控制台复制「登录指令」整行粘进来，点「填入」会自动识别主机、端口、用户名；
+                密码仍需在下面那栏填（控制台里那条密码）。
+              </p>
+            </div>
+
             <div className="field-row">
               <div className="field">
                 <label className="label" htmlFor="cloud-host">主机</label>
