@@ -10,7 +10,7 @@
 ```
 1) 解压到非系统盘，路径别带中文和空格        例：D:\VoiceSmith
 2) 装 Python 3.10（64 位），勾选 Add python to PATH
-3) 双击 start.bat                          → 自动建虚拟环境、装依赖、开浏览器
+3) 双击 start.bat                          → 打开图形启动器，一路点下去即可
 4) 打开 https://localhost:8443              → 浏览器提示证书不安全时点「高级 → 继续前往」
 5) 下载模型放进 models\                      → 见第 4 章
 6) 「设置 → 引擎与模型」点「安装」→「切换」   → 回工作台就能出音
@@ -22,10 +22,10 @@
 
 | 你想做的事 | 文件位置（解压后相对路径） |
 | --- | --- |
-| **一键启动（推荐）** | `start.bat` （Windows 双击）／`scripts/start.sh`（Linux/macOS） |
+| **一键启动（推荐）** | `start.bat`（双击→拉起图形启动器）／直接双击 `launcher/dist/QWENTTS-Setup.exe` |
 | 图形化启动器（选目录→体检→装依赖→起服务） | `launcher/dist/QWENTTS-Setup.exe` |
 | 启动器源码（想自己改） | `launcher/qwentts_launcher.py`、`launcher/launcher.json` |
-| 手动启动命令 | `scripts/start.ps1`（PowerShell） |
+| 命令行启动（排查用） | `scripts/start.ps1`（PowerShell，已带 BOM 不乱码）／`scripts/start.sh` |
 | 直接跑后端（排查用） | `backend/app/main.py` → `cd backend && python -m app.main` |
 | **下载模型** | `download-models.bat` / `download-models.sh` / `scripts/download_models.py` |
 | 模型存放目录 | `models/`（结构见第 4 章） |
@@ -71,35 +71,44 @@
 
 ## 3. 首次启动
 
-### 方式 A：双击 `start.bat`（最简单）
+> **推荐用图形化启动器**：界面化体检 + 装依赖 + 起服务，全程看得见进度，也不会遇到命令行乱码问题。
 
-它会依次做：检查 Python → 建 `.venv` → 装 `requirements*.txt` → 生成 `config/config.yaml` → 自检 → 启动服务 → 打开浏览器。
+### 方式 A：双击 `start.bat`（等价于打开图形启动器）
 
-### 方式 B：图形启动器 `launcher/dist/QWENTTS-Setup.exe`
+`start.bat` 现在只做一件事：拉起 **`launcher/dist/QWENTTS-Setup.exe`**。
+所有提示与进度都在图形界面里显示（命令行窗口不再输出中文，避免乱码）。
 
-适合第一次装、想看得见进度的人：选目录 → 体检（Python/显卡/磁盘/端口）→ 一键装依赖 → 起服务。
+启动器会依次做：选目录 → 体检（Python / 显卡 / 磁盘 / 端口）→ 安装依赖 → 启动服务 → 自动打开浏览器。
 启动器自己的配置存在 `launcher/launcher.json`（记录上次选的目录）。
 
-### 方式 C：手动（排查问题时用）
+### 方式 B：直接双击启动器
+
+`launcher/dist/QWENTTS-Setup.exe` —— 与方式 A 完全一样，适合做桌面快捷方式。
+
+### 方式 C：命令行（排查问题、或没有 exe 时）
 
 ```powershell
 cd <解压目录>
+# PowerShell 脚本（已处理编码，直接运行）
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start.ps1
+
+# 或完全手动
 py -3.10 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 python -m pip install -r requirements-torch.txt --index-url https://download.pytorch.org/whl/cu121
 cd backend
-python -m app.main            # 加 --no-browser 不自动开浏览器
-python -m app.main --selfcheck # 只做体检，不起服务
+python -m app.main             # 加 --no-browser 不自动开浏览器
+python -m app.main --selfcheck  # 只做体检，不起服务
 ```
+
+> 如果 `start.bat` 提示「launcher not found」，说明包不完整或 `launcher/dist/QWENTTS-Setup.exe` 被杀软删了 —— 用方式 C 启动，或重新解压。
 
 ### 启动成功后
 
 - 地址：<https://localhost:8443>（HTTPS，自签证书）
 - 首次访问：浏览器 →「高级」→「继续前往 localhost」
 - 端口被占用：改 `config/config.yaml` 里 `server.port`
-
----
 
 ## 4. 模型放哪里
 
