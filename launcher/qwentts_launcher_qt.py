@@ -720,6 +720,8 @@ class Launcher(QMainWindow):
         self.btn_next = QPushButton("开始体检")
         self.btn_next.setObjectName("Primary")
         self.btn_next.setMinimumWidth(150)
+        self.btn_next.setAutoDefault(False)
+        self.btn_next.setDefault(False)
         self.btn_next.clicked.connect(self.run_next)
         actions.addWidget(self.btn_next)
 
@@ -882,6 +884,7 @@ class Launcher(QMainWindow):
             self.toast.show_text("已有任务在执行", "warn", self.reduce_motion)
             return
         self.last_action = label
+        self.append_log(f"[动作] 启动任务：{label}")
         step_key = TASK_TO_STEP.get(label)
         if step_key:
             self._set_step(step_key, "running")
@@ -920,6 +923,10 @@ class Launcher(QMainWindow):
             self.toast.show_text(f"{label} 失败", "fail", self.reduce_motion)
             self.btn_retry.setEnabled(True)
         self.status_label.setText(f"{label}：{'成功' if ok else '失败'}")
+        try:
+            self.table.setFocus(Qt.FocusReason.OtherFocusReason)
+        except Exception:  # noqa: BLE001
+            pass
         self._update_buttons()
         if ok and step_key in ("deps", "config", "frontend"):
             QTimer.singleShot(400, self.run_checks_quiet)

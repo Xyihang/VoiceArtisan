@@ -105,7 +105,17 @@ launcher/build-qt.ps1               # 打包成 exe（输出 launcher/dist-qt/QW
 | 日志 | 常驻 | 抽屉式，默认收起，需要时展开 |
 | 窗口尺寸 | 固定 960×720 | 按屏幕可用区域自适应并居中（125%/150% 缩放不裁切） |
 
-启动：`python launcher\qwentts_launcher_qt.py --root <解压目录>`，或先跑 `build-qt.ps1` 生成 exe。
+启动方式（任选）：
+
+| 方式 | 说明 |
+| --- | --- |
+| 双击 `start.bat` | 优先拉起 `launcher/dist-qt/QWENTTS-Setup-Qt/QWENTTS-Setup-Qt.exe`（Qt 版），没有才退回 tk 版 |
+| 直接双击 | `launcher/dist-qt/QWENTTS-Setup-Qt/QWENTTS-Setup-Qt.exe`（免装 Python / PySide6） |
+| 源码运行 | `python launcher\qwentts_launcher_qt.py --root <解压目录>` |
+| 命令行体检 | `python launcher\qwentts_launcher_qt.py --self-test <目录>` 或 exe 加同样参数 |
+
+体积：exe 本体 1.5 MB，整个 `QWENTTS-Setup-Qt` 文件夹约 **106 MB**（PySide6 运行时），发版时必须整个文件夹一起拷。
+重新打包：`powershell -ExecutionPolicy Bypass -File launcher\build-qt.ps1`（约 40 秒）。
 命令行体检仍可用：`python launcher\qwentts_launcher_qt.py --self-test <目录>`。
 
 ### 方式 C：命令行（排查问题、或没有 exe 时）

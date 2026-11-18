@@ -1,0 +1,62 @@
+{
+  "probes": {
+    "python:detect": {
+      "ts": 1795002494.0506217,
+      "value": {
+        "chosen": {
+          "exe": "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+          "version": [
+            3,
+            10,
+            8
+          ]
+        },
+        "too_old": null,
+        "candidates": [
+          "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+          "C:\\Users\\xiyih\\AppData\\Local\\Microsoft\\WindowsApps\\python3.EXE"
+        ]
+      }
+    }
+  },
+  "deps_probe": {
+    "C:\\Users\\xiyih\\AppData\\Local\\Programs\\Python\\Python310\\python.exe": {
+      "ts": 1795002508.5627162,
+      "info": {
+        "torch": "2.4.1+cu121",
+        "cuda": true,
+        "qwen_tts": "installed",
+        "error": ""
+      }
+    }
+  },
+  "model_sizes": {
+    "E:\\trae_projects\\QWENTTS\\models\\Qwen3-TTS-12Hz-1.7B-Base": {
+      "size": 4544170411,
+      "mtime": 1792307133.737411,
+      "checked_at": 1795002509.4089956
+    },
+    "E:\\trae_projects\\QWENTTS\\models\\Qwen3-TTS-12Hz-1.7B-CustomVoice": {
+      "size": 4520159633,
+      "mtime": 1792307728.894932,
+      "checked_at": 1795002509.412997
+    },
+    "E:\\trae_projects\\QWENTTS\\models\\Qwen3-TTS-12Hz-1.7B-VoiceDesign": {
+      "size": 4520159146,
+      "mtime": 1792308218.353746,
+      "checked_at": 1795002509.4159954
+    },
+    "E:\\trae_projects\\QWENTTS\\models\\Qwen3-TTS-12Hz-0.6B-Base": {
+      "size": 2516100939,
+      "mtime": 1792299668.6283228,
+      "checked_at": 1795002509.4195087
+    },
+    "E:\\trae_projects\\QWENTTS\\models\\Qwen3-TTS-12Hz-0.6B-CustomVoice": {
+      "size": 2498383657,
+      "mtime": 1792299960.4561002,
+      "checked_at": 1795002509.4235106
+    }
+  },
+  "env": "system",
+  "saved_at": "2026-11-18 19:48:30"
+}

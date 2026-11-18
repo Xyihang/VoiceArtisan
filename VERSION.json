@@ -1,6 +1,6 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.61",
+  "version": "1.1.62",
   "release_date": "2026-10-21",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.62：PySide6 启动器出 EXE（onedir 106MB，exe 1.5MB）；start.bat 优先拉起 Qt 版；主按钮禁回车误触、体检后焦点给表格；打包排除 dist-qt",
     "v1.1.61：图形启动器改用 PySide6 重构（新布局：左步骤栏 + 单一主行动 + 可收起日志抽屉），深浅双主题、屏幕自适应、体检结果自动跳过已满足步骤；附 build-qt.ps1 打包脚本",
     "v1.1.60：start.bat 改为纯 ASCII、只负责拉起图形启动器 QWENTTS-Setup.exe（彻底解决 cmd 中文乱码）；运行教程第 3 章改为「图形启动器优先」",
     "v1.1.59：结果不再自动播放（只缓冲+展示，用户点播放）；任务中心展开行加播放器；修「后端 / 模型」卡片长模型名溢出",
