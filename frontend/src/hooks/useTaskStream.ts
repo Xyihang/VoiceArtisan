@@ -57,11 +57,7 @@ export function useTaskStream(engine: AudioEngine) {
           if (firstPacketRef.current == null) {
             firstPacketRef.current = Math.round(performance.now() - startRef.current);
           }
-          // 预缓冲：攒够 1.2s 音频（或最后一块）再开播，避免解码跟不上造成断音
-          if (!playingRef.current && (data.is_last || engine.duration >= 1.2)) {
-            playingRef.current = true;
-            void engine.play(0);
-          }
+          // 只缓冲、不自动播放：生成完成后由用户点播放键（首包即播会打断用户当前在做的事）
           setState((prev) => ({
             ...prev,
             firstPacketMs: firstPacketRef.current,

@@ -821,6 +821,8 @@ input[type='range'] {
   padding: var(--space-4);
   background: var(--color-surface-nested);
   border-bottom: var(--border-width) solid var(--color-border);
+  /* .table td 是 nowrap，展开行里要恢复换行，否则长模型名把卡片撑破 */
+  white-space: normal;
 }
 
 .log-list {
@@ -1053,6 +1055,8 @@ input[type='range'] {
 .kv__item {
   display: grid;
   gap: 2px;
+  /* 长模型名（Qwen3-TTS-12Hz-1.7B-CustomVoice）不能把卡片撑破 */
+  min-width: 0;
   padding: var(--space-3);
   background: var(--color-surface-nested);
   border-radius: var(--radius-sm);
@@ -1067,6 +1071,31 @@ input[type='range'] {
 .kv__value {
   font-size: var(--fs-16);
   font-weight: var(--fw-medium);
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.kv__value.num {
+  white-space: nowrap;
+}
+
+/* 任务中心展开行里的播放器 */
+.task-audio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface-nested);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.task-audio audio {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
 }
 
 .kv__value .unit {

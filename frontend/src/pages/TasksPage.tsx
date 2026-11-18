@@ -892,6 +892,21 @@ export function TasksPage() {
                                     </span>
                                   </div>
                                 </div>
+                                {task.output_file ? (
+                                  <div className="task-audio">
+                                    <audio
+                                      controls
+                                      preload="none"
+                                      src={`/api/tasks/${encodeURIComponent(task.id)}/download`}
+                                    >
+                                      你的浏览器不支持音频播放。
+                                    </audio>
+                                    <span className="hint">
+                                      {task.output_format ? task.output_format.toUpperCase() : '音频'} ·{' '}
+                                      {task.duration_sec != null ? formatSeconds(task.duration_sec, 2) : '—'}
+                                    </span>
+                                  </div>
+                                ) : null}
                                 {diarizeBackend ? (
                                   <div className="toolbar">
                                     <span className="badge badge--info">
