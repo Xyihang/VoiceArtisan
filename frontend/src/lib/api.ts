@@ -252,6 +252,12 @@ export const api = {
   /* --------------------------- 云端引擎（远程管理） --------------------------- */
   /** 云端主机档案（密码永远脱敏，只有 has_password 布尔） */
   cloudHost: () => request<CloudHostProfile>('/api/cloud/engines/host'),
+  /** 把「一键接入 / 云端连接」里的主机信息一键同步到云端引擎的主机档案 */
+  syncCloudHostFromAgent: () =>
+    request<{ ok: boolean; updated: string[]; message?: string; data?: CloudHostProfile }>(
+      '/api/cloud/engines/host/sync-from-agent',
+      { method: 'POST' },
+    ),
   saveCloudHost: (body: Record<string, unknown>) =>
     request<CloudHostProfile>('/api/cloud/engines/host', { method: 'PUT', body: JSON.stringify(body) }),
   testCloudHost: () =>

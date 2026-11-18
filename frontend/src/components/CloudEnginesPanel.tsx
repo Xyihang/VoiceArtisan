@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Cloud, Download, PlugZap, RefreshCw, Trash2, Check } from 'lucide-react';
+import { Check, Cloud, Download, Link2, PlugZap, RefreshCw, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { parseSshCommand } from '../lib/sshcmd';
 import type { CloudEngineJob, CloudEngineList, CloudHostProfile } from '../types';
@@ -231,6 +231,34 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
                 {host?.username}@{host?.host}:{host?.ssh_port}
                 {host?.has_password ? ' · 密码已加密保存' : ' · 未保存密码'}
               </span>
+              <button
+                type="button"
+                className="btn btn--sm"
+                disabled={busy === 'sync'}
+                title="把「一键接入云主机 / 云端连接」里的主机、端口、用户名、项目目录同步过来"
+                onClick={() => {
+                  void (async () => {
+                    setBusy('sync');
+                    setError('');
+                    try {
+                      const res = await api.syncCloudHostFromAgent();
+                      await loadHost();
+                      if (res.updated?.length) {
+                        toast('success', '已从接入配置同步', '更新：' + res.updated.join('、') + '（密码仍用本页已保存的）');
+                        await loadEngines();
+                      } else {
+                        toast('info', '无需同步', res.message || '主机档案已有值');
+                      }
+                    } catch (exc) {
+                      setError(exc instanceof Error ? exc.message : String(exc));
+                    } finally {
+                      setBusy('');
+                    }
+                  })();
+                }}
+              >
+                {busy === 'sync' ? <Spinner size={12} /> : <Link2 size={13} strokeWidth={1.75} />} 从接入配置同步
+              </button>
               <button type="button" className="btn btn--sm" onClick={() => setEditing((v) => !v)}>
                 {editing ? '收起' : '修改'}
               </button>

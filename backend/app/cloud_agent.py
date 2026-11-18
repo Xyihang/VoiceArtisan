@@ -1134,6 +1134,30 @@ class CloudAgent:
             })
         except Exception as exc:
             raise AppError("CONFIG_WRITE_FAILED", str(exc)) from exc
+        # 联动：把这次接入用的主机信息写进「云端引擎管理」的主机档案，
+        # 这样引擎页不用再手填一遍（密码同样用 DPAPI 加密落盘）
+        try:
+            from . import cloud_hosts
+            from .secretstore import protect as _protect_pwd
+
+            auth = payload.get("auth") or {}
+            pwd = str(auth.get("password") or "")
+            profile = {
+                "host": job["target"]["host"],
+                "ssh_port": int(job["target"]["ssh_port"]),
+                "username": job["target"]["username"],
+                "project_dir": job["remote"].get("path") or "~/qwentts",
+                "python": job.get("env", {}).get("python") or cloud_hosts.DEFAULT_PYTHON,
+            }
+            if pwd:
+                profile["password"] = pwd
+            elif auth.get("key_path"):
+                profile["key_path"] = str(auth.get("key_path"))
+            cloud_hosts.save(self.cfg_manager.app.data_dir, profile)
+            self._log(job, "已同步到「云端引擎管理」的主机档案，可直接装/删云端引擎")
+        except Exception:  # noqa: BLE001
+            logger.debug("同步云端主机档案失败", exc_info=True)
+
         result["api_key_set"] = True
         if callable(self.on_applied):
             try:

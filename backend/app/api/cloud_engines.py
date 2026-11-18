@@ -102,6 +102,39 @@ def put_host(payload: HostProfileRequest, state: AppState = Depends(get_state)):
     return cloud_hosts.masked(cloud_hosts.load(state.paths.root, decrypt=False))
 
 
+@router.post("/host/sync-from-agent", summary="把「一键接入 / 云端连接」里的主机信息同步到主机档案")
+def sync_host_from_agent(state: AppState = Depends(get_state)):
+    saved = cloud_hosts.load(state.paths.root, decrypt=False) or {}
+    latest = _latest_agent_job(state)
+    defaults, sources = cloud_hosts.derive_defaults(state.cfg, latest)
+    patch: dict = {}
+    for key in ("host", "ssh_port", "username", "project_dir", "python"):
+        # 只补空字段：已手填过的值优先，避免把用户刚改的覆盖掉
+        if not saved.get(key) or saved.get(key) in ("", 0, None):
+            value = defaults.get(key)
+            if value:
+                patch[key] = value
+    if not patch:
+        return {"ok": True, "updated": [], "message": "主机档案已有值，无需同步"}
+
+    # 密码从「云端连接 → SSH 隧道」配置里取（一键接入的密码已在接入成功时写入档案）
+    tunnel = getattr(state.cfg.cloud, "tunnel", None)
+    pwd = ""
+    if tunnel is not None:
+        try:
+            from ..secretstore import unprotect
+
+            pwd = unprotect(getattr(tunnel, "password_enc", "") or "")
+        except Exception:  # noqa: BLE001
+            pwd = ""
+    if pwd and not saved.get("has_password"):
+        patch["password"] = pwd
+
+    data = cloud_hosts.save(state.paths.root, patch)
+    logger.info("云端主机档案已从接入配置同步：%s", sorted(patch))
+    return {"ok": True, "updated": sorted(patch), "data": cloud_hosts.masked(data)}
+
+
 @router.post("/host/test", summary="测试云端 SSH 连接")
 def test_host(state: AppState = Depends(get_state)):
     try:
