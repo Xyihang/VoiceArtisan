@@ -394,6 +394,8 @@ export interface EngineInstallStatus {
   done: boolean;
   /** 后端 install/status 会返回：线程是否还在跑（轮询兜底用） */
   running?: boolean;
+  /** 服务重启/进程退出导致上次安装中断 */
+  interrupted?: boolean;
   job_id?: string;
 }
 

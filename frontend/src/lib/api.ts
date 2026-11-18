@@ -243,6 +243,9 @@ export const api = {
     }),
   installStatus: (id: string) =>
     request<EngineInstallStatus>(`/api/engines/${encodeURIComponent(id)}/install/status`),
+  /** 还没结束的安装（关掉页面再打开，用它把进度续上） */
+  activeInstalls: () =>
+    request<{ items: (EngineInstallStatus & { engine_id: string })[] }>('/api/engines/install/active'),
   removeEngine: (id: string) =>
     request<{ ok: boolean; freed_mb: number }>(`/api/engines/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   selectEngine: (id: string) =>
@@ -279,6 +282,8 @@ export const api = {
       `/api/cloud/engines/${encodeURIComponent(id)}/install`,
       { method: 'POST' },
     ),
+  cloudEngineJobs: () =>
+    request<{ items: CloudEngineJob[] }>('/api/cloud/engines/jobs'),
   cloudEngineJob: (jobId: string) =>
     request<CloudEngineJob>(`/api/cloud/engines/jobs/${encodeURIComponent(jobId)}`),
   removeCloudEngine: (id: string) =>

@@ -256,8 +256,16 @@ class CloudEngines:
                 raise AppError("NOT_FOUND", "云端引擎任务记录已损坏") from exc
         return job
 
+    def _mark_stale(self, job: dict) -> dict:
+        """文件里留下的 running 但实际上没线程在跑 → 标成中断。"""
+        if job.get("status") == "running" and not (self._thread is not None and self._thread.is_alive()):
+            job = dict(job)
+            job["status"] = "interrupted"
+            job["error"] = job.get("error") or "服务重启导致安装中断，可重新点安装（已下载的部分会续传）"
+        return job
+
     def jobs(self, limit: int = 10) -> dict:
-        items = list(self._jobs.values())
+        items = [self._mark_stale(j) for j in list(self._jobs.values())]
         for path in sorted(self._job_dir().glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
             if len(items) >= limit:
                 break
@@ -267,5 +275,6 @@ class CloudEngines:
                 items.append(json.loads(path.read_text(encoding="utf-8")))
             except (OSError, json.JSONDecodeError):
                 continue
+        items = [self._mark_stale(j) for j in items]
         items.sort(key=lambda j: j.get("created_at", 0), reverse=True)
         return {"items": items[:limit]}

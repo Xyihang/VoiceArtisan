@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Boxes, Check, Copy, Download, ListChecks, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
 import { WsClient } from '../lib/ws';
@@ -841,6 +841,47 @@ export function EngineSection({ id }: { id?: string } = {}) {
       window.clearInterval(timer);
     };
   }, [pendingKey]);
+
+  /**
+   * 关掉页面/浏览器再打开时，把还在跑的安装进度接回来：
+   * 后端把状态落盘（engines_state.json），这里拉「未结束的安装」重新填进 installs，
+   * 之后照常走 WS + 兜底轮询，就不会出现「重新打开啥也没有、还得重装」。
+   */
+  const resumedRef = useRef(false);
+  useEffect(() => {
+    if (resumedRef.current) return;
+    resumedRef.current = true;
+    let cancelled = false;
+    api
+      .activeInstalls()
+      .then((res) => {
+        if (cancelled || !res?.items?.length) return;
+        setInstalls((prev) => {
+          const next = { ...prev };
+          res.items.forEach((item) => {
+            if (next[item.engine_id]) return; // 已有本地状态就别覆盖
+            next[item.engine_id] = {
+              phase: (item.phase as InstallState['phase']) ?? 'download',
+              progress: Number(item.progress) || 0,
+              message: item.message || (item.interrupted ? '上次安装被中断，可重新安装' : '安装进行中（后端继续跑）'),
+              done: Boolean(item.done) || !item.running,
+            };
+          });
+          return next;
+        });
+        pushToast?.({
+          level: 'info',
+          title: `已续接 ${res.items.length} 个安装进度`,
+          description: '关掉页面不影响后端下载，进度会一直更新',
+        });
+      })
+      .catch(() => {
+        /* 拉不到就算了，不影响正常使用 */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pushToast]);
 
   const setAction = (id: string, action: EngineAction | null) =>
     setBusy((prev) => ({ ...prev, [id]: action }));

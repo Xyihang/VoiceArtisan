@@ -106,8 +106,34 @@ class EngineManager:
                 "running": False,
             }
         status.setdefault("engine_id", engine_id)
-        status["running"] = bool(self._is_running(engine_id))
+        running = bool(self._is_running(engine_id))
+        status["running"] = running
+        # 服务重启/崩溃后，文件里可能还留着 running：这里如实标成中断，别让界面一直转圈
+        if not running and not status.get("done"):
+            status["done"] = True
+            status["interrupted"] = True
+            status["message"] = status.get("message") or "安装被中断（服务重启或进程退出），可重新点安装"
         return status
+
+    def active_installs(self) -> dict:
+        """所有「还没结束」的安装（运行中 / 中断未完成），供前端重开页面后续接进度。"""
+        items: list[dict] = []
+        with self._lock:
+            for engine_id, job in self._jobs.items():
+                if not isinstance(job, dict):
+                    continue
+                running = bool(self._is_running(engine_id))
+                done = bool(job.get("done")) and not running
+                if done:
+                    continue
+                item = dict(job)
+                item["engine_id"] = engine_id
+                item["running"] = running
+                if not running:
+                    item["interrupted"] = True
+                items.append(item)
+        items.sort(key=lambda j: j.get("started_at") or j.get("updated_at") or 0, reverse=True)
+        return {"items": items}
 
     def _is_running(self, engine_id: str) -> bool:
         thread = self._threads.get(engine_id)

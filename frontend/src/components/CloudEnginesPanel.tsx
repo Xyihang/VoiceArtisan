@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Cloud, Download, Link2, PlugZap, RefreshCw, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { parseSshCommand } from '../lib/sshcmd';
@@ -81,6 +81,33 @@ export function CloudEnginesPanel({ pushToast }: { pushToast?: (t: any) => void 
     } finally {
       setBusy('');
     }
+  }, []);
+
+  /** 云端安装任务在后端跑，关掉页面再打开要能接着看（从 /jobs 里挑未结束的） */
+  const resumedRef = useRef(false);
+  useEffect(() => {
+    if (resumedRef.current) return;
+    resumedRef.current = true;
+    let cancelled = false;
+    api
+      .cloudEngineJobs()
+      .then((res) => {
+        if (cancelled) return;
+        const active = (res.items || []).find((j) => String(j.status) === 'running');
+        const last = active || (res.items || [])[0];
+        if (!last) return;
+        setJob(last);
+        if (active) {
+          setBusy('list');
+          toast('info', '已续接云端安装进度', `${active.engine_id} 正在云端执行，关掉页面也不会中断`);
+        }
+      })
+      .catch(() => {
+        /* 忽略 */
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

@@ -56,6 +56,11 @@ def install_engine(engine_id: str, state: AppState = Depends(get_state)):
     return {"job_id": job["job_id"], "engine_id": engine_id}
 
 
+@router.get("/install/active", summary="还在进行中的安装（重开页面后继续显示进度）")
+def active_installs(state: AppState = Depends(get_state)):
+    return _manager(state).active_installs()
+
+
 @router.get("/{engine_id}/install/status", summary="最近一次安装状态（刷新页面后继续显示）")
 def install_status(engine_id: str, state: AppState = Depends(get_state)):
     try:
