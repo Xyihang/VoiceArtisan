@@ -1,4 +1,4 @@
-# 声匠 · VoiceSmith 运行教程（从安装到接入云端）
+# 声匠 · VoiceArtisan 运行教程（从安装到接入云端）
 
 > 适用版本：v1.1.59 ｜ 阅读顺序建议：第 1 章 → 第 3 章 → 第 6/7 章按需
 > 全文出现的路径都是**压缩包解压后的相对路径**，例：`start.bat` 就是解压目录下的那个文件。
@@ -8,7 +8,7 @@
 ## 0. 五分钟跑起来（先看这一节）
 
 ```
-1) 解压到非系统盘，路径别带中文和空格        例：D:\VoiceSmith
+1) 解压到非系统盘，路径别带中文和空格        例：D:\VoiceArtisan
 2) 装 Python 3.10（64 位），勾选 Add python to PATH
 3) 双击 start.bat                          → 打开图形启动器，一路点下去即可
 4) 打开 https://localhost:8443              → 浏览器提示证书不安全时点「高级 → 继续前往」
@@ -22,9 +22,9 @@
 
 | 你想做的事 | 文件位置（解压后相对路径） |
 | --- | --- |
-| **一键启动（推荐）** | `start.bat`（双击→拉起图形启动器）／直接双击 `launcher/dist/QWENTTS-Setup.exe` |
-| 图形化启动器（选目录→体检→装依赖→起服务） | `launcher/dist/QWENTTS-Setup.exe` |
-| 启动器源码（想自己改） | `launcher/qwentts_launcher.py`、`launcher/launcher.json` |
+| **一键启动（推荐）** | `start.bat`（双击→拉起图形启动器）／直接双击 `launcher/dist/VoiceArtisan-Setup.exe` |
+| 图形化启动器（选目录→体检→装依赖→起服务） | `launcher/dist/VoiceArtisan-Setup.exe` |
+| 启动器源码（想自己改） | `launcher/voiceartisan_launcher.py`、`launcher/launcher.json` |
 | 命令行启动（排查用） | `scripts/start.ps1`（PowerShell，已带 BOM 不乱码）／`scripts/start.sh` |
 | 直接跑后端（排查用） | `backend/app/main.py` → `cd backend && python -m app.main` |
 | **下载模型** | `download-models.bat` / `download-models.sh` / `scripts/download_models.py` |
@@ -75,7 +75,7 @@
 
 ### 方式 A：双击 `start.bat`（等价于打开图形启动器）
 
-`start.bat` 现在只做一件事：拉起 **`launcher/dist/QWENTTS-Setup.exe`**。
+`start.bat` 现在只做一件事：拉起 **`launcher/dist/VoiceArtisan-Setup.exe`**。
 所有提示与进度都在图形界面里显示（命令行窗口不再输出中文，避免乱码）。
 
 启动器会依次做：选目录 → 体检（Python / 显卡 / 磁盘 / 端口）→ 安装依赖 → 启动服务 → 自动打开浏览器。
@@ -83,15 +83,15 @@
 
 ### 方式 B：直接双击启动器
 
-`launcher/dist/QWENTTS-Setup.exe` —— 与方式 A 完全一样，适合做桌面快捷方式。
+`launcher/dist/VoiceArtisan-Setup.exe` —— 与方式 A 完全一样，适合做桌面快捷方式。
 
 ### 方式 A+：PySide6 版启动器（新界面，推荐）
 
-除了 `launcher/dist/QWENTTS-Setup.exe`（tkinter 版），项目里还有重写过的 Qt 版：
+除了 `launcher/dist/VoiceArtisan-Setup.exe`（tkinter 版），项目里还有重写过的 Qt 版：
 
 ```
-launcher/qwentts_launcher_qt.py     # 源码
-launcher/build-qt.ps1               # 打包成 exe（输出 launcher/dist-qt/QWENTTS-Setup-Qt/）
+launcher/voiceartisan_launcher_qt.py     # 源码
+launcher/build-qt.ps1               # 打包成 exe（输出 launcher/dist-qt/VoiceArtisan-Setup-Qt/）
 ```
 
 界面差别（同一套探测逻辑）：
@@ -109,14 +109,14 @@ launcher/build-qt.ps1               # 打包成 exe（输出 launcher/dist-qt/QW
 
 | 方式 | 说明 |
 | --- | --- |
-| 双击 `start.bat` | 优先拉起 `launcher/dist-qt/QWENTTS-Setup-Qt/QWENTTS-Setup-Qt.exe`（Qt 版），没有才退回 tk 版 |
-| 直接双击 | `launcher/dist-qt/QWENTTS-Setup-Qt/QWENTTS-Setup-Qt.exe`（免装 Python / PySide6） |
-| 源码运行 | `python launcher\qwentts_launcher_qt.py --root <解压目录>` |
-| 命令行体检 | `python launcher\qwentts_launcher_qt.py --self-test <目录>` 或 exe 加同样参数 |
+| 双击 `start.bat` | 优先拉起 `launcher/dist-qt/VoiceArtisan-Setup-Qt/VoiceArtisan-Setup-Qt.exe`（Qt 版），没有才退回 tk 版 |
+| 直接双击 | `launcher/dist-qt/VoiceArtisan-Setup-Qt/VoiceArtisan-Setup-Qt.exe`（免装 Python / PySide6） |
+| 源码运行 | `python launcher\voiceartisan_launcher_qt.py --root <解压目录>` |
+| 命令行体检 | `python launcher\voiceartisan_launcher_qt.py --self-test <目录>` 或 exe 加同样参数 |
 
-体积：exe 本体 1.5 MB，整个 `QWENTTS-Setup-Qt` 文件夹约 **106 MB**（PySide6 运行时），发版时必须整个文件夹一起拷。
+体积：exe 本体 1.5 MB，整个 `VoiceArtisan-Setup-Qt` 文件夹约 **106 MB**（PySide6 运行时），发版时必须整个文件夹一起拷。
 重新打包：`powershell -ExecutionPolicy Bypass -File launcher\build-qt.ps1`（约 40 秒）。
-命令行体检仍可用：`python launcher\qwentts_launcher_qt.py --self-test <目录>`。
+命令行体检仍可用：`python launcher\voiceartisan_launcher_qt.py --self-test <目录>`。
 
 ### 方式 C：命令行（排查问题、或没有 exe 时）
 
@@ -135,7 +135,7 @@ python -m app.main             # 加 --no-browser 不自动开浏览器
 python -m app.main --selfcheck  # 只做体检，不起服务
 ```
 
-> 如果 `start.bat` 提示「launcher not found」，说明包不完整或 `launcher/dist/QWENTTS-Setup.exe` 被杀软删了 —— 用方式 C 启动，或重新解压。
+> 如果 `start.bat` 提示「launcher not found」，说明包不完整或 `launcher/dist/VoiceArtisan-Setup.exe` 被杀软删了 —— 用方式 C 启动，或重新解压。
 
 ### 启动成功后
 

@@ -42,7 +42,7 @@ python -m app.mcp_server --selftest
 `--selftest` 期望输出：
 
 ```
-qwentts-mcp selftest  (server v1.1.52, base=https://127.0.0.1:8443)
+voiceartisan-mcp selftest  (server v1.1.52, base=https://127.0.0.1:8443)
   PASS  initialize
   PASS  tools/list          工具 9 个：tts_synthesize, tts_submit, ...
   PASS  health
@@ -58,7 +58,7 @@ selftest 全部通过
 
 ```powershell
 pip install -e backend
-# 之后客户端配置里只要： command = "qwentts-mcp"
+# 之后客户端配置里只要： command = "voiceartisan-mcp"
 ```
 
 ---
@@ -86,7 +86,7 @@ pip install -e backend
 
 - Claude Desktop：`%APPDATA%\Claude\claude_desktop_config.json`，改完完全退出再启动
 - Cursor / Cline / Continue：MCP 设置里按 command / args / cwd 三个框填
-- **`cwd` 必须是 backend 目录**，否则 `ModuleNotFoundError: No module named 'app'`（装了 `qwentts-mcp` 命令后可以省掉）
+- **`cwd` 必须是 backend 目录**，否则 `ModuleNotFoundError: No module named 'app'`（装了 `voiceartisan-mcp` 命令后可以省掉）
 
 ### 3.2 环境变量
 
@@ -255,4 +255,4 @@ echo {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"voice_list"
 | P3 克隆 / 设计缺失 | 已加 `voice_clone` / `voice_design` / `task_cancel` |
 | P3 `voice_list` 字段太少 | 已加 `language` / `gender` / `age` / `accent` / `available`，支持按语种过滤 |
 | P4 文档漂移 | 本文档已按 v1.1.52 重写（含 `start_s`/`end_s`、9 个工具、`--selftest`） |
-| P4 强依赖 `cwd` | 已加 `backend/pyproject.toml` 的 `qwentts-mcp` console script |
+| P4 强依赖 `cwd` | 已加 `backend/pyproject.toml` 的 `voiceartisan-mcp` console script |

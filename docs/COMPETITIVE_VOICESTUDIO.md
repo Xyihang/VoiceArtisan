@@ -169,10 +169,10 @@
 | 缓存 | 段缓存（longform resume/cache）、prompt 磁盘缓存、clone prompt cache | 无合成结果缓存（每次重算）；有模型常驻/预热 | 弱于 | 直播/长文场景差距明显 |
 | **评测与质检** | WER/SIM-o/UTMOS + 测试集 + 对比脚本 | ASR 回译质检（`qc.enabled`，默认关，相似度阈值 0.75） | 弱于 | 我们有「内容是否漏字」这一层，缺「音质/相似度」指标 |
 | **监控与日志** | 日志页、错误日志、诊断包、性能画像、存储报告 | 状态与日志页 + 环形缓冲（800 条）+ 自检 + 任务日志 | 持平 | 我们缺「诊断包一键导出」与性能画像 |
-| **部署形态** | Electron 三平台 + Docker + Store + 移动端 preview + 一键安装脚本 | Windows 单机（FastAPI 自签 HTTPS + tkinter 引导器 + `QWENTTS-Setup.exe`） + Docker 云端 | 弱于 | 我们**故意**窄：单机 Windows 交付 |
+| **部署形态** | Electron 三平台 + Docker + Store + 移动端 preview + 一键安装脚本 | Windows 单机（FastAPI 自签 HTTPS + tkinter 引导器 + `VoiceArtisan-Setup.exe`） + Docker 云端 | 弱于 | 我们**故意**窄：单机 Windows 交付 |
 | **安全鉴权** | 默认 loopback 免鉴权；PIN/API key/可信网络；管理员会话；CORS/CSRF 规则 | HTTPS 自签 + `cloud.api_key`（`X-API-Key`）+ 路径穿越白名单 + 上传白名单 | 持平 | 默认值取向不同：对方偏「易用」，我们偏「默认收紧」 |
 | **可扩展性** | 引擎插件目录 + Plugin SDK + 内置 skills（`npx skills add`） | 引擎抽象基类（新增引擎需改 `engine/__init__.py` 与 router）；无插件机制 | 弱于 | 我们的抽象够用，但扩展点未开成公开契约 |
-| 安装与升级 | 一键脚本 + 自带更新通道（`docs/update-channels.md`），安装器保留设置/项目/模型 | `QWENTTS-Setup.exe` 引导器（选目录→体检→下模型→装依赖→起服务）；无在线升级 | 弱于 | 我们的引导器是「一次性安装」，缺版本检查与升级路径 |
+| 安装与升级 | 一键脚本 + 自带更新通道（`docs/update-channels.md`），安装器保留设置/项目/模型 | `VoiceArtisan-Setup.exe` 引导器（选目录→体检→下模型→装依赖→起服务）；无在线升级 | 弱于 | 我们的引导器是「一次性安装」，缺版本检查与升级路径 |
 | 本地化 i18n | 英/中/日 README + 界面 locale 一致性测试 | 界面中文为主，英文 README 仍在待办 | 弱于 | PROJECT_HISTORY §10 已列「英文版 README」 |
 | 无障碍 | 未见专门说明（`[未核实]`） | 前端三档响应式 + 键盘可达（README §4 一行） | 持平 | 双方都未把无障碍作为卖点 |
 | 存储与隐私 | 本地优先，分析需同意（可关）；存储报告与清理 | 数据全部落项目目录、不写系统盘；无遥测 | 持平 | 取向一致 |
@@ -277,7 +277,7 @@
 | 对方做法 | 为什么不照搬（结合我们的已知限制） |
 | --- | --- |
 | 15+ TTS 引擎可热插拔 | 我们的交付承诺是「4GB 单卡跑通 1.7B」（docs/BENCHMARK.md）。每多一个引擎就多一套显存预算、许可证、安装脚本与回归面；单机 Windows 更是依赖地狱（flash-attn 都装不上，PROJECT_HISTORY §9-2）。 |
-| Electron 三平台 + Snap/Store/移动端 | 我们的形态是「Windows 单机 + `QWENTTS-Setup.exe` 引导器」。对方的 6 条发布流水线与其团队规模匹配，我们照搬=把维护成本乘 6。 |
+| Electron 三平台 + Snap/Store/移动端 | 我们的形态是「Windows 单机 + `VoiceArtisan-Setup.exe` 引导器」。对方的 6 条发布流水线与其团队规模匹配，我们照搬=把维护成本乘 6。 |
 | 视频配音全链路（转写→翻译→时长适配→混音） | 依赖 ffmpeg/yt-dlp/翻译服务，且版权与平台条款风险高。我们已有「音频转文字 + 克隆」，可先做「字幕导出」这一小块（§5.1-③）。 |
 | 646 语言承诺 | 我们的模型是 Qwen3-TTS，实际支持面有限（README F5：中英日韩 + 方言）。照抄数字会造成**虚假宣传**，且用户一旦发现不支持就是信任崩塌。 |
 | 默认 loopback 免鉴权 | 对方偏易用（本机无鉴权）。我们默认 HTTPS + 云端强制 `X-API-Key`，更符合「专有软件 + 商用交付」的定位，不应为了对齐而放松。 |
@@ -396,7 +396,7 @@
 | ASR 回译质检 | `worker.py::_run_quality_check`（默认关，阈值 0.75） | 有 |
 | 设置热改 + 自动保存 | `config.py` `RUNTIME_MUTABLE` + `SettingsPage.tsx` 防抖 | 有 |
 | 启动自检 | `backend/app/selfcheck.py` · `--selfcheck` | 有 |
-| Windows 安装引导器 | `launcher/qwentts_launcher.py` → `QWENTTS-Setup.exe` | 有 · 自检 11/11 |
+| Windows 安装引导器 | `launcher/voiceartisan_launcher.py` → `VoiceArtisan-Setup.exe` | 有 · 自检 11/11 |
 | 文档与许可 | docs/ 13 篇 + `LICENSE`（专有）+ `THIRD_PARTY_NOTICES.md` | 有 |
 
 **基线结论**：在「语音生成四件套 + 单机可交付 + 4GB 可用」这条主线上我们并不薄弱；缺口集中在**文本层（规范化/词典/SSML）、产出层（字幕/响度/位深）、平台层（OpenAI 兼容/MCP/CLI）、内容层（多角色/批量）**四块。

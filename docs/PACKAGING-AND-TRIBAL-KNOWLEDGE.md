@@ -10,8 +10,8 @@
 | 产物 | 生成命令 | 内容 | 给谁 |
 | --- | --- | --- | --- |
 | 源码包 `QWENTTS-src-v*.zip` | `python .cache/make_backup.py` | 纯代码（**不含** `frontend/dist`、`launcher/dist`） | 开发者 / 上传云主机 / 二次开发 |
-| 便携包 `QWENTTS-portable-v*.zip` | `python .cache/make_backup.py portable` | 代码 + `frontend/dist` + `launcher/dist/QWENTTS-Setup.exe` | 最终用户（无需 Node） |
-| 安装器 `QWENTTS-Setup.exe` | `powershell -NoProfile -File .\launcher\build.ps1` | PyInstaller 单文件 GUI | 双击安装的用户 |
+| 便携包 `QWENTTS-portable-v*.zip` | `python .cache/make_backup.py portable` | 代码 + `frontend/dist` + `launcher/dist/VoiceArtisan-Setup.exe` | 最终用户（无需 Node） |
+| 安装器 `VoiceArtisan-Setup.exe` | `powershell -NoProfile -File .\launcher\build.ps1` | PyInstaller 单文件 GUI | 双击安装的用户 |
 
 另有独立小工具（也打包进 portable）：
 
@@ -49,7 +49,7 @@
 | **产物只增不删**：`<项目根目录>-backups` 里的旧 zip 永远不删 | 用户明确要求；出问题时能回退到任意历史版本 |
 | **不要用 `Compress-Archive`** | 会写入 Windows 反斜杠路径，解压到 Linux/云主机时目录结构错乱；脚本用 zipfile + POSIX 路径 |
 | `SKIP_REL_PREFIX = {"launcher/build"}` | PyInstaller 工作目录漏进去时包会从 13MB 涨到 13.23MB+ |
-| `SKIP_REL = {"launcher/QWENTTS-Setup.spec", "config/config.yaml"}` | `config.yaml` 含**云端地址和 API Key**，绝对不能进包 |
+| `SKIP_REL = {"launcher/VoiceArtisan-Setup.spec", "config/config.yaml"}` | `config.yaml` 含**云端地址和 API Key**，绝对不能进包 |
 | `SKIP_SUFFIX` 含 `.new` | 发布 exe 时旧文件被占用 → 先写 `.exe.new`，别把它打进包（曾导致 29.41MB 的错误包） |
 | `BASE_SKIP` 含 `data models .cache .git node_modules .venv __pycache__` | 模型 12.6GB、数据库、密钥都不该进包 |
 | src 包额外跳过所有 `dist` 目录 | src 要“纯代码” |
@@ -60,12 +60,12 @@
 
 ## 4. PyInstaller 相关
 
-- `launcher/build.ps1` 用 `--onefile --windowed`，产物固定写到 `launcher/dist/QWENTTS-Setup.exe`
-- **`QWENTTS-Setup.exe` 正在运行时就无法覆盖**（WinError 5）。做法：
+- `launcher/build.ps1` 用 `--onefile --windowed`，产物固定写到 `launcher/dist/VoiceArtisan-Setup.exe`
+- **`VoiceArtisan-Setup.exe` 正在运行时就无法覆盖**（WinError 5）。做法：
   1. 先 build 到别的 distpath：`--distpath .cache\launcher-dist`
-  2. 自测 `QWENTTS-Setup.exe --self-test`（退出码 0 才算好）
-  3. 旧文件被占用就落成 `QWENTTS-Setup.exe.new`，让用户关掉窗口后：
-     `move /Y "launcher\dist\QWENTTS-Setup.exe.new" "launcher\dist\QWENTTS-Setup.exe"`
+  2. 自测 `VoiceArtisan-Setup.exe --self-test`（退出码 0 才算好）
+  3. 旧文件被占用就落成 `VoiceArtisan-Setup.exe.new`，让用户关掉窗口后：
+     `move /Y "launcher\dist\VoiceArtisan-Setup.exe.new" "launcher\dist\VoiceArtisan-Setup.exe"`
 - PyInstaller 会把普通 INFO 写 stderr，PowerShell 里别用 `$ErrorActionPreference='Stop'` 裸接，脚本里已有 `Invoke-Native` 包装
 - **Tkinter GUI 必须 `--windowed`**，否则会弹黑窗；但 `--windowed` 下 `print` 看不到，所以关键诊断信息要写日志文件
 - 安装器日志位置：`<exe 所在目录>\data\logs\launcher.log`（注意是 exe 旁边，不是项目根）

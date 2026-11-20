@@ -38,3 +38,4 @@ launcher/build/
 launcher/*.spec
 launcher/dist/
 launcher/dist-qt/**/launcher.json
+launcher/dist-qt/

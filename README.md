@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="docs/assets/banner.svg" alt="声匠 · VoiceSmith" width="100%">
+<img src="docs/assets/banner.svg" alt="声匠 · VoiceArtisan" width="100%">
 
 **把「本地能跑、云端能借、别的 AI 能用」缝进同一个界面**
 
-[![version](https://img.shields.io/badge/version-1.1.63-4C8DFF?style=flat-square)](VERSION.json)
+[![version](https://img.shields.io/badge/version-1.1.64-4C8DFF?style=flat-square)](VERSION.json)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-2DD4BF?style=flat-square)](#快速开始)
 [![python](https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](#方式-b从源码运行)
 [![react](https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black)](frontend)
@@ -21,7 +21,7 @@
 
 ## 这是什么
 
-**声匠 · VoiceSmith** 是一套**跑在自己电脑上的语音工作台**：一个 Web 界面 + 一个本地后端，把 13 个语音模型（TTS / ASR / 声纹）编排在一起，同时保留一条通往云端 GPU 的路。
+**声匠 · VoiceArtisan** 是一套**跑在自己电脑上的语音工作台**：一个 Web 界面 + 一个本地后端，把 13 个语音模型（TTS / ASR / 声纹）编排在一起，同时保留一条通往云端 GPU 的路。
 
 它解决三件事：
 
@@ -117,7 +117,7 @@
 3. 启动器先跑**环境体检**，然后按提示点唯一的主按钮：装依赖 → 装前端产物 →（在「引擎与模型」里下载模型）→ 启动服务
 4. 浏览器自动打开 `https://localhost:8443`（自签证书：点「高级 → 继续前往」）
 
-> `start.bat` 会优先拉起 Qt 版启动器（`launcher/dist-qt/QWENTTS-Setup-Qt/QWENTTS-Setup-Qt.exe`，免装 Python 与 PySide6），找不到才退回旧版 `launcher/dist/QWENTTS-Setup.exe`。细节见 [LAUNCHER](docs/LAUNCHER.md)。
+> `start.bat` 会优先拉起 Qt 版启动器（`launcher/dist-qt/VoiceArtisan-Setup-Qt/VoiceArtisan-Setup-Qt.exe`，免装 Python 与 PySide6），找不到才退回旧版 `launcher/dist/VoiceArtisan-Setup.exe`。细节见 [LAUNCHER](docs/LAUNCHER.md)。
 
 ### 方式 B：从源码运行
 
@@ -198,7 +198,7 @@ S0 参数校验 → S1 SSH 连通 → S2 环境体检 → S3 上传源码 → S4
 ```jsonc
 {
   "mcpServers": {
-    "voicesmith": { "command": "qwentts-mcp", "cwd": "<项目根目录>" }
+    "voiceartisan": { "command": "voiceartisan-mcp", "cwd": "<项目根目录>" }
   }
 }
 ```
@@ -379,9 +379,9 @@ QWENTTS/
 
 <div align="center">
 
-**VoiceSmith — a local-first TTS / ASR workbench that can borrow a cloud GPU**
+**VoiceArtisan — a local-first TTS / ASR workbench that can borrow a cloud GPU**
 
-[![version](https://img.shields.io/badge/version-1.1.63-4C8DFF?style=flat-square)](VERSION.json)
+[![version](https://img.shields.io/badge/version-1.1.64-4C8DFF?style=flat-square)](VERSION.json)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-2DD4BF?style=flat-square)](#english)
 [![engines](https://img.shields.io/badge/engines-13-8B5CF6?style=flat-square)](#supported-engines)
 [![mcp](https://img.shields.io/badge/MCP-9%20tools-111827?style=flat-square)](#mcp-server)
@@ -393,7 +393,7 @@ QWENTTS/
 
 ## What it is
 
-VoiceSmith is a **self-hosted speech workbench**: one React UI plus one FastAPI backend that orchestrates **13 engines** — text-to-speech, zero-shot voice cloning, voice design, transcription and speaker diarization — with an optional path to a **cloud GPU** when local VRAM is not enough.
+VoiceArtisan is a **self-hosted speech workbench**: one React UI plus one FastAPI backend that orchestrates **13 engines** — text-to-speech, zero-shot voice cloning, voice design, transcription and speaker diarization — with an optional path to a **cloud GPU** when local VRAM is not enough.
 
 Three problems it solves:
 
@@ -468,7 +468,7 @@ Put them under `models/Qwen3-TTS-12Hz-1.7B-{Base,CustomVoice,VoiceDesign}/`. See
 ```jsonc
 {
   "mcpServers": {
-    "voicesmith": { "command": "qwentts-mcp", "cwd": "<repo root>" }
+    "voiceartisan": { "command": "voiceartisan-mcp", "cwd": "<repo root>" }
   }
 }
 ```

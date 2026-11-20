@@ -3,8 +3,8 @@
 给「拿到源码压缩包」的人用的图形化安装引导：**一个窗口把选目录 → 体检 → 下模型 → 装依赖 → 构建前端 →
 生成配置 → 启动服务** 全部串起来，长任务的输出实时滚动在窗口里。
 
-- 程序：`launcher/qwentts_launcher.py`（**只用 Python 标准库 + tkinter**，不额外装包）
-- 打包：`launcher/build.ps1` → `launcher/dist/QWENTTS-Setup.exe`（单文件，双击即用）
+- 程序：`launcher/voiceartisan_launcher.py`（**只用 Python 标准库 + tkinter**，不额外装包）
+- 打包：`launcher/build.ps1` → `launcher/dist/VoiceArtisan-Setup.exe`（单文件，双击即用）
 - 日志：`data/logs/launcher.log`（UTF-8 追加，带时间戳）
 - 记忆：`launcher/launcher.json` 记住上次选的项目根目录 **和运行环境选择**（系统 Python / 项目内 venv；不可写时回落到临时目录）
 
@@ -98,7 +98,7 @@
 
 > 若选了「项目内 venv」但还没创建：体检里 `venv` 行变黄色提醒，「安装依赖 / 仅校验 / 启动服务」
 > 四个按钮置灰，状态栏提示"请先创建 venv"。命令行等价物：
-> `python launcher\qwentts_launcher.py --make-venv <项目根>`。
+> `python launcher\voiceartisan_launcher.py --make-venv <项目根>`。
 
 ---
 
@@ -149,20 +149,20 @@ cd backend; $env:PYTHONPATH = "<根>\backend"; python -m app.main
 
 ```powershell
 # 直接打开 GUI，并预填项目根
-python launcher\qwentts_launcher.py --root E:\QWENTTS
+python launcher\voiceartisan_launcher.py --root E:\QWENTTS
 
 # 不开窗口，只体检并打印 JSON（自动化/验收用）
-python launcher\qwentts_launcher.py --self-test E:\QWENTTS --json
+python launcher\voiceartisan_launcher.py --self-test E:\QWENTTS --json
 
 # 人读版报告
-python launcher\qwentts_launcher.py --self-test E:\QWENTTS
+python launcher\voiceartisan_launcher.py --self-test E:\QWENTTS
 
 # 无 GUI 创建项目内 venv（已存在则复用；加 --force 先删后重建）
-python launcher\qwentts_launcher.py --make-venv E:\QWENTTS
-python launcher\qwentts_launcher.py --make-venv E:\QWENTTS --force
+python launcher\voiceartisan_launcher.py --make-venv E:\QWENTTS
+python launcher\voiceartisan_launcher.py --make-venv E:\QWENTTS --force
 
 # 指定运行环境做自检（默认沿用 launcher.json 里记住的选择）
-python launcher\qwentts_launcher.py --self-test E:\QWENTTS --json --env venv
+python launcher\voiceartisan_launcher.py --self-test E:\QWENTTS --json --env venv
 ```
 
 `--make-venv` 的真实输出（首次创建）：
@@ -214,12 +214,12 @@ powershell -NoProfile -File .\launcher\build.ps1
 ```
 
 - 脚本会检查 `pyinstaller`，缺失则 `python -m pip install "pyinstaller==6.21.0"`（默认走清华镜像，失败回落官方源）
-- 打包命令：`pyinstaller --noconfirm --clean --onefile --windowed --name QWENTTS-Setup launcher/qwentts_launcher.py`
-- 产物：`launcher/dist/QWENTTS-Setup.exe`（约 8–10 MB，单文件、无控制台）
+- 打包命令：`pyinstaller --noconfirm --clean --onefile --windowed --name VoiceArtisan-Setup launcher/voiceartisan_launcher.py`
+- 产物：`launcher/dist/VoiceArtisan-Setup.exe`（约 8–10 MB，单文件、无控制台）
 - 结束后打印产物路径与大小；失败时打印退出码 + PyInstaller 日志尾部（`%TEMP%\qwentts-pyinstaller.log`）
 - 可选参数：`-SkipInstallMirror`（不用国内镜像装 pyinstaller）、`-KeepBuild`（保留 `launcher/build` 中间目录）
 
-分发方式：把 `QWENTTS-Setup.exe` 和源码压缩包一起发给用户，双击 exe 即可。
+分发方式：把 `VoiceArtisan-Setup.exe` 和源码压缩包一起发给用户，双击 exe 即可。
 exe 只包含引导器本体（标准库 + tkinter），**不含**模型、后端代码，也不含 Python 运行时之外的依赖。
 
 ---
@@ -228,7 +228,7 @@ exe 只包含引导器本体（标准库 + tkinter），**不含**模型、后�
 
 **Q1：双击 exe 被杀软/Windows Defender 拦了？**
 PyInstaller onefile 打包的程序常被误报（自解压行为）。选「更多信息 → 仍要运行」，或把 exe 加入白名单；
-介意的话直接用 `python launcher\qwentts_launcher.py` 跑源码版，功能完全一致。
+介意的话直接用 `python launcher\voiceartisan_launcher.py` 跑源码版，功能完全一致。
 
 **Q2：提示"未找到 Python 3.10+"，但命令行里 `python -V` 正常？**
 引导器会按 `python` / `python3` / `py -0p` / `%LOCALAPPDATA%\Programs\Python\Python3*` 的顺序找。
@@ -284,7 +284,7 @@ PyInstaller onefile 打包的程序常被误报（自解压行为）。选「更
 | `PermissionError` / `Access is denied` | 目录无写权限，或被其它进程占用（服务、编辑器、资源管理器预览） | 换一个可写目录；先点「停止服务」并关掉占用 `.venv` 的程序，再点「创建 venv」 |
 | `删除旧 .venv 失败` | 服务仍在跑 / 文件被占用 | 点「停止服务」后重试；实在删不掉就手动删除 `.venv` 目录 |
 
-命令行等价操作：`python launcher\qwentts_launcher.py --make-venv <项目根> --force`
+命令行等价操作：`python launcher\voiceartisan_launcher.py --make-venv <项目根> --force`
 （`--force` 会先删再建，输出里能看到 `-m venv` 的完整日志与退出码）。
 
 **Q14：切换 venv 后要不要重装依赖？**

@@ -283,7 +283,7 @@ def data_checks() -> None:
     latest = zips[-1]
     with zipfile.ZipFile(latest) as zf:
         names = zf.namelist()
-        has_exe = any(n.endswith("QWENTTS-Setup.exe") for n in names)
+        has_exe = any(n.endswith("VoiceArtisan-Setup.exe") for n in names)
         has_dist = any(n.endswith("frontend/dist/index.html") or n.endswith("dist/index.html") for n in names)
     check("D3 备份可交付（exe + 预构建 dist）", has_exe and has_dist, f"{latest.name}")
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""声匠 VoiceSmith 一键安装器（Windows Launcher，纯标准库 + tkinter）。
+"""声匠 VoiceArtisan 一键安装器（Windows Launcher，纯标准库 + tkinter）。
 
 面向「下载源码压缩包的人」：选目录 → 环境体检 → 装依赖 → 构建前端 →
 生成配置 → 启动服务并打开浏览器。只提示用户自己安装系统级前置（Python / Node /
 CUDA 驱动），项目自身的 pip 依赖与前端构建由本程序执行；模型下载在服务启动后于界面完成。
 
 用法：
-    python launcher/qwentts_launcher.py                    # 打开 GUI
-    python launcher/qwentts_launcher.py --root <项目根>     # 打开 GUI 并预填目录
-    python launcher/qwentts_launcher.py --self-test <项目根> --json   # 无 GUI 自检
-    python launcher/qwentts_launcher.py --make-venv <项目根>          # 无 GUI 创建 <根>\.venv
+    python launcher/voiceartisan_launcher.py                    # 打开 GUI
+    python launcher/voiceartisan_launcher.py --root <项目根>     # 打开 GUI 并预填目录
+    python launcher/voiceartisan_launcher.py --self-test <项目根> --json   # 无 GUI 自检
+    python launcher/voiceartisan_launcher.py --make-venv <项目根>          # 无 GUI 创建 <根>\.venv
 
 自检退出码：0 = 关键项（Python / pip / 磁盘）全通过；1 = 有致命项。
 """
@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-APP_TITLE = "声匠 VoiceSmith · 一键安装器"
+APP_TITLE = "声匠 VoiceArtisan · 一键安装器"
 APP_VERSION = "1.0.0"
 
 HOME_URL = "https://localhost:8443"
@@ -913,7 +913,7 @@ def detect_venv(root: Path, env_choice: str = ENV_SYSTEM) -> Check:
         "path": str(target),
         "size_mb": size_mb,
     }
-    command = f'python launcher\\qwentts_launcher.py --make-venv "{root}"'
+    command = f'python launcher\\voiceartisan_launcher.py --make-venv "{root}"'
     if exists:
         detail = f"已创建，{size_mb} MB（{'当前使用' if selected else '未选中，默认用系统 Python'}）"
         return Check(

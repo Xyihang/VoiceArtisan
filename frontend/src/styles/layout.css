@@ -163,7 +163,7 @@
   pointer-events: none;
 }
 
-/* 图标严格居中；「声匠」贴其左、「VOICESMITH」贴其右 */
+/* 图标严格居中；「声匠」贴其左、「VOICEARTISAN」贴其右 */
 .topbar__brand-mark {
   position: absolute;
   left: 50%;

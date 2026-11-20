@@ -3,8 +3,17 @@ setlocal
 cd /d "%~dp0"
 
 rem Prefer the PySide6 launcher (new UI); fall back to the tkinter build.
+rem Old QWENTTS-* names stay as fallbacks so already-shipped packages keep working.
+if exist "launcher\dist-qt\VoiceArtisan-Setup-Qt\VoiceArtisan-Setup-Qt.exe" (
+    start "" "launcher\dist-qt\VoiceArtisan-Setup-Qt\VoiceArtisan-Setup-Qt.exe"
+    exit /b 0
+)
 if exist "launcher\dist-qt\QWENTTS-Setup-Qt\QWENTTS-Setup-Qt.exe" (
     start "" "launcher\dist-qt\QWENTTS-Setup-Qt\QWENTTS-Setup-Qt.exe"
+    exit /b 0
+)
+if exist "launcher\dist\VoiceArtisan-Setup.exe" (
+    start "" "launcher\dist\VoiceArtisan-Setup.exe"
     exit /b 0
 )
 if exist "launcher\dist\QWENTTS-Setup.exe" (
@@ -13,10 +22,10 @@ if exist "launcher\dist\QWENTTS-Setup.exe" (
 )
 
 echo ============================================================
-echo  VoiceSmith launcher not found
+echo  VoiceArtisan launcher not found
 echo  Expected one of:
-echo    launcher\dist-qt\QWENTTS-Setup-Qt\QWENTTS-Setup-Qt.exe
-echo    launcher\dist\QWENTTS-Setup.exe
+echo    launcher\dist-qt\VoiceArtisan-Setup-Qt\VoiceArtisan-Setup-Qt.exe
+echo    launcher\dist\VoiceArtisan-Setup.exe
 echo ============================================================
 echo.
 echo Manual start:

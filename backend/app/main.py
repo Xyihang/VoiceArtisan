@@ -143,7 +143,7 @@ def create_app() -> FastAPI:
 
     _soxfree.apply()
     app = FastAPI(
-        title="声匠 · VoiceSmith —— 多引擎语音工作台",
+        title="声匠 · VoiceArtisan —— 多引擎语音工作台",
         description="本地 + 云 GPU 双后端语音生成服务（生成 / 克隆 / 音色设计 / 转写）",
         version=__version__,
         lifespan=lifespan,

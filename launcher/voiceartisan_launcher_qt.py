@@ -1,4 +1,4 @@
-"""声匠 · VoiceSmith 一键安装器（PySide6）
+"""声匠 · VoiceArtisan 一键安装器（PySide6）
 
 重写版：布局按 diseno-qt / taste-qt 的设计口径重做（不是把 tk 版搬过来）。
 
@@ -67,9 +67,9 @@ from PySide6.QtWidgets import (
 )
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import qwentts_launcher as core  # noqa: E402
+import voiceartisan_launcher as core  # noqa: E402
 
-APP_TITLE = "声匠 VoiceSmith 一键安装器"
+APP_TITLE = "声匠 VoiceArtisan 一键安装器"
 APP_VERSION = getattr(core, "APP_VERSION", "1.1.60")
 RADIUS = 8
 TOAST_MS = 180
@@ -511,7 +511,7 @@ class Launcher(QMainWindow):
         self.brand_icon.setFixedSize(26, 26)
         brand_text = QVBoxLayout()
         brand_text.setSpacing(0)
-        brand = QLabel("声匠 VoiceSmith")
+        brand = QLabel("声匠 VoiceArtisan")
         brand.setObjectName("Brand")
         tag = QLabel(f"一键安装器 · v{APP_VERSION}")
         tag.setObjectName("Tag")
@@ -561,7 +561,7 @@ class Launcher(QMainWindow):
         eyebrow.setObjectName("Eyebrow")
         path_lay.addWidget(eyebrow)
         self.root_edit = QLineEdit()
-        self.root_edit.setPlaceholderText(r"D:\VoiceSmith")
+        self.root_edit.setPlaceholderText(r"D:\VoiceArtisan")
         self.root_edit.editingFinished.connect(self._on_root_edited)
         path_lay.addWidget(self.root_edit)
         path_actions = QHBoxLayout()
@@ -1407,7 +1407,7 @@ class Launcher(QMainWindow):
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="声匠 VoiceSmith 一键安装器（PySide6）")
+    parser = argparse.ArgumentParser(description="声匠 VoiceArtisan 一键安装器（PySide6）")
     parser.add_argument("--root", default="")
     parser.add_argument("--self-test", nargs="?", const="", metavar="ROOT")
     parser.add_argument("--json", action="store_true")
@@ -1419,7 +1419,7 @@ def main(argv=None) -> int:
         return core.self_test(Path(root), args.json, core.normalize_env_choice(args.env))
 
     app = QApplication(sys.argv[:1])
-    app.setApplicationName("声匠 VoiceSmith 一键安装器")
+    app.setApplicationName("声匠 VoiceArtisan 一键安装器")
     window = Launcher(root=args.root)
     window.show()
     return app.exec()

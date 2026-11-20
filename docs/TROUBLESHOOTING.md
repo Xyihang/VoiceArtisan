@@ -12,7 +12,7 @@
 
 ---
 
-> 安装器（QWENTTS-Setup.exe）相关的问题（体检项、依赖门禁、前端构建）请看 [LAUNCHER.md](LAUNCHER.md) 的「缺陷修复记录」与「复核清单」。
+> 安装器（VoiceArtisan-Setup.exe）相关的问题（体检项、依赖门禁、前端构建）请看 [LAUNCHER.md](LAUNCHER.md) 的「缺陷修复记录」与「复核清单」。
 
 ## 一、启动阶段
 

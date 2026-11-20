@@ -487,7 +487,7 @@ def _handle(message: dict) -> dict | None:
             {
                 "protocolVersion": params.get("protocolVersion") or PROTOCOL_VERSION,
                 "capabilities": {"tools": {"listChanged": False}},
-                "serverInfo": {"name": "qwentts-mcp", "version": __version__},
+                "serverInfo": {"name": "voiceartisan-mcp", "version": __version__},
             }
         )
     if method == "ping":
@@ -516,7 +516,7 @@ def _handle(message: dict) -> dict | None:
 # ---------------------------------------------------------------- 自检
 def selftest() -> int:
     """端到端自检：initialize → tools/list → 真实合成 → 转写回环。"""
-    print(f"qwentts-mcp selftest  (server v{__version__}, base={BASE_URL})")
+    print(f"voiceartisan-mcp selftest  (server v{__version__}, base={BASE_URL})")
     failures: list[str] = []
 
     def step(name: str, fn):

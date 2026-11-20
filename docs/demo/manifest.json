@@ -40,7 +40,7 @@
     "file": "03-en-voice.wav",
     "task_id": "6e414713f088",
     "kind": "tts",
-    "text": "Welcome to VoiceSmith. Your voice, your machine, your rules.",
+    "text": "Welcome to VoiceArtisan. Your voice, your machine, your rules.",
     "note": "英文男声 · 跨语言",
     "voice_id": "builtin-ryan",
     "instruct": "",

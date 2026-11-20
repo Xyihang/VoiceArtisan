@@ -7,11 +7,11 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LAUNCHER = str(ROOT / "launcher" / "qwentts_launcher.py")
+LAUNCHER = str(ROOT / "launcher" / "voiceartisan_launcher.py")
 
-spec = importlib.util.spec_from_file_location("qwentts_launcher", LAUNCHER)
+spec = importlib.util.spec_from_file_location("voiceartisan_launcher", LAUNCHER)
 mod = importlib.util.module_from_spec(spec)
-sys.modules["qwentts_launcher"] = mod
+sys.modules["voiceartisan_launcher"] = mod
 spec.loader.exec_module(mod)
 
 try:

@@ -1,10 +1,10 @@
-﻿# Qwen3-TTS 一键安装器 · 打包脚本（PyInstaller → QWENTTS-Setup.exe）
+﻿# Qwen3-TTS 一键安装器 · 打包脚本（PyInstaller → VoiceArtisan-Setup.exe）
 #
 # 用法（在项目根或任意目录执行均可）：
 #   powershell -NoProfile -File .\launcher\build.ps1
 #   powershell -NoProfile -Command "& { . 'launcher\build.ps1' }"
 #
-# 产物：launcher\dist\QWENTTS-Setup.exe（单文件、无控制台窗口）
+# 产物：launcher\dist\VoiceArtisan-Setup.exe（单文件、无控制台窗口）
 # 说明：仅打包 launcher 本体（纯标准库 + tkinter），不含模型与后端代码；
 #       运行时仍需要系统已安装 Python 3.10+/Node（后端服务由源码目录提供）。
 
@@ -18,10 +18,10 @@ $ErrorActionPreference = 'Stop'
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Split-Path -Parent $scriptDir
-$entry = Join-Path $projectRoot 'launcher\qwentts_launcher.py'
+$entry = Join-Path $projectRoot 'launcher\voiceartisan_launcher.py'
 $distDir = Join-Path $scriptDir 'dist'
 $workDir = Join-Path $scriptDir 'build'
-$exePath = Join-Path $distDir 'QWENTTS-Setup.exe'
+$exePath = Join-Path $distDir 'VoiceArtisan-Setup.exe'
 $mirror = 'https://pypi.tuna.tsinghua.edu.cn/simple'
 
 # 调用原生命令时必须临时放宽 ErrorActionPreference，
@@ -84,7 +84,7 @@ try {
     $pyiCmd = @(
         '-m', 'PyInstaller',
         '--noconfirm', '--clean', '--onefile', '--windowed',
-        '--name', 'QWENTTS-Setup',
+        '--name', 'VoiceArtisan-Setup',
         '--distpath', $distDir,
         '--workpath', $workDir,
         '--specpath', $scriptDir,
@@ -110,13 +110,13 @@ try {
     Write-Step '打包完成'
     Write-Host "    产物路径：$exePath" -ForegroundColor Green
     Write-Host "    产物大小：$sizeMb MB" -ForegroundColor Green
-    Write-Host '    分发方式：把 QWENTTS-Setup.exe 与源码压缩包一起发给用户；双击即可运行。' -ForegroundColor Gray
+    Write-Host '    分发方式：把 VoiceArtisan-Setup.exe 与源码压缩包一起发给用户；双击即可运行。' -ForegroundColor Gray
     Write-Host '    注意：首次运行可能被杀软/Windows Defender 拦一下，选择「仍要运行」并加入信任。' -ForegroundColor Yellow
     Write-Host '    打包日志：' -NoNewline; Write-Host $buildLog -ForegroundColor DarkGray
 
     if (-not $KeepBuild) {
         if (Test-Path $workDir) { Remove-Item $workDir -Recurse -Force -ErrorAction SilentlyContinue }
-        $specFile = Join-Path $scriptDir 'QWENTTS-Setup.spec'
+        $specFile = Join-Path $scriptDir 'VoiceArtisan-Setup.spec'
         if (Test-Path $specFile) { Remove-Item $specFile -Force -ErrorAction SilentlyContinue }
     }
     exit 0

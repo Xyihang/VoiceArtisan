@@ -567,7 +567,7 @@ const GUIDE: GuideSection[] = [
       {
         title: '把这段直接发给你的 AI（它会自己探测路径并接好）',
         note: '复制整段发给任意支持 MCP 的 AI（DSH / Claude / Cursor / Cline 都行）。它不需要你提供任何路径——第一步会自己探测。',
-        code: `你正在和我机器上的「声匠 VoiceSmith」语音工作台对接。请**自己探测本机环境**，把它的 MCP Server
+        code: `你正在和我机器上的「声匠 VoiceArtisan」语音工作台对接。请**自己探测本机环境**，把它的 MCP Server
 配到你自己身上，然后告诉我可以调用哪些能力。不要问我要路径，按下面的方法自己找。
 
 【第一步：自己探测这两个路径】
@@ -579,7 +579,7 @@ A. Python 解释器（3.10+，也就是跑「声匠」后端用的那个）
    若装了虚拟环境，优先用 <项目根>\\.venv\\Scripts\\python.exe（Windows）或 <项目根>/.venv/bin/python
 B. 项目根目录（找到后 backend 目录 = 项目根\\backend）
    判定标准（满足任一即可认定是根）：
-   - 目录里有 VERSION.json，且里面 name 字段包含 VoiceSmith
+   - 目录里有 VERSION.json，且里面 name 字段包含 VoiceArtisan
    - 目录里有 start.bat 或 scripts/start.ps1 或 scripts/start.sh
    - 目录里有 backend/app/mcp_server.py
    找法（按顺序试，找到就停）：
@@ -686,7 +686,7 @@ env:
 pip install -e backend
 
 # 客户端配置变成：
-# { "mcpServers": { "qwentts": { "command": "qwentts-mcp" } } }`,
+# { "mcpServers": { "qwentts": { "command": "voiceartisan-mcp" } } }`,
       },
       {
         title: '先在命令行自测（确认能握手再配客户端）',

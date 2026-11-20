@@ -13,7 +13,7 @@
 | --- | --- | --- | --- | --- |
 | 源码包 | `QWENTTS-src-v<版本>-<时间戳>.zip` | ❌ | ❌ | ❌ |
 | 便携包 | `QWENTTS-portable-v<版本>-<时间戳>.zip` | ✅ | ✅ | ❌ |
-| 安装器 | `launcher\dist\QWENTTS-Setup.exe` | — | — | — |
+| 安装器 | `launcher\dist\VoiceArtisan-Setup.exe` | — | — | — |
 
 ### 1.2 标准流程
 
@@ -35,7 +35,7 @@ python -m app.main --selfcheck        # 服务在跑时「端口占用」必然 
 # 3) 安装器（约 20s；缺 PyInstaller 会自动装）
 cd ..
 powershell -NoProfile -File .\launcher\build.ps1
-launcher\dist\QWENTTS-Setup.exe --self-test   # 期望：13 通过 / 2 提醒 / 0 失败，退出码 0
+launcher\dist\VoiceArtisan-Setup.exe --self-test   # 期望：13 通过 / 2 提醒 / 0 失败，退出码 0
 
 # 4) 两个 zip
 python .cache\make_backup.py
@@ -48,7 +48,7 @@ python .cache\make_backup.py portable
 BASE_SKIP = {"node_modules", "__pycache__", ".venv", "venv", "data", "models", ".cache", ".git"}
 SKIP_SUFFIX = {".pyc", ".log"}
 SKIP_REL_PREFIX = {"launcher/build"}                       # PyInstaller 中间产物
-SKIP_REL = {"launcher/QWENTTS-Setup.spec", "config/config.yaml"}   # ← 必排，含密钥
+SKIP_REL = {"launcher/VoiceArtisan-Setup.spec", "config/config.yaml"}   # ← 必排，含密钥
 skip = BASE_SKIP | ({"dist"} if not portable else set())   # src 不含任何 dist；portable 都含
 ...
 zf.write(path, rel.as_posix())      # POSIX 路径：Linux unzip 才不会解出反斜杠怪名
@@ -159,7 +159,7 @@ curl -s -H "X-API-Key: cloudtest123" \
 python .cache\make_backup.py            # 源码包
 python .cache\make_backup.py portable   # 便携包
 powershell -NoProfile -File .\launcher\build.ps1
-launcher\dist\QWENTTS-Setup.exe --self-test
+launcher\dist\VoiceArtisan-Setup.exe --self-test
 
 # 云端（本机执行，走 paramiko）
 python .cache\cloud_script.py .cache\steps\03_start.sh     # 起服务 + 健康检查

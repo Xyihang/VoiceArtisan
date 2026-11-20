@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""声匠 · VoiceSmith —— 独立升级工具（不依赖项目代码，纯标准库）。
+"""声匠 · VoiceArtisan —— 独立升级工具（不依赖项目代码，纯标准库）。
 
 用法：
     QWENTTS-Upgrader.exe                        # 图形界面
@@ -110,7 +110,7 @@ def inspect(current: Path, new: Path) -> dict:
     overwrite = [rel.as_posix() for _, rel in files if (current / rel).exists()]
     fresh = len(files) - len(overwrite)
     has_dist = (new / "frontend" / "dist" / "index.html").is_file()
-    has_exe = (new / "launcher" / "dist" / "QWENTTS-Setup.exe").is_file()
+    has_exe = (new / "launcher" / "dist" / "VoiceArtisan-Setup.exe").is_file()
     running = _running_tasks(current)
 
     kept = sorted(
@@ -208,7 +208,7 @@ def apply(current: Path, new: Path, force: bool = False, log=print) -> dict:
     log(f"③ 复制完成，共 {len(files)} 个文件")
     _write_history(current, backup, info, len(files))
     log(f"✅ 升级完成：{info['current_version']} → {info['new_version']}")
-    log("   请关闭本程序与旧服务窗口，然后双击 start.bat（或 QWENTTS-Setup.exe）重新启动")
+    log("   请关闭本程序与旧服务窗口，然后双击 start.bat（或 VoiceArtisan-Setup.exe）重新启动")
     return {"ok": True, "backup": backup.name, "copied": len(files), **info}
 
 
@@ -308,7 +308,7 @@ def run_gui() -> int:
     from tkinter import filedialog, messagebox, ttk
 
     root = tk.Tk()
-    root.title("声匠 VoiceSmith · 升级工具")
+    root.title("声匠 VoiceArtisan · 升级工具")
     root.geometry("820x620")
 
     cur_var = tk.StringVar(value=str(Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent))
@@ -415,7 +415,7 @@ def run_gui() -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="声匠 VoiceSmith 独立升级工具")
+    parser = argparse.ArgumentParser(description="声匠 VoiceArtisan 独立升级工具")
     parser.add_argument("--cli", nargs=2, metavar=("当前目录", "新版本目录"))
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--force", action="store_true")

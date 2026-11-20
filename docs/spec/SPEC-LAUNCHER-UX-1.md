@@ -1,7 +1,7 @@
 # 规格：可视化启动器 —— 过程可视化 + 性能优化（SPEC-LAUNCHER-UX-1）
 
 > 状态：**待评审**（评审通过后再实施；本轮**不打包**）
-> 对象：`launcher/qwentts_launcher.py`（tkinter 单文件启动器，1975 行）+ 打包后的 `launcher/dist/QWENTTS-Setup.exe`
+> 对象：`launcher/voiceartisan_launcher.py`（tkinter 单文件启动器，1975 行）+ 打包后的 `launcher/dist/VoiceArtisan-Setup.exe`
 > 起因：用户反馈「过程中等待烦躁」，希望启动器把过程讲清楚、等待不焦虑，并做性能优化
 
 ---
@@ -183,14 +183,14 @@
 
 ```json
 {
-  "root": "D:\\VoiceSmith",
+  "root": "D:\\VoiceArtisan",
   "env": "venv",
   "saved_at": "2026-11-18 19:00:00",
   "model_sizes": {
-    "D:\\VoiceSmith\\models\\Qwen3-TTS-12Hz-1.7B-Base": { "size": 4200000000, "mtime": 1763100000.0 }
+    "D:\\VoiceArtisan\\models\\Qwen3-TTS-12Hz-1.7B-Base": { "size": 4200000000, "mtime": 1763100000.0 }
   },
   "deps_probe": {
-    "D:\\VoiceSmith\\.venv\\Scripts\\python.exe": {
+    "D:\\VoiceArtisan\\.venv\\Scripts\\python.exe": {
       "ts": 1763100000.0,
       "info": { "torch": "2.4.1+cu121", "qwen_tts": "0.1.1", "cuda": true }
     }
@@ -219,7 +219,7 @@
 - [ ] 关窗口时任务在跑 → 弹二次确认
 - [ ] 日志超过 2000 行后内存不增长（Text 行数恒定）
 - [ ] 缓存命中/失效两种情况都正确（改模型目录 mtime 后 10 分钟内应复核）
-- [ ] 无新增第三方依赖；`python launcher/qwentts_launcher.py --selfcheck` 仍工作
+- [ ] 无新增第三方依赖；`python launcher/voiceartisan_launcher.py --selfcheck` 仍工作
 - [ ] PyInstaller 重新打包后体积增长 ≤ 1 MB
 
 ## 8. 风险与依赖
@@ -239,4 +239,4 @@
 3. pip 解析 + 标题/任务栏进度
 4. 启动服务探测可视化 + 就绪提示
 5. 日志限行/滚动策略 + 退出确认 + 失败重试按钮
-6. 125%/150% DPI 与打包验证（**本轮不打包**，仅本地 `python launcher/qwentts_launcher.py` 与 `QWENTTS-Setup.exe` 重建验证）
+6. 125%/150% DPI 与打包验证（**本轮不打包**，仅本地 `python launcher/voiceartisan_launcher.py` 与 `VoiceArtisan-Setup.exe` 重建验证）

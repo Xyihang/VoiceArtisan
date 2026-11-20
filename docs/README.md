@@ -16,7 +16,7 @@
 | --- | --- | --- |
 | [QUICKSTART.md](QUICKSTART.md) | 想 10 分钟跑出第一段音频 | 启动服务、放模型、生成、验收清单 |
 | [CLOUD_AGENT.md](CLOUD_AGENT.md) | 云主机一键接入 Agent：准备、8 步流程、AI 诊断配置、验收步骤 |
-| [LAUNCHER.md](LAUNCHER.md) | 想点鼠标完成安装（不想敲命令） | 用图形引导器选目录/体检/下模型/装依赖/起服务，出 `QWENTTS-Setup.exe` |
+| [LAUNCHER.md](LAUNCHER.md) | 想点鼠标完成安装（不想敲命令） | 用图形引导器选目录/体检/下模型/装依赖/起服务，出 `VoiceArtisan-Setup.exe` |
 | [MODELS.md](MODELS.md) | 不知道下哪个模型、下载慢 | 拿到直链 / 脚本下载、目录结构、完整性校验 |
 | [CONFIG.md](CONFIG.md) | 想改模式、显存、ASR、限额 | 逐项配置说明 + 环境变量速查 + 两份预设 |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | 报错了 | 按错误码定位原因与修法 |

@@ -1,4 +1,4 @@
-# 参赛提交文案 · 声匠 VoiceSmith（可直接粘贴）
+# 参赛提交文案 · 声匠 VoiceArtisan（可直接粘贴）
 
 > 对应表单字段：#12 一句话介绍 / #13 详细介绍 / #17 体验入口 / #20 源码 / #21 其它材料
 
@@ -6,7 +6,7 @@
 
 ## #12 一句话介绍你的作品
 
-声匠·VoiceSmith 是一款跑在自己电脑上的 AI 配音工作台：创作者把一段文字丢进去，就能在本机完成配音、克隆音色、音色设计与录音转写，成品可直接导出交付——素材不出本机，试用不按次付费，显存不够时还能一键借云端 GPU。
+声匠·VoiceArtisan 是一款跑在自己电脑上的 AI 配音工作台：创作者把一段文字丢进去，就能在本机完成配音、克隆音色、音色设计与录音转写，成品可直接导出交付——素材不出本机，试用不按次付费，显存不够时还能一键借云端 GPU。
 
 （备选更短版）让创作者用自己的显卡做配音：输入文字 → 本机合成/克隆/转写 → 一键导出，随时可切云端 GPU 借算力。
 
@@ -94,7 +94,7 @@ TRAE 具体做了什么：补齐 `Content-Type`、把 `ok=false` 映射成 `isEr
 
 **打开方式（约 1 分钟到界面）**
 1. 解压便携包到任意目录（路径不要带中文特殊字符亦可）
-2. 双击根目录 `start.bat`（脚本会自动拉起图形化启动器；也可直接运行 `launcher\dist-qt\QWENTTS-Setup-Qt\QWENTTS-Setup-Qt.exe`，免装 Python / PySide6）
+2. 双击根目录 `start.bat`（脚本会自动拉起图形化启动器；也可直接运行 `launcher\dist-qt\VoiceArtisan-Setup-Qt\VoiceArtisan-Setup-Qt.exe`，免装 Python / PySide6）
 3. 启动器先跑「环境体检」，按提示点唯一的主按钮：装依赖 → 装前端产物 →（在「引擎与模型」里下载模型）→ 启动服务
 4. 服务起来后浏览器会自动打开界面；进入「工作台」
 5. 输入一句话 → 选音色 → 点「开始生成」→ 首包到达即播放；成品在「任务中心」可播放、下载、换档重编、导出字幕
@@ -162,7 +162,7 @@ def trim_process_memory() -> None:
         ctypes.windll.kernel32.SetProcessWorkingSetSize(handle, ctypes.c_size_t(-1), ctypes.c_size_t(-1))
 ```
 
-**片段 C：启动器把阻塞操作放线程，只通过信号回到 UI（`launcher/qwentts_launcher_qt.py`）**
+**片段 C：启动器把阻塞操作放线程，只通过信号回到 UI（`launcher/voiceartisan_launcher_qt.py`）**
 
 ```python
 class TaskSignals(QObject):

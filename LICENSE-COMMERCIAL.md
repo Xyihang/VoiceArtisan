@@ -1,6 +1,6 @@
 # 商业授权 · Commercial License
 
-> 本文件说明「声匠 · VoiceSmith」的商业使用授权方式。它是 [LICENSE](LICENSE)（PolyForm Noncommercial 1.0.0）之外的另一种选择。
+> 本文件说明「声匠 · VoiceArtisan」的商业使用授权方式。它是 [LICENSE](LICENSE)（PolyForm Noncommercial 1.0.0）之外的另一种选择。
 
 ## 一句话
 

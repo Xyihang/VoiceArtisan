@@ -3,7 +3,7 @@ import { Eraser, Sparkles } from 'lucide-react';
 import { estimateSeconds } from '../lib/format';
 
 const SAMPLES = [
-  '欢迎使用声匠 VoiceSmith。输入要合成的文本即可；能力取决于当前引擎，可在「设置 → 引擎与模型」切换。',
+  '欢迎使用声匠 VoiceArtisan。输入要合成的文本即可；能力取决于当前引擎，可在「设置 → 引擎与模型」切换。',
   '这是一段用于试听的中文示例：清晰、自然、有节奏感的播报，适合产品介绍与短视频配音。',
   'Hello there! This is a cross-lingual voice cloning demo — the same voice can speak both Chinese and English.',
 ];

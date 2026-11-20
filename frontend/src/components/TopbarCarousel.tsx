@@ -14,7 +14,7 @@ const PAGE_MS = 6000; // 页面信息停留
 const BRAND_MS = 3200; // 品牌停留
 
 /**
- * 顶栏轮播：品牌（声匠 ⟡ VoiceSmith）与「当前页面信息」交替出现。
+ * 顶栏轮播：品牌（声匠 ⟡ VoiceArtisan）与「当前页面信息」交替出现。
  *
  * - 切页后先展示页面信息，6s 后翻到品牌，3.2s 再翻回来
  * - 鼠标悬停/键盘聚焦时暂停（不会在你正要读的时候翻走）
@@ -69,7 +69,7 @@ export function TopbarCarousel({ subtitle, chips, routeKey }: Props) {
         <span className="topbar-slide__mark" aria-hidden="true">
           <AudioLines size={18} strokeWidth={2} />
         </span>
-        <span className="topbar-slide__sub">VoiceSmith</span>
+        <span className="topbar-slide__sub">VoiceArtisan</span>
         <span className="topbar-slide__credit">保留所有权利 · © 2026 xiyihang</span>
       </div>
 
