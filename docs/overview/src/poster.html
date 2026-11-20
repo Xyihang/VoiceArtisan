@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>声匠 · VoiceSmith 全功能总览</title>
+<link rel="stylesheet" href="poster.css">
+</head><body>
+
+<!-- ============================ 01 总览 ============================ -->
+<section class="sheet" id="p1">
+  <header class="hd">
+    <div class="brand"><div class="mark">匠</div>
+      <div><h1>声匠 · VoiceSmith</h1>
+        <div class="tag">Local + Cloud TTS / ASR Workbench · 全功能总览</div></div>
+    </div>
+    <div class="meta">
+      <span class="pill">v1.1.62</span>
+      <span class="pill a">FastAPI + React</span>
+      <span class="pill m">Windows 一键安装</span>
+      <span class="pill m">01 / 05 · 总览</span>
+    </div>
+  </header>
+
+  <div class="row grow">
+    <div class="col" style="width:700px">
+      <div class="card">
+        <h2>六个主页面 · 底部 Dock + 搜索 FAB <span class="n">NAVIGATION</span></h2>
+        <div class="map">
+          <div class="it"><span class="no">01</span><span class="nm">工作台</span>
+            <span class="d">合成主入口：语音生成 / 声音克隆 / 音色设计 / 音频转文字 四能力切换；指令控制、参考音频、高级参数、流式播放、运行指标、最近任务、快捷键。</span></div>
+          <div class="it"><span class="no">02</span><span class="nm">音色库</span>
+            <span class="d">9 个内置音色 + 自建克隆音色；搜索（名称/方言/描述）、排序、筛选、试听、重命名、删除；克隆新音色（拖拽参考音频 + 参考文本）。</span></div>
+          <div class="it"><span class="no">03</span><span class="nm">任务中心</span>
+            <span class="d">全量任务表：状态/类型/排序/文本搜索、行内播放器、本地重试 / 云端重试、取消、下载、删除、批量提交、重新导出、字幕与说话人拆分。</span></div>
+          <div class="it"><span class="no">04</span><span class="nm">设置</span>
+            <span class="d">13 个分区 · 60+ 可调项：运行模式、云端、SSH 隧道、ASR、预热、引擎、云端引擎、本地模型、质检、文本、后期、默认参数、授权。</span></div>
+          <div class="it"><span class="no">05</span><span class="nm">状态与日志</span>
+            <span class="d">后端健康、队列与活动后端、云端延迟、运行时长、累计任务、空闲停机倒计时、环境自检、日志级别筛选、性能指标（首包 / RTF）。</span></div>
+          <div class="it"><span class="no">06</span><span class="nm">教程</span>
+            <span class="d">21 章内置文档：五分钟跑通 → 运行模式 → 云端与隧道 → 语音识别 → 引擎与预热 → 质检/文本/后期 → 导出与时长 → 批量 → MCP → 常见错误速查。</span></div>
+        </div>
+        <div class="hr"></div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          <span class="tagx">主链路</span>
+          <span class="chip">输入文本</span><span class="chip m">›</span>
+          <span class="chip">选音色 / 传参考音频</span><span class="chip m">›</span>
+          <span class="chip">指令或设计描述</span><span class="chip m">›</span>
+          <span class="chip">高级参数</span><span class="chip m">›</span>
+          <span class="chip a">提交（本地 / 云端自动选址）</span><span class="chip m">›</span>
+          <span class="chip">流式播放</span><span class="chip m">›</span>
+          <span class="chip">任务中心</span><span class="chip m">›</span>
+          <span class="chip">导出档位 / 字幕</span>
+        </div>
+      </div>
+
+      <div class="card tight">
+        <h2>三种运行模式 · 选址规则 <span class="n">RUN MODE</span></h2>
+        <div class="quad">
+          <div><span class="t">仅本地</span><span class="d">全部任务用本机 GPU/CPU；断网可用，零 API 成本</span></div>
+          <div><span class="t">仅云端</span><span class="d">全部任务走云端 GPU；HTTPS + API Key 强制鉴权</span></div>
+          <div><span class="t">混合</span><span class="d">按任务与显存自动选址；长文本超阈值优先云端</span></div>
+          <div><span class="t">切换方式</span><span class="d">设置内分段控件即时切换；状态页显示当前活动后端</span></div>
+        </div>
+      </div>
+
+      <div class="card grow">
+        <h2>十个不妥协的细节 <span class="n">HIGHLIGHTS</span></h2>
+        <div class="grid2">
+          <ul>
+            <li class="dot">安装/下载可断点续跑，中断不会伪装成「进行中」</li>
+            <li class="dot">预热 + 常驻：首个请求就快，空闲自动卸载可配</li>
+            <li class="dot">显存不足：CPU offload、0.6B 回退、显存超额与预留</li>
+            <li class="dot">取消真的能取消：取消令牌直达推理循环</li>
+            <li class="dot">重试可选本地或云端，参数原样保留</li>
+          </ul>
+          <ul>
+            <li class="dot a">设置 0.7 秒自动保存，切页不丢修改</li>
+            <li class="dot a">密钥脱敏显示，SSH 密码 DPAPI 加密落盘</li>
+            <li class="dot a">云端一键接入选「挂载模式」可跳过上传与装依赖</li>
+            <li class="dot a">失败必给错误码 + 中文提示 + 修复建议</li>
+            <li class="dot a">MCP Server 让别的 AI 直接调用本机算力</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col grow">
+      <div class="card">
+        <h2>四层架构 <span class="n">STACK</span></h2>
+        <div class="layer"><div class="lab">UI</div>
+          <div class="box pri"><span class="t">界面层 · React + Vite + TypeScript</span>
+            <span class="d">底部胶囊 Dock（6 标签 + 搜索 FAB）· 顶部轮播条 · 命令面板 Ctrl K · WebSocket 实时进度 · 深/浅/跟随系统主题 · 液态玻璃卡片</span></div></div>
+        <div class="flow">▼</div>
+        <div class="layer"><div class="lab">API</div>
+          <div class="box"><span class="t">服务层 · FastAPI + SQLite + Worker 队列</span>
+            <span class="d">任务表 / 音色表 / 设置覆盖 · 优先级队列与取消令牌 · 流式分块下发 · 错误码 + 提示 + 建议 · runtime.json 运行期覆盖</span></div></div>
+        <div class="flow">▼</div>
+        <div class="layer"><div class="lab">ENGINE</div>
+          <div class="box acc"><span class="t">引擎层 · 13 个本地模型（统一适配器注册表）</span>
+            <span class="d">Qwen3-TTS · CosyVoice ×3 · VoxCPM · IndexTTS-2 · Whisper ×5 · CAM++；显存调度 / 预热 / 空闲卸载 / 0.6B 回退</span></div></div>
+        <div class="flow">▼</div>
+        <div class="layer"><div class="lab">CLOUD</div>
+          <div class="box"><span class="t">云端层 · 任意 GPU 主机（AutoDL 等）+ SSH 隧道</span>
+            <span class="d">一键接入向导 · 隧道映射本地端口 · 云端引擎安装/切换 · 空闲自动停机 · 一键关机省费用</span></div></div>
+      </div>
+
+      <div class="card tight">
+        <h2>关键数字 <span class="n">NUMBERS</span></h2>
+        <div class="metrics">
+          <div><span class="v">7<small>TTS</small></span><span class="l">本地合成引擎</span></div>
+          <div><span class="v">6<small>ASR</small></span><span class="l">转写 + 声纹模型</span></div>
+          <div><span class="v">13<small>LANG</small></span><span class="l">语言与方言口音</span></div>
+          <div><span class="v">9<small>VOICE</small></span><span class="l">内置音色</span></div>
+          <div><span class="v">60<small>+</small></span><span class="l">可调设置项</span></div>
+          <div><span class="v">9<small>MCP</small></span><span class="l">对外工具（给其它 AI）</span></div>
+          <div><span class="v">3<small>MODE</small></span><span class="l">本地 / 云端 / 混合</span></div>
+          <div><span class="v">3<small>TIER</small></span><span class="l">导出档位</span></div>
+        </div>
+      </div>
+
+      <div class="card grow">
+        <h2>第一次打开：五个动作到出声 <span class="n">FIRST RUN</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">① 双击 start.bat</span><span class="o">拉起图形化启动器（无需装 Python / PySide6）</span></div>
+          <div class="rw"><span class="f">② 环境体检</span><span class="o">Python / 依赖 / GPU 与显存 / 前端产物 / 配置 / 模型齐备度</span></div>
+          <div class="rw"><span class="f">③ 一键安装</span><span class="o">依赖与前端产物，进度可续、失败可重试上一步</span></div>
+          <div class="rw"><span class="f">④ 下载模型</span><span class="o">在「引擎与模型」装 Qwen3-TTS 或其它引擎（体积/路径可见）</span></div>
+          <div class="rw"><span class="f">⑤ 启动服务</span><span class="o">启动后自动打开界面：工作台输入一句话 → 生成 → 播放</span></div>
+        </div>
+        <div class="hr"></div>
+        <div class="xs dim">不想装本地模型？设置里切「仅云端」并填服务地址 + API Key，或直接用「一键接入云主机」向导把云端配好。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card tight">
+    <h2>能力矩阵 · 同一套界面，两种算力 <span class="n">CAPABILITY MATRIX</span></h2>
+    <table>
+      <tr><th style="width:176px">能力</th><th style="width:190px">入口</th><th style="width:290px">本地 GPU / CPU</th><th style="width:200px">云端 GPU</th><th style="width:150px">混合模式</th><th>前提 / 限制</th></tr>
+      <tr><td class="k">语音生成（预置音色 + 指令）</td><td>工作台 › 语音生成</td><td>CustomVoice 1.7B / 0.6B、CosyVoice-300M 预置音色</td><td>同名模型，HTTPS + API Key</td><td>按显存与任务自动选址</td><td>需要模型已安装并加载完成</td></tr>
+      <tr><td class="k">声音克隆（零样本）</td><td>工作台 › 声音克隆 / 音色库</td><td>Base 1.7B / 0.6B，参考音频编码器额外占显存</td><td>需云端 Base 模型已装</td><td>长文本超阈值优先云端</td><td>参考音频建议 3–10 秒纯净人声</td></tr>
+      <tr><td class="k">音色设计（自然语言造音色）</td><td>工作台 › 音色设计</td><td>VoiceDesign（仅 1.7B 提供）</td><td>云端 VoiceDesign 模型</td><td>按可用性路由</td><td>0.6B 无此能力，需切 1.7B</td></tr>
+      <tr><td class="k">音频转文字</td><td>工作台 › 音频转文字</td><td>faster-whisper Tiny→Large-V3（int8 / fp16 / fp32）</td><td>云端接口</td><td>ASR 优先位置可设</td><td>Large-V3 建议 GPU，CPU 明显慢</td></tr>
+      <tr><td class="k">说话人区分（声纹）</td><td>工作台 / 任务详情</td><td>CAM++（阿里 3D-Speaker）</td><td>远端声纹服务</td><td>自动：云端优先，回落本地</td><td>需先安装 CAM++；云端不支持时明确报错</td></tr>
+      <tr><td class="k">质检 · 后期 · 字幕</td><td>设置 / 任务详情</td><td>ASR 回译比对 + 低切/高架/压缩/峰值归一化</td><td>同一流程，产物留在本机</td><td>—</td><td>质检默认关闭；开启后单任务 +10–30% 耗时</td></tr>
+      <tr><td class="k">给其它 AI 调用</td><td>MCP Server（stdio）</td><td>9 个工具，直连本机后端</td><td>—</td><td>—</td><td>需客户端支持 MCP；可先用 --selftest 自测</td></tr>
+    </table>
+  </div>
+
+  <footer class="ft">
+    <div>一句话定位：<b>把「本地能跑、云端能借、别的 AI 能用」三件事缝进同一个界面</b>，并且每一步都留了退路。</div>
+    <div class="pg">01 · OVERVIEW</div>
+  </footer>
+</section>
+
+<!-- ============================ 02 工作台 + 音色库 ============================ -->
+<section class="sheet" id="p2">
+  <header class="hd">
+    <div class="brand"><div class="mark">匠</div>
+      <div><h1>工作台 · 音色库</h1>
+        <div class="tag">合成主入口 · 四种能力 · 16 项合成参数 · 音色资产管理</div></div>
+    </div>
+    <div class="meta"><span class="pill">4 能力</span><span class="pill a">16 参数</span><span class="pill m">02 / 05</span></div>
+  </header>
+
+  <div class="row grow">
+    <div class="col" style="width:900px">
+      <div class="card tight">
+        <h2>四种能力（分段切换，参数按能力显隐） <span class="n">CAPABILITIES</span></h2>
+        <div class="grid4">
+          <div class="sec"><div class="h"><span class="code">A</span>语音生成</div>
+            <div class="b">内置音色列表 → 选人 → 文本 → 指令控制（可选）→ 生成。最常用路径，无需参考音频。</div></div>
+          <div class="sec"><div class="h"><span class="code">B</span>声音克隆</div>
+            <div class="b">上传/拖拽 3–10 秒纯净人声 + 参考文本（可选，填了相似度更高）→ 零样本克隆生成。</div></div>
+          <div class="sec"><div class="h"><span class="code">C</span>音色设计</div>
+            <div class="b">用自然语言描述音色（性别/年龄/质感/情绪/口音）→ 模型直接造出新音色；仅 1.7B 引擎。</div></div>
+          <div class="sec"><div class="h"><span class="code">D</span>音频转文字</div>
+            <div class="b">选音频 → Whisper 转写；可开说话人区分（最少/最多人数、本地/云端/自动），结果可下载。</div></div>
+        </div>
+        <div class="hr"></div>
+        <div class="grid4">
+          <div><span class="tagx">指令控制 instruct</span><div class="xs" style="color:#b6c4d8">自然语言调语气、情感、语速、风格；例「语气更温柔一些，语速稍慢，句尾轻收」。只改本次任务，不写全局配置。</div></div>
+          <div><span class="tagx">文本编辑</span><div class="xs" style="color:#b6c4d8">实时字数统计、清空、粘贴长文；合成前按「文本规范化」把数字/单位/日期转中文读法。</div></div>
+          <div><span class="tagx">参考音频</span><div class="xs" style="color:#b6c4d8">拖拽区 + 波形预览 + 时长；未选择时明确提示，选完显示文件信息与删除。</div></div>
+          <div><span class="tagx">音色检索</span><div class="xs" style="color:#b6c4d8">按内置/克隆分组，搜索名称与描述，卡片内直接试听（播放态提示「试听中」）。</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>高级参数 · 面板内一次改完，可一键恢复默认 <span class="n">PARAMETERS</span></h2>
+        <table class="dense">
+          <tr><th style="width:112px">参数</th><th style="width:104px">范围 / 选项</th><th style="width:58px">默认</th><th>说明</th></tr>
+          <tr><td class="k">语速 speed</td><td class="m">0.5 – 2.0</td><td class="m">1.00</td><td>1.0 原速，0.8–1.2 为推荐区间</td></tr>
+          <tr><td class="k">音高 pitch</td><td class="m">−12 – +12 半音</td><td class="m">0</td><td>±3 内自然，超出会有机械感</td></tr>
+          <tr><td class="k">温度 temperature</td><td class="m">0.1 – 1.5</td><td class="m">0.70</td><td>越高越有变化，0.7–1.0 稳定</td></tr>
+          <tr><td class="k">Top P</td><td class="m">0.3 – 1.0</td><td class="m">0.80</td><td>核采样阈值</td></tr>
+          <tr><td class="k">Top K</td><td class="m">1 – 100</td><td class="m">50</td><td>采样候选数，建议 40–60</td></tr>
+          <tr><td class="k">重复惩罚 repetition</td><td class="m">1.0 – 1.5</td><td class="m">1.05</td><td>略大于 1 可减少复读</td></tr>
+          <tr><td class="k">采样步数 steps</td><td class="m">256 – 4096</td><td class="m">1024</td><td>生成长度上限（token），长文本调大</td></tr>
+          <tr><td class="k">num_step</td><td class="m">1 – 4096 / 空</td><td class="m">引擎默认</td><td>按引擎覆盖解码步数</td></tr>
+          <tr><td class="k">guidance_scale</td><td class="m">0 – 20 / 空</td><td class="m">引擎默认</td><td>引导强度，越高越贴提示</td></tr>
+          <tr><td class="k">denoise</td><td class="m">默认 / 开 / 关</td><td class="m">默认</td><td>降噪开关（引擎支持时生效）</td></tr>
+          <tr><td class="k">target_duration_s</td><td class="m">秒 / 空</td><td class="m">不控制</td><td>优先级高于语速；生成后保音高伸缩 / 截断 / 补静音</td></tr>
+          <tr><td class="k">流式合成</td><td class="m">开 / 关</td><td class="m">开</td><td>开=按句分块首包即播；关=整段一次生成更连贯</td></tr>
+          <tr><td class="k">分块字数 chunk</td><td class="m">12 – 80（步 4）</td><td class="m">28</td><td>越小首包越快、拼接越多</td></tr>
+          <tr><td class="k">导出档位 tier</td><td class="m">跟随 / Original / Standard / For editing</td><td class="m">跟随设置</td><td>Original=模型原生 WAV；Standard=44.1k MP3 192k；For editing=48k 24bit WAV</td></tr>
+          <tr><td class="k">输出格式</td><td class="m">wav / mp3 / flac / ogg</td><td class="m">wav</td><td>只影响成品封装，无损原件始终保留</td></tr>
+          <tr><td class="k">语言 language</td><td class="m">13 项</td><td class="m">Auto</td><td>Auto / 中 / 英 / 日 / 韩 / 法 / 德 / 西 / 意 / 葡 / 俄 / 北京话 / 四川话</td></tr>
+        </table>
+      </div>
+
+      <div class="card grow">
+        <h2>参数怎么被消费 <span class="n">BEHAVIOUR</span></h2>
+        <div class="grid3">
+          <div><span class="tagx">只对本次生效</span><div class="xs" style="color:#b6c4d8">工作台里的改动不写全局配置；默认值统一在「设置 › 默认参数」管。</div></div>
+          <div><span class="tagx">空值 = 引擎默认</span><div class="xs" style="color:#b6c4d8">num_step / guidance_scale / denoise / target_duration_s 留空即交给引擎，不同引擎能力不同。</div></div>
+          <div><span class="tagx">面板记忆</span><div class="xs" style="color:#b6c4d8">展开/收起状态记在本地，下次进来还是你上次的样子。</div></div>
+          <div><span class="tagx">生成中锁定</span><div class="xs" style="color:#b6c4d8">提交后参数控件禁用，改参数要等这一条结束（或先点停止）。</div></div>
+          <div><span class="tagx">首包 vs 连贯</span><div class="xs" style="color:#b6c4d8">流式 + 小分块首包最快；关掉流式整段生成，语气衔接更自然。</div></div>
+          <div><span class="tagx">时长优先级</span><div class="xs" style="color:#b6c4d8">target_duration_s 高于语速：先生成再保音高伸缩 / 截断 / 补静音。</div></div>
+          <div><span class="tagx">后处理独立</span><div class="xs" style="color:#b6c4d8">低切高架压缩属于「设置 › 后期处理链」，不在这张表里，也不改引擎参数。</div></div>
+          <div><span class="tagx">导出不动原件</span><div class="xs" style="color:#b6c4d8">档位只决定导出编码；无损原件永远保留，可随时按别的档位重编。</div></div>
+          <div><span class="tagx">恢复默认</span><div class="xs" style="color:#b6c4d8">面板右上角一键回到「设置 › 默认参数」里的那套值。</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col grow">
+      <div class="card tight">
+        <h2>运行状态（本次任务实时） <span class="n">TELEMETRY</span></h2>
+        <dl class="kv">
+          <dt>当前后端</dt><dd>本地 / 云端 / 模拟（联调）</dd>
+          <dt>首包延迟</dt><dd class="mono">ms，目标 ≤ 1500</dd>
+          <dt>本次耗时</dt><dd class="mono">s，流式过程中持续刷新</dd>
+          <dt>实时率 RTF</dt><dd class="mono">&gt; 1 表示快于实时</dd>
+          <dt>音频时长</dt><dd class="mono">s，按到达分块累计</dd>
+          <dt>显存占用</dt><dd class="mono">MB，本地模型已分配</dd>
+          <dt>停止</dt><dd>取消令牌立即中断流式生成</dd>
+        </dl>
+        <div class="hr"></div>
+        <div class="grid2">
+          <div><span class="tagx">使用提示</span><div class="xs" style="color:#b6c4d8">克隆建议 3–10 秒纯净人声；噪声直接拉低相似度。</div></div>
+          <div><span class="tagx">降级路径</span><div class="xs" style="color:#b6c4d8">显存不足会提示，并可一键切云端续跑同一任务。</div></div>
+        </div>
+      </div>
+
+      <div class="card tight">
+        <h2>说话人区分（转写后处理） <span class="n">DIARIZATION</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">最少 / 最多</span><span class="o">1–8 / 2–8；不足下限强制拆分补足，超上限合并最相似簇</span></div>
+          <div class="rw"><span class="f">识别位置</span><span class="o">本地 CAM++（默认）/ 云端声纹 / 自动（云端优先回落）</span></div>
+          <div class="rw"><span class="f">SPK 重命名</span><span class="o">把 SPK1 改成真实姓名（时间轴不变）</span></div>
+          <div class="rw"><span class="f">合并说话人</span><span class="o">把误判出来的说话人并进同一个</span></div>
+          <div class="rw"><span class="f">还原 / 只转文字</span><span class="o">一键还原 SPK1/SPK2；或本次关闭声纹只出文本</span></div>
+        </div>
+      </div>
+
+      <div class="card tight">
+        <h2>音色卡片字段（库里存了什么） <span class="n">VOICE RECORD</span></h2>
+        <div class="grid2">
+          <div><ul><li class="dot">名称 / 类型（内置 · 克隆）</li><li class="dot">性别 · 年龄段 · 语言 · 方言 · 口音</li><li class="dot">描述（可搜索）</li></ul></div>
+          <div><ul><li class="dot">参考音频时长与波形峰值</li><li class="dot">参考文本（可选，提升相似度）</li><li class="dot">创建时间 · 归属任务引用</li></ul></div>
+        </div>
+      </div>
+
+      <div class="card grow">
+        <h2>全站快捷键 <span class="n">KEYS</span></h2>
+        <table class="dense">
+          <tr><td class="m" style="width:96px">Ctrl K</td><td>命令面板：跳页 / 新建 / 切引擎 / 切主题</td></tr>
+          <tr><td class="m">Ctrl Enter</td><td>提交当前生成；音色库内保存新音色</td></tr>
+          <tr><td class="m">↑ ↓</td><td>任务中心行间移动</td></tr>
+          <tr><td class="m">r</td><td>重试当前行任务</td></tr>
+          <tr><td class="m">d</td><td>下载当前行结果</td></tr>
+          <tr><td class="m">Delete</td><td>删除当前行任务</td></tr>
+          <tr><td class="m">Esc</td><td>关闭面板或浮层</td></tr>
+        </table>
+        <div class="hr"></div>
+        <div class="grid2">
+          <div><span class="tagx">命令面板里能干什么</span>
+            <ul>
+              <li class="dot">跳六个页面，含「教程」与「状态与日志」</li>
+              <li class="dot">新建语音生成 / 新建声音克隆</li>
+              <li class="dot">只看失败任务、刷新状态</li>
+            </ul></div>
+          <div><span class="tagx">还能直接搜到</span>
+            <ul>
+              <li class="dot">切换主题：深色 / 浅色 / 跟随系统</li>
+              <li class="dot">按名字搜引擎，回车即切换当前引擎</li>
+              <li class="dot">搜索文本忽略大小写，中英混排可搜</li>
+            </ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card tight">
+    <h2>音色库 · 9 个内置音色 + 无限自建克隆 <span class="n">VOICE LIBRARY</span></h2>
+    <div class="row" style="gap:14px">
+      <div style="flex:1.15">
+        <span class="tagx">内置音色（开箱即用，按语言/性别/年龄标注）</span>
+        <div class="grid3" style="margin-top:3px">
+          <div class="xs" style="color:#c3d0e2">Vivian · 温柔女声 <span class="dim">年轻 / 旁白</span></div>
+          <div class="xs" style="color:#c3d0e2">Serena · 知性女声 <span class="dim">成熟 / 讲解</span></div>
+          <div class="xs" style="color:#c3d0e2">Uncle Fu · 磁性男声 <span class="dim">中年 / 广告</span></div>
+          <div class="xs" style="color:#c3d0e2">Ryan · 英文男声 <span class="dim">播音 / 介绍</span></div>
+          <div class="xs" style="color:#c3d0e2">Aiden · 英文青年 <span class="dim">轻松 / 口播</span></div>
+          <div class="xs dim">其余内置音色随模型包附带，共 9 个</div>
+        </div>
+      </div>
+      <div style="flex:1.15">
+        <span class="tagx">克隆新音色（5 步）</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">
+          <span class="chip">1 拖拽/选择参考音频</span><span class="chip">2 填参考文本（可选）</span>
+          <span class="chip">3 命名（如「深夜电台男声」）</span><span class="chip">4 Ctrl+Enter 保存</span>
+          <span class="chip a">5 入库：标签/时长/波形</span>
+        </div>
+        <div class="xs dim" style="margin-top:3px">附：可选填参考文本；填了相似度更高，留空也能克隆。</div>
+      </div>
+      <div style="flex:.9">
+        <span class="tagx">检索与维护</span>
+        <div class="xs" style="color:#b6c4d8;margin-top:3px">搜索名称 / 方言 / 描述 · 排序 · 内置/克隆筛选 · 试听 · 重命名 · 删除（二次确认：已用该音色的任务与音频不受影响；删除不可恢复）</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ft"><div>工作台把「文本 → 音色 → 参数 → 提交 → 播放 → 归档」压在一屏内；参数只对本次任务生效，默认值统一在设置里管。</div><div class="pg">02 · WORKBENCH</div></footer>
+</section>
+
+<!-- ============================ 03 任务中心 ============================ -->
+<section class="sheet" id="p3">
+  <header class="hd">
+    <div class="brand"><div class="mark">匠</div>
+      <div><h1>任务中心</h1><div class="tag">队列生命周期 · 行内播放 · 双侧重试 · 批量 · 导出与字幕</div></div></div>
+    <div class="meta"><span class="pill">7 列</span><span class="pill a">批量</span><span class="pill m">03 / 05</span></div>
+  </header>
+
+  <div class="card tight">
+    <h2>任务生命周期（取消真的能取消，重试可选本地或云端） <span class="n">STATE MACHINE</span></h2>
+    <div class="fsm">
+      <div class="st"><div class="n">排队 queued</div><div class="d">优先级队列，状态页显示排队数</div></div>
+      <span class="ar">›</span>
+      <div class="st run"><div class="n">运行 running</div><div class="d">WebSocket 推送进度与分块</div></div>
+      <span class="ar">›</span>
+      <div class="st ok"><div class="n">成功 succeeded</div><div class="d">结果入库 + 无损原件保留</div></div>
+      <span class="ar">|</span>
+      <div class="st bad"><div class="n">失败 failed</div><div class="d">错误码 + 中文提示 + 建议</div></div>
+      <span class="ar">|</span>
+      <div class="st"><div class="n">取消 cancelled</div><div class="d">取消令牌即时中断推理</div></div>
+      <span class="ar">↻</span>
+      <div class="st"><div class="n">重试 retry</div><div class="d">本地重试 / 云端重试，沿用原参数</div></div>
+    </div>
+  </div>
+
+  <div class="row grow">
+    <div class="col" style="width:470px">
+      <div class="card">
+        <h2>筛选 · 排序 · 刷新 <span class="n">FILTERS</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">状态筛选</span><span class="o">全部 / 排队 / 运行 / 成功 / 失败 / 取消（分段控件）</span></div>
+          <div class="rw"><span class="f">类型筛选</span><span class="o">全部 / 语音生成 / 声音克隆 / 音色设计 / 音频转文字</span></div>
+          <div class="rw"><span class="f">排序</span><span class="o">最新优先 / 最早优先</span></div>
+          <div class="rw"><span class="f">文本搜索</span><span class="o">按任务文本内容模糊匹配</span></div>
+          <div class="rw"><span class="f">筛选面板</span><span class="o">默认收起，展开显示当前筛选 chip，可逐个移除</span></div>
+          <div class="rw"><span class="f">刷新</span><span class="o">手动重新拉取 + WS 变更 300ms 合并刷新</span></div>
+          <div class="rw"><span class="f">首屏</span><span class="o">仅首次加载出骨架，之后静默更新不闪</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>表格七列 <span class="n">COLUMNS</span></h2>
+        <table class="dense">
+          <tr><th style="width:80px">列</th><th>内容</th></tr>
+          <tr><td class="k">选择</td><td>行勾选 / 全选当前页（批量操作条）</td></tr>
+          <tr><td class="k">类型</td><td>生成 / 克隆 / 设计 / 转写</td></tr>
+          <tr><td class="k">文本摘要</td><td>任务文本或文件名，过长省略</td></tr>
+          <tr><td class="k">音色</td><td>内置音色名或克隆音色名</td></tr>
+          <tr><td class="k">状态</td><td>状态点 + 文案 + 失败原因摘要</td></tr>
+          <tr><td class="k">首包 / 耗时</td><td class="m">ms / s（同级并排）</td></tr>
+          <tr><td class="k">创建时间</td><td>可排序，本地时区</td></tr>
+        </table>
+      </div>
+      <div class="card grow">
+        <h2>一条任务里存了什么 <span class="n">RECORD</span></h2>
+        <table class="dense">
+          <tr><th style="width:126px">字段</th><th>用途</th></tr>
+          <tr><td class="m">id / type</td><td>任务 id 与类型（生成 / 克隆 / 设计 / 转写）</td></tr>
+          <tr><td class="m">status</td><td>排队 / 运行 / 成功 / 失败 / 取消</td></tr>
+          <tr><td class="m">text</td><td>原文（规范化后用于合成与质检比对）</td></tr>
+          <tr><td class="m">voice_id</td><td>内置或克隆音色引用</td></tr>
+          <tr><td class="m">params</td><td>参数快照（含 <span class="mono">_post</span> 后期实测值），重试照此复现</td></tr>
+          <tr><td class="m">first_packet_ms</td><td>首包延迟，性能页统计来源</td></tr>
+          <tr><td class="m">rtf / vram_mb</td><td>实时率与峰值显存</td></tr>
+          <tr><td class="m">output_path</td><td>产物位置：<span class="mono">data/outputs/&lt;task_id&gt;/</span></td></tr>
+          <tr><td class="m">transcribe</td><td>转写文本；开了质检则带 <span class="mono">[质检 86%]</span> 前缀</td></tr>
+          <tr><td class="m">speaker_segments</td><td>按说话人切分的时间轴与改名映射</td></tr>
+          <tr><td class="m">error</td><td>错误码 + 提示 + 建议（失败任务才有）</td></tr>
+          <tr><td class="m">created_at / updated_at</td><td>排序与「最近任务」依据</td></tr>
+        </table>
+        <div class="hr"></div>
+        <div class="xs dim">行高压缩 + 长列表 <span class="mono">content-visibility</span> 惰性渲染：一次能看十几行，滚起来不卡。</div>
+      </div>
+    </div>
+
+    <div class="col grow">
+      <div class="card">
+        <h2>行操作 <span class="n">ACTIONS</span></h2>
+        <div class="grid2">
+          <ul>
+            <li class="dot"><b>展开</b>：详情面板（右侧）</li>
+            <li class="dot"><b>本地重试</b>：本机 GPU/CPU 再跑一次</li>
+            <li class="dot"><b>云端重试</b>：走云端 GPU（实例需在线）</li>
+            <li class="dot"><b>取消</b>：中断运行中的任务</li>
+          </ul>
+          <ul>
+            <li class="dot"><b>下载</b>：取成品文件（快捷键 D）</li>
+            <li class="dot"><b>删除</b>：清理记录（Delete）</li>
+            <li class="dot a"><b>批量</b>：全选 → 重试 / 下载 / 删除</li>
+            <li class="dot a"><b>键盘</b>：↑↓ 移动、r 重试、d 下载</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <h2>批量提交（每行可覆盖参数） <span class="n">BATCH</span></h2>
+        <div class="grid3">
+          <div><span class="tagx">整批默认</span><div class="xs" style="color:#b6c4d8">留空 = 跟随引擎默认；单行可展开覆盖</div></div>
+          <div><span class="tagx">逐行覆盖</span><div class="xs" style="color:#b6c4d8">音色 / 指令 / 设计描述 / 语言 / 参数，改动行标「已覆盖」</div></div>
+          <div><span class="tagx">重试失败项</span><div class="xs" style="color:#b6c4d8">逐项参数落盘，不丢 voice_id / instruct / design / language</div></div>
+        </div>
+      </div>
+      <div class="card grow">
+        <h2>失败自救：错误码速查 <span class="n">ERRORS</span></h2>
+        <table class="dense">
+          <tr><th style="width:132px">错误码</th><th>含义 / 处理</th></tr>
+          <tr><td class="m">VRAM_INSUFFICIENT</td><td>显存不够：换 0.6B / 降精度 / 释放预留，或切云端</td></tr>
+          <tr><td class="m">MODEL_MISSING</td><td>模型未下载：去「引擎与模型」安装后重试</td></tr>
+          <tr><td class="m">ENGINE_NOT_INSTALLED</td><td>引擎未安装或依赖缺失：安装并查看依赖状态</td></tr>
+          <tr><td class="m">CLOUD_UNREACHABLE</td><td>云端不可达：查服务地址/端口，或改用 SSH 隧道</td></tr>
+          <tr><td class="m">CLOUD_AUTH_FAILED</td><td>API Key 不匹配：重填密钥后测试连接</td></tr>
+          <tr><td class="m">CLOUD_NOT_READY</td><td>实例在线但服务未起：等就绪或让向导重启服务</td></tr>
+          <tr><td class="m">SSH_AUTH_FAILED</td><td>SSH 认证失败：密码/私钥与平台给的不一致</td></tr>
+          <tr><td class="m">SSH_HOSTKEY_CHANGED</td><td>主机指纹变了：确认实例重建后再连</td></tr>
+          <tr><td class="m">REMOTE_PROJECT_MISSING</td><td>云端缺项目目录：重跑一键接入（或用挂载模式）</td></tr>
+          <tr><td class="m">SOX_MISSING</td><td>缺 SoX：安装后重启后端（便携包已内置 shim）</td></tr>
+          <tr><td class="m">ENGINE_BUSY</td><td>引擎正被别的任务占用：等它结束或换引擎</td></tr>
+          <tr><td class="m">ENGINE_TIMEOUT</td><td>引擎超时：长文本调大分块或换更小的模型</td></tr>
+          <tr><td class="m">TORCH_CHANGED</td><td>torch 版本被改动：按提示重装引擎依赖</td></tr>
+          <tr><td class="m">TEXT_EMPTY / TEXT_TOO_LONG</td><td>文本为空或超长：拆分后重新提交</td></tr>
+          <tr><td class="m">UPLOAD_FORMAT / AUDIO_DECODE</td><td>格式不支持或解码失败：转 wav/mp3 再试</td></tr>
+          <tr><td class="m">DIARIZE_UNAVAILABLE</td><td>声纹不可用：装 CAM++ 或把位置切到云端</td></tr>
+          <tr><td class="m">EXPORT_SOURCE_MISSING</td><td>无损原件被删：只能重新生成，不能换档重编</td></tr>
+          <tr><td class="m">CANCELED / INTERRUPTED</td><td>被取消 / 进程重启导致的悬空任务，可直接重试</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="col grow">
+      <div class="card">
+        <h2>展开详情 <span class="n">DETAIL</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">播放器</span><span class="o">行内波形 + 播放/暂停 + 时长（列表不自动播放）</span></div>
+          <div class="rw"><span class="f">后端 / 模型</span><span class="o">实际执行方与模型 id（含 0.6B 回退标注）</span></div>
+          <div class="rw"><span class="f">音频时长</span><span class="o">秒</span></div>
+          <div class="rw"><span class="f">RTF</span><span class="o">音频时长 / 处理耗时</span></div>
+          <div class="rw"><span class="f">显存</span><span class="o">峰值分配 MB</span></div>
+          <div class="rw"><span class="f">重新导出</span><span class="o">选档位按无损原件重编码，原件不覆盖</span></div>
+          <div class="rw"><span class="f">字幕 / 时间戳</span><span class="o">按分块时间轴导出，可选格式 + [SPKn] 前缀</span></div>
+          <div class="rw"><span class="f">转写文本</span><span class="o">含 [质检 86%] 回译结果（不改变任务状态）</span></div>
+          <div class="rw"><span class="f">按说话人拆分</span><span class="o">只读视图，按 SPK 分段的完整文本</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>导出档位（原件永不覆盖） <span class="n">EXPORT</span></h2>
+        <table class="dense">
+          <tr><th style="width:92px">档位</th><th style="width:130px">规格</th><th>用途</th></tr>
+          <tr><td class="k">Original</td><td class="m">模型原生 WAV</td><td>母带、二次处理</td></tr>
+          <tr><td class="k">Standard</td><td class="m">44.1k / MP3 192k</td><td>直接交付、投放</td></tr>
+          <tr><td class="k">For editing</td><td class="m">48k / 24bit WAV</td><td>进剪辑软件</td></tr>
+        </table>
+        <div class="xs dim" style="margin-top:3px">字幕：按分块时间轴导出，格式可选；「每句前加 [SPKn]」用于多人录音本。</div>
+      </div>
+      <div class="card grow">
+        <h2>字幕与文件落点 <span class="n">FILES</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">字幕格式</span><span class="o">SRT / VTT / ASS 三选一，随任务详情即时切换</span></div>
+          <div class="rw"><span class="f">SPKn 前缀</span><span class="o">开关式：勾上则每句前带说话人标记，适合多人录音本</span></div>
+          <div class="rw"><span class="f">时间轴来源</span><span class="o">按分块时间轴生成，与流式播放的段落一一对应</span></div>
+          <div class="rw"><span class="f">产物路径</span><span class="o">data/outputs/&lt;task_id&gt;/&lt;file&gt;，任务详情里可直接点开</span></div>
+          <div class="rw"><span class="f">下载</span><span class="o">单行按 D / 点下载图标；批量勾选后一次性下载</span></div>
+          <div class="rw"><span class="f">重编限制</span><span class="o">原件被手动删掉就只能重新生成，报 EXPORT_SOURCE_MISSING</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>性能口径与指标落点 <span class="n">METRICS</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">首包延迟</span><span class="o">提交到第一段音频到达；目标 ≤ 1.5s（云端含网络）</span></div>
+          <div class="rw"><span class="f">RTF</span><span class="o">音频时长 / 处理耗时，&gt; 1 表示快于实时</span></div>
+          <div class="rw"><span class="f">出现位置</span><span class="o">工作台运行状态 · 任务详情 · 状态页性能指标</span></div>
+          <div class="rw"><span class="f">事件流</span><span class="o">排队 / 开始 / 分块 / 进度 / 完成 / 失败 / 取消</span></div>
+          <div class="rw"><span class="f">刷新策略</span><span class="o">WS 变更 300ms 合并一次拉取，避免抖动与重复渲染</span></div>
+          <div class="rw"><span class="f">统计口径</span><span class="o">状态页累计任务数、首包与 RTF 汇总；无数据时给「去生成一次」引导</span></div>
+          <div class="rw"><span class="f">行内定位</span><span class="o">失败行直接显示错误码，点开看提示与建议，不用翻日志</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ft"><div>任务中心是唯一的「事实来源」：成功/失败/取消都在这里落地，重试与导出都不离开这一页。</div><div class="pg">03 · TASKS</div></footer>
+</section>
+
+<!-- ============================ 04 设置全景 ============================ -->
+<section class="sheet" id="p4">
+  <header class="hd">
+    <div class="brand"><div class="mark">匠</div>
+      <div><h1>设置 · 13 个分区全景</h1><div class="tag">60+ 可调项 · 搜索定位 · 字段级校验 · 0.7 秒自动保存</div></div></div>
+    <div class="meta"><span class="pill">13 分区</span><span class="pill a">60+ 项</span><span class="pill m">04 / 05</span></div>
+  </header>
+
+  <div class="card tight" style="gap:4px">
+    <div class="row" style="gap:14px;align-items:center">
+      <div class="xs" style="color:#c3d0e2"><b>左栏导航</b> 固定不滚动 · 搜索框（命中分区数与「N 项待确认」）· 滚动高亮 · 窄屏自动降级为下拉</div>
+      <div class="xs" style="color:#c3d0e2"><b>写入策略</b> 改动后 0.7 秒自动落盘到运行期覆盖，优先级高于 config/config.yaml；切页不丢失</div>
+      <div class="xs" style="color:#c3d0e2"><b>校验</b> 地址/端口/范围实时提示；硬冲突（最少&gt;最多说话人）不落盘；密钥始终脱敏</div>
+      <div class="xs" style="color:#c3d0e2"><b>工具</b> 重新读取 · 恢复默认（清除覆盖）· 保存</div>
+    </div>
+  </div>
+
+  <div class="row grow">
+    <div class="col" style="flex:1">
+      <div class="card tight"><h2><span class="tt">01 运行模式</span><span class="n">RUN</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">运行模式</span><span class="o"><b>仅本地</b> / <b>仅云端</b> / <b>混合</b>（按任务与显存自动选址）</span></div>
+          <div class="rw"><span class="f">混合长文本阈值</span><span class="o">50 – 5000 字，超过的克隆任务优先云端</span></div>
+          <div class="rw"><span class="f">ASR 优先位置</span><span class="o">本地优先 / 云端优先</span></div>
+          <div class="rw"><span class="f">当前生效</span><span class="o">实时显示生效模式 + 活动后端</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">02 云端连接</span><span class="n">CLOUD</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">服务地址</span><span class="o">https://host:8443；隧道开启时自动跟随本地映射端口，只选 http/https</span></div>
+          <div class="rw"><span class="f">API 密钥</span><span class="o">X-API-Key，强制鉴权；脱敏显示，留空沿用原值</span></div>
+          <div class="rw"><span class="f">校验 TLS</span><span class="o">校验（生产）/ 不校验（自签调试）</span></div>
+          <div class="rw"><span class="f">空闲自动停机</span><span class="o">关闭（默认）/ 开启；开启后明示后果</span></div>
+          <div class="rw"><span class="f">空闲时长</span><span class="o">0 – 240 分钟，0 = 不停机</span></div>
+          <div class="rw"><span class="f">云端模型名</span><span class="o">Base / CustomVoice / VoiceDesign 三个模型 id 可改</span></div>
+          <div class="rw"><span class="f">测试连接</span><span class="o">后端探测（自动试隧道/直连、http/https），显示延迟与 ready</span></div>
+          <div class="rw"><span class="f">一键关机</span><span class="o">SSH 关机省费用 / 仅停止服务（保留实例）</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">03 SSH 隧道</span><span class="n">TUNNEL</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">粘贴登录指令</span><span class="o">整行 ssh -p 13485 root@host → 一键解析并启用</span></div>
+          <div class="rw"><span class="f">SSH 主机 / 端口</span><span class="o">云主机地址与平台给的非标准端口（如 26322）</span></div>
+          <div class="rw"><span class="f">用户名</span><span class="o">AutoDL 等镜像通常 root</span></div>
+          <div class="rw"><span class="f">私钥 / 密码</span><span class="o">key_path 或密码（DPAPI 加密后写 runtime.json）</span></div>
+          <div class="rw"><span class="f">本地映射端口</span><span class="o">默认 18443，避开 8443</span></div>
+          <div class="rw"><span class="f">远端地址 / 端口</span><span class="o">127.0.0.1:8443（须与云端实际监听一致）</span></div>
+          <div class="rw"><span class="f">隧道状态</span><span class="o">运行中（本地端口）/ 未运行（原因）</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">04 语音转文字</span><span class="n">ASR</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">ASR 引擎</span><span class="o">本地 faster-whisper / 云端接口</span></div>
+          <div class="rw"><span class="f">模型规模</span><span class="o">Tiny 75MB · Base 145MB · Small 480MB · Medium 1.5GB · Large-V3 3.1GB</span></div>
+          <div class="rw"><span class="f">计算精度</span><span class="o">int8 / float16 / int8_float16 / float32</span></div>
+          <div class="rw"><span class="f">区分说话人</span><span class="o">关闭（默认）/ 开启（需装 CAM++）</span></div>
+          <div class="rw"><span class="f">识别位置</span><span class="o">本地 / 云端 / 自动</span></div>
+          <div class="rw"><span class="f">最少 / 最多</span><span class="o">1–8 / 2–8；min &gt; max 拒绝保存</span></div>
+        </div></div>
+
+      <div class="card tight grow"><h2><span class="tt">三个危险操作都二次确认</span><span class="n">GUARD</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">一键关机</span><span class="o">SSH <b>shutdown -h now</b>：云端正在跑的任务立即中断、隧道同时断开、平台停止计费；数据在数据盘保留，再用需到控制台「开机」。想只释放显存选「仅停止服务」</span></div>
+          <div class="rw"><span class="f">全部卸载</span><span class="o">清空显存里已加载的模型，并<u>顺手关闭</u>「启动时自动预热」；下次首个任务会明显变慢（数十秒）；不删任何模型文件、不动其它设置</span></div>
+          <div class="rw"><span class="f">恢复默认</span><span class="o">清除界面写入的运行期覆盖，回到 config/config.yaml 的值；受影响的是模式/地址/密钥/隧道/默认参数，<u>不影响</u>已生成音频、任务记录、自定义音色与磁盘上的模型；覆盖文件不备份</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" style="flex:1">
+      <div class="card tight"><h2><span class="tt">05 模型预热</span><span class="n">WARMUP</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">三种模型</span><span class="o">语音生成 / 声音克隆 / 音色设计，逐个勾选，显示已加载·回退·offload</span></div>
+          <div class="rw"><span class="f">预热选中</span><span class="o">返回每类状态、耗时 s、显存 MB</span></div>
+          <div class="rw"><span class="f">卸载</span><span class="o">卸载选中 / 全部卸载（并关自动预热，释放显存）</span></div>
+          <div class="rw"><span class="f">启动自动预热</span><span class="o">开 / 关（保存后下次启动生效）</span></div>
+          <div class="rw"><span class="f">预热哪些</span><span class="o">Chip 多选，默认只预热语音生成</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">06 引擎与模型</span><span class="n">ENGINES</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">7 TTS 引擎</span><span class="o">Qwen3-TTS 1.7B / 0.6B · CosyVoice3 · CosyVoice2 · CosyVoice-300M-SFT · VoxCPM1.5 · IndexTTS-2</span></div>
+          <div class="rw"><span class="f">6 ASR/声纹</span><span class="o">Whisper ×5 + CAM++；单独归入「语音识别」分组</span></div>
+          <div class="rw"><span class="f">卡片信息</span><span class="o">厂商 / 用途标签 / 许可证 / 模型路径与体积 / 依赖状态</span></div>
+          <div class="rw"><span class="f">操作</span><span class="o">安装（进度可续）· 预览 · 设为当前 · 卸载 · 查看依赖</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">07 云端引擎管理</span><span class="n">CLOUD ENGINE</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">主机档案</span><span class="o">云端主机 / SSH 端口 / 项目目录 / 解释器</span></div>
+          <div class="rw"><span class="f">操作</span><span class="o">测试连接 · 安装 · 删除 · 设为当前</span></div>
+          <div class="rw"><span class="f">任务</span><span class="o">安装任务列表 + 断点续跑</span></div>
+          <div class="rw"><span class="f">同步</span><span class="o">从 Agent 配置回写主机档案（免手填）</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">08 本地模型</span><span class="n">LOCAL</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">模型路径</span><span class="o">只读 kv，列出 1.7B / 0.6B 各目录</span></div>
+          <div class="rw"><span class="f">推理设备</span><span class="o">GPU（cuda:0）/ CPU（慢约 25 倍）</span></div>
+          <div class="rw"><span class="f">保持常驻</span><span class="o">常驻（推荐）/ 空闲卸载</span></div>
+          <div class="rw"><span class="f">CPU offload</span><span class="o">关（推荐）/ 开（实验）</span></div>
+          <div class="rw"><span class="f">0.6B 回退</span><span class="o">禁止 / 允许（降级会在任务里标注）</span></div>
+          <div class="rw"><span class="f">空闲卸载时长</span><span class="o">0 – 7200 秒</span></div>
+          <div class="rw"><span class="f">数值精度</span><span class="o">float16（4GB 可跑 1.7B）/ bfloat16 / float32</span></div>
+          <div class="rw"><span class="f">显存超额</span><span class="o">开（Windows 回落共享内存）/ 关（严格判定）</span></div>
+          <div class="rw"><span class="f">显存预留</span><span class="o">0 – 8 GB，判定可加载前先扣除</span></div>
+        </div></div>
+
+      <div class="card tight grow"><h2><span class="tt">09 内容质检</span><span class="n">QC</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">自动质检</span><span class="o">关（默认）/ 开；开启后单任务 +10–30% 耗时</span></div>
+          <div class="rw"><span class="f">相似度阈值</span><span class="o">0.30 – 1.00（默认 0.75）</span></div>
+          <div class="rw"><span class="f">机制</span><span class="o">完成后用 ASR 回译比对原文，结果写进转写文本，不改任务状态</span></div>
+        </div></div>
+    </div>
+
+    <div class="col" style="flex:1">
+      <div class="card tight"><h2><span class="tt">10 文本处理</span><span class="n">NORMALIZE</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">文本规范化</span><span class="o">开（推荐）/ 关</span></div>
+          <div class="rw"><span class="f">规范化语言</span><span class="o">中文 zh / 英文 en（暂原样）</span></div>
+          <div class="rw"><span class="f">例</span><span class="o">4GB→四 G B · ¥99→九十九元 · 2026-10-18→二零二六年十月十八日</span></div>
+          <div class="rw"><span class="f">幂等</span><span class="o">云端二次下发不重复改写；质检用规范化文本比对</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">11 后期处理链</span><span class="n">POST</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">启用</span><span class="o">关（默认）/ 开：低切 → 高架 → 压缩 → 峰值归一化</span></div>
+          <div class="rw"><span class="f">低切</span><span class="o">0 – 300 Hz（常用 80）</span></div>
+          <div class="rw"><span class="f">高架增益</span><span class="o">−12 – +12 dB（0 = 不动）</span></div>
+          <div class="rw"><span class="f">压缩</span><span class="o">开 / 关；阈值 −60 – 0 dB（−18）；比率 1 – 20（2.5）</span></div>
+          <div class="rw"><span class="f">峰值归一化</span><span class="o">−20 – 0 dBFS（−1），留空不归一化</span></div>
+          <div class="rw"><span class="f">记录</span><span class="o">实测峰值写入任务参数 params._post；不改引擎参数</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">12 默认参数</span><span class="n">DEFAULTS</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">语速 / 音高</span><span class="o">0.5–2.0（1.0）/ −12–+12 半音（0）</span></div>
+          <div class="rw"><span class="f">温度 / Top P</span><span class="o">0.1–1.5（0.7）/ 0.3–1.0（0.8）</span></div>
+          <div class="rw"><span class="f">采样步数</span><span class="o">256–4096（1024，步 128）</span></div>
+          <div class="rw"><span class="f">输出格式</span><span class="o">按后端允许列表</span></div>
+          <div class="rw"><span class="f">导出档位</span><span class="o">Original / Standard / For editing</span></div>
+          <div class="rw"><span class="f">目标时长</span><span class="o">秒；0 或空 = 不控制</span></div>
+        </div></div>
+
+      <div class="card tight"><h2><span class="tt">13 授权</span><span class="n">LICENSE</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">模型许可</span><span class="o">各模型由发布方授权，商用以模型仓库为准；每引擎卡片内标注</span></div>
+          <div class="rw"><span class="f">数据位置</span><span class="o">音色 / 参考音频 / 结果只存本机 data/；仅云端模式按需上传参考音频</span></div>
+          <div class="rw"><span class="f">密钥隐私</span><span class="o">API Key 与 SSH 密码写入 data/runtime.json，界面脱敏</span></div>
+        </div></div>
+
+      <div class="card tight grow" style="border-color:rgba(76,141,255,.3)">
+        <h2><span class="tt">设置页的工程细节</span><span class="n">CRAFT</span></h2>
+        <ul>
+          <li class="dot">分区清单同时是导航与搜索索引，只索引「分区标题 + 字段名」，避免搜数字命中全部</li>
+          <li class="dot">命中的关键字以高亮包裹，过滤与强调同时成立</li>
+          <li class="dot">IntersectionObserver + rAF 滚动校正：同一屏内小幅滚动也跟得上高亮</li>
+          <li class="dot">从状态页「去设置」直达分区：<span class="mono xs">#/settings?s=cloud</span>，二次校正抵消异步布局漂移</li>
+          <li class="dot a">硬冲突（min &gt; max 说话人）不落盘，并给出具体冲突说明</li>
+          <li class="dot a">「全部卸载」顺手关闭启动自动预热，避免下次启动又被装回显存</li>
+          <li class="dot a">危险项都写明后果：停机 / 计费 / 耗时 / 显存，不让你盲开</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ft"><div>设置不是一堆开关：每个危险项都写明后果（停机 / 计费 / 耗时 / 显存），每个数字都给取值范围。</div><div class="pg">04 · SETTINGS</div></footer>
+</section>
+
+<!-- ============================ 05 引擎 / 云端 / MCP / 启动器 ============================ -->
+<section class="sheet" id="p5">
+  <header class="hd">
+    <div class="brand"><div class="mark">匠</div>
+      <div><h1>引擎 · 云端 · MCP · 启动器</h1><div class="tag">13 个本地模型 · 一键接入云主机 · 9 个对外工具 · 图形化安装</div></div></div>
+    <div class="meta"><span class="pill">13 模型</span><span class="pill a">9 MCP</span><span class="pill m">05 / 05</span></div>
+  </header>
+
+  <div class="row grow">
+    <div class="col" style="width:520px">
+      <div class="card">
+        <h2>本地引擎注册表 <span class="n">ENGINES · 13</span></h2>
+        <table class="dense">
+          <tr><th style="width:148px">引擎</th><th style="width:92px">厂商</th><th>用途 / 备注</th></tr>
+          <tr><td class="k">Qwen3-TTS 1.7B（默认）</td><td>Qwen</td><td>生成 · 克隆 · 设计；fp16 需 ≥4.5GB 显存</td></tr>
+          <tr><td class="k">Qwen3-TTS 0.6B</td><td>Qwen</td><td>小显存首选；音色设计仅 1.7B 提供</td></tr>
+          <tr><td class="k">Fun-CosyVoice3-0.5B</td><td>FunAudioLLM</td><td>克隆 + 指令控制</td></tr>
+          <tr><td class="k">CosyVoice2-0.5B</td><td>FunAudioLLM</td><td>克隆 + 预置音色</td></tr>
+          <tr><td class="k">CosyVoice-300M-SFT</td><td>FunAudioLLM</td><td>极轻量，预置音色直出</td></tr>
+          <tr><td class="k">VoxCPM1.5</td><td>OpenBMB 面壁</td><td>克隆，音色还原见长</td></tr>
+          <tr><td class="k">IndexTTS-2</td><td>bilibili Index</td><td>克隆，情绪表现力强</td></tr>
+          <tr><td class="k">Whisper Tiny</td><td>OpenAI/Systran</td><td>75MB · 最快，草稿用</td></tr>
+          <tr><td class="k">Whisper Base</td><td>—</td><td>145MB · 快速草稿</td></tr>
+          <tr><td class="k">Whisper Small</td><td>—</td><td>480MB · 默认，速度精度平衡</td></tr>
+          <tr><td class="k">Whisper Medium</td><td>—</td><td>1.5GB · 高精度，CPU 慢</td></tr>
+          <tr><td class="k">Whisper Large-V3</td><td>—</td><td>3.1GB · 最高精度，建议 GPU</td></tr>
+          <tr><td class="k">CAM++ 声纹</td><td>阿里 3D-Speaker</td><td>说话人区分（diarization）</td></tr>
+        </table>
+        <div class="hr"></div>
+        <div class="xs dim">统一适配器接口：新增引擎 = 写一个适配器 + 注册一行；路由 / API / CLI / MCP 全部自动支持。</div>
+      </div>
+      <div class="card grow">
+        <h2>显存策略（本地能不能跑起来） <span class="n">VRAM</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">先扣预留</span><span class="o">显存预留 0–8GB 先扣掉，再判断能否加载</span></div>
+          <div class="rw"><span class="f">允许超额</span><span class="o">Windows 可回落共享内存；关闭则严格按空闲显存判定</span></div>
+          <div class="rw"><span class="f">精度换空间</span><span class="o">float16 让 4GB 卡也能跑 1.7B；异常时换 bfloat16</span></div>
+          <div class="rw"><span class="f">回退与降级</span><span class="o">0.6B 回退可禁止；CPU offload 明确标注「实验」</span></div>
+          <div class="rw"><span class="f">显存回收</span><span class="o">空闲卸载（秒级阈值）/ 全部卸载按钮 / 卸载即关自动预热</span></div>
+          <div class="rw"><span class="f">依赖与隔离</span><span class="o">每个引擎独立依赖清单，装在项目 venv 里；缺项按清单同步，不污染系统 Python</span></div>
+          <div class="rw"><span class="f">安装可续</span><span class="o">进程重启后未完成的安装标记为「已中断」，可继续或重试，不会假装进行中</span></div>
+          <div class="rw"><span class="f">设备探测</span><span class="o">显示显卡名与可用显存；无 GPU 时明确提示 CPU 约慢 25 倍</span></div>
+          <div class="rw"><span class="f">SoX 依赖</span><span class="o">后期处理与时长控制需要 SoX；便携包内置路径 shim，缺失时报 SOX_MISSING</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col grow">
+      <div class="card tight">
+        <h2>云端：三种连法，一种体验 <span class="n">CLOUD</span></h2>
+        <div class="grid3">
+          <div class="sec"><div class="h"><span class="code">A</span>直连</div><div class="b">填 https 地址 + API Key，后端起请求；适合有公网端口的实例。</div></div>
+          <div class="sec"><div class="h"><span class="code">B</span>SSH 隧道</div><div class="b">粘贴平台登录指令一键启用；本地 18443 → 云端 127.0.0.1:8443。</div></div>
+          <div class="sec"><div class="h"><span class="code">C</span>一键接入向导</div><div class="b">只需连接信息，自动布置源码/依赖/服务并写回本地配置。</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>一键接入云主机 · 十步状态机（可续跑） <span class="n">ONBOARDING</span></h2>
+        <div class="steps">
+          <span class="s1"><b>S0</b>参数校验</span>
+          <span class="s1"><b>S1</b>SSH 连通</span>
+          <span class="s1"><b>S2</b>环境体检</span>
+          <span class="s1"><b>S3</b>上传源码</span>
+          <span class="s1"><b>S4</b>安装依赖</span>
+          <span class="s1"><b>S4B</b>下载模型</span>
+          <span class="s1"><b>S5</b>启动服务</span>
+          <span class="s1"><b>S6</b>就绪探测</span>
+          <span class="s1"><b>S7</b>写入本地配置</span>
+          <span class="s1 done"><b>S8</b>本地验收</span>
+        </div>
+        <div class="grid2" style="margin-top:4px">
+          <div><ul>
+            <li class="dot">鉴权：密码或私钥文件二选一，密码 DPAPI 加密落盘</li>
+            <li class="dot">接入模式：全量布置 / 挂载既有项目（跳过 S3、S4、S4B）</li>
+            <li class="dot">可填云端项目目录与解释器，适配自定义镜像</li>
+          </ul></div>
+          <div><ul>
+            <li class="dot">每步独立状态：pending / running / ok / failed / skipped</li>
+            <li class="dot">失败给诊断建议，可只重跑失败的那一步</li>
+            <li class="dot a">成功后自动写回主机档案，隧道参数不用手填</li>
+          </ul></div>
+        </div>
+      </div>
+
+      <div class="card grow">
+        <h2>省钱 · 排错 · 云端管理 <span class="n">COST / TROUBLE</span></h2>
+        <div class="grid3">
+          <div>
+            <span class="tagx">停机（省钱）</span>
+            <ul>
+              <li class="dot">空闲自动停机：0–240 分钟可配，仅在云端/混合模式生效</li>
+              <li class="dot">一键关机：SSH <span class="mono xs">shutdown -h now</span>，平台停止计费</li>
+              <li class="dot">仅停止服务：释放显存但保留实例，随时再起</li>
+            </ul>
+          </div>
+          <div>
+            <span class="tagx">诊断（排错）</span>
+            <ul>
+              <li class="dot">SSH 认证失败 / 不可达 / 主机指纹变更</li>
+              <li class="dot">云端缺项目目录 → 重跑向导或用挂载模式</li>
+              <li class="dot">引擎安装任务可查日志、可断点续跑</li>
+            </ul>
+          </div>
+          <div>
+            <span class="tagx">云端引擎管理</span>
+            <ul>
+              <li class="dot">主机档案：主机 / SSH 端口 / 项目目录 / 解释器</li>
+              <li class="dot">安装 · 删除 · 设为当前，模型不占本机磁盘</li>
+              <li class="dot">可从 Agent 配置同步回写，免手抄参数</li>
+            </ul>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="rows">
+          <div class="rw"><span class="f">一致性</span><span class="o">本地与云端共用同一套任务中心、导出档位与设置界面，只有「算力」被替换</span></div>
+          <div class="rw"><span class="f">选址回退</span><span class="o">混合模式云端不可用时按规则回落本地，并在任务里标注实际执行方</span></div>
+          <div class="rw"><span class="f">鉴权</span><span class="o">云端强制 API Key；SSH 侧密码或私钥，密码 DPAPI 加密落盘</span></div>
+          <div class="rw"><span class="f">能力差异</span><span class="o">音色设计需 1.7B；声纹需云端服务支持，不支持时报 CLOUD_DIARIZE_UNSUPPORTED</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col grow">
+      <div class="card">
+        <h2>MCP Server · 让别的 AI 直接调用 <span class="n">9 TOOLS</span></h2>
+        <table class="dense">
+          <tr><td class="k" style="width:112px">tts_synthesize</td><td>同步合成，直接返回音频路径</td></tr>
+          <tr><td class="k">tts_submit</td><td>异步提交，拿 task_id 轮询</td></tr>
+          <tr><td class="k">asr_transcribe</td><td>同步转写（可带说话人区分）</td></tr>
+          <tr><td class="k">asr_submit</td><td>异步提交转写</td></tr>
+          <tr><td class="k">task_status</td><td>查状态 / 进度 / 产物路径</td></tr>
+          <tr><td class="k">task_cancel</td><td>取消任务</td></tr>
+          <tr><td class="k">voice_list</td><td>列出内置与克隆音色</td></tr>
+          <tr><td class="k">voice_clone</td><td>用参考音频建克隆音色</td></tr>
+          <tr><td class="k">voice_design</td><td>自然语言造音色</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h2>客户端接入（三式） <span class="n">CONFIG</span></h2>
+        <pre class="json">{
+  "mcpServers": {
+    "voicesmith": {
+      "command": "qwentts-mcp",
+      "cwd": "&lt;项目根目录&gt;"
+    }
+  }
+}</pre>
+        <div class="xs dim">同结构可贴进 Claude Desktop、Cursor / Cline / Continue；也可直接用 python 模块名启动，不写 cwd。</div>
+      </div>
+      <div class="card grow">
+        <h2>行为约定 <span class="n">CONTRACT</span></h2>
+        <div class="rows">
+          <div class="rw"><span class="f">传输</span><span class="o">stdio，请求必带 Content-Type</span></div>
+          <div class="rw"><span class="f">失败语义</span><span class="o">ok=false → isError=true，并带错误码</span></div>
+          <div class="rw"><span class="f">产物路径</span><span class="o">data/outputs/&lt;task_id&gt;/&lt;file&gt;</span></div>
+          <div class="rw"><span class="f">语言校验</span><span class="o">别名归一（中/英/日…）+ 非法值直接拒绝</span></div>
+          <div class="rw"><span class="f">自测</span><span class="o">--selftest 六步握手，确认再配客户端</span></div>
+          <div class="rw"><span class="f">语言别名</span><span class="o">中/中文/zh → chinese；非法值直接报错而不是静默降级</span></div>
+          <div class="rw"><span class="f">异步语义</span><span class="o">submit 返回 task_id；status 轮询到 succeeded 再取产物路径</span></div>
+          <div class="rw"><span class="f">取消</span><span class="o">task_cancel 真正中断推理，返回 cancelled 而非「已忽略」</span></div>
+          <div class="rw"><span class="f">能力边界</span><span class="o">音色设计需 1.7B；克隆需参考音频；声纹需 CAM++</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card" style="flex:1.2">
+      <h2>图形化启动器（PySide6）· 7 步从零到可用 <span class="n">LAUNCHER</span></h2>
+      <div class="steps" style="margin-bottom:4px">
+        <span class="s1"><b>01</b>体检</span><span class="s1"><b>02</b>依赖</span><span class="s1"><b>03</b>前端</span>
+        <span class="s1"><b>04</b>配置</span><span class="s1"><b>05</b>模型</span><span class="s1"><b>06</b>服务</span>
+        <span class="s1 done"><b>07</b>打开界面</span>
+      </div>
+      <div class="grid3">
+        <div><span class="tagx">界面</span><div class="xs" style="color:#b6c4d8">品牌标 + 系统 Python / 项目 venv 分段切换 + 创建 venv + 深浅主题；左侧 7 步清单；中央大号进度与当前动作；底部单一主按钮</div></div>
+        <div><span class="tagx">体检表</span><div class="xs" style="color:#b6c4d8">Python / 依赖 / GPU 与显存 / 前端产物 / 配置 / 模型齐备度，逐行状态 + 修复动作，首行 ≤0.5s 出结果</div></div>
+        <div><span class="tagx">兜底</span><div class="xs" style="color:#b6c4d8">折叠日志抽屉（2000 行上限）· 手动命令 · 停止服务 / 打开界面 / 日志目录 / 重试上一步 · 小屏自适应</div></div>
+      </div>
+    </div>
+    <div class="card" style="flex:.95">
+      <h2>交付形态 <span class="n">PACKAGES</span></h2>
+      <table class="dense">
+        <tr><td class="k" style="width:98px">便携包</td><td>解压即用：start.bat → 启动器 → 一键装依赖与模型</td></tr>
+        <tr><td class="k">启动器 EXE</td><td>免装 Python / PySide6（onedir）</td></tr>
+        <tr><td class="k">源码包</td><td>不含构建产物，便于二次开发</td></tr>
+        <tr><td class="k">运行教程</td><td>12 章 + 包内路径逐一对应</td></tr>
+        <tr><td class="k">许可</td><td>EULA：授予使用许可，不得公开发布修改版</td></tr>
+      </table>
+      <div class="hr"></div>
+      <div class="xs dim">包内 <span class="mono">launcher/dist-qt/</span> 免装运行；<span class="mono">start.bat</span> 优先拉启动器，失败再退回旧版 EXE，最后给手动命令。</div>
+    </div>
+    <div class="card" style="flex:.8">
+      <h2>本机与隐私 <span class="n">DATA</span></h2>
+      <div class="xs" style="color:#b6c4d8">数据全部落在 <span class="mono">data/</span>：SQLite 任务库、outputs 音频、voices 参考音频、logs 日志。<br>
+      密钥写 <span class="mono">data/runtime.json</span>（SSH 密码 DPAPI 加密，界面脱敏）。<br>
+      仅云端/混合模式合成时才按需上传参考音频，不做其它外发。</div>
+      <div class="hr"></div>
+      <div class="grid2">
+        <div><span class="tagx">不上传</span><div class="xs" style="color:#b6c4d8">任务文本、音色库、生成结果都留在本机</div></div>
+        <div><span class="tagx">不打点</span><div class="xs" style="color:#b6c4d8">无遥测、无账号、无激活服务</div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ft"><div>从「装不上」到「给 AI 用」的整条路都在产品里：体检 → 安装 → 引擎 → 云端 → MCP → 教程。</div><div class="pg">05 · ECOSYSTEM</div></footer>
+</section>
+
+</body></html>
