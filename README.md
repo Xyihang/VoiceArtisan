@@ -4,15 +4,16 @@
 
 **把「本地能跑、云端能借、别的 AI 能用」缝进同一个界面**
 
-[![version](https://img.shields.io/badge/version-1.1.62-4C8DFF?style=flat-square)](VERSION.json)
+[![version](https://img.shields.io/badge/version-1.1.63-4C8DFF?style=flat-square)](VERSION.json)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-2DD4BF?style=flat-square)](#快速开始)
 [![python](https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](#方式-b从源码运行)
 [![react](https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black)](frontend)
 [![engines](https://img.shields.io/badge/engines-13-8B5CF6?style=flat-square)](#支持的多引擎)
 [![mcp](https://img.shields.io/badge/MCP-9%20tools-111827?style=flat-square)](#给其它-ai-用mcp-server)
 [![tests](https://img.shields.io/badge/tests-114%20passed-57D68B?style=flat-square)](#验证与数字)
+[![license](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-1f6feb?style=flat-square)](LICENSE)
 
-[中文](#这是什么) · [English](#english) · [快速开始](#快速开始) · [文档](#文档索引) · [常见问题](#常见问题)
+[🔊 在线试听真实样本](docs/demo/) · [中文](#这是什么) · [English](#english) · [快速开始](#快速开始) · [文档](#文档索引) · [常见问题](#常见问题)
 
 </div>
 
@@ -31,6 +32,13 @@
 | 云端 GPU 只敢开一小时，关机全靠控制台 | 粘贴登录指令一键建隧道、S0–S8 十步接入向导、空闲自动停机、一键关机省费用 |
 
 ## 界面预览
+
+<div align="center">
+<img src="docs/assets/demo.gif" alt="工作台：输入文本 → 生成 → 结果（真机录屏）" width="860">
+<br><sub>真机流程：选音色 → 输入文本 → 生成（进度回传）→ 波形与首包 / RTF / 显存</sub>
+</div>
+
+> **不想装？先听**：**[在线试听 5 段真实合成样本](docs/demo/)**（中文旁白、指令控制、英文、四川话、音色设计）——本机 GPU 直接生成，无后期处理。
 
 <table>
 <tr>
@@ -301,6 +309,7 @@ QWENTTS/
 | [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) | 每引擎独立 venv 的原因与实现 |
 | [LAUNCHER](docs/LAUNCHER.md) | 图形启动器的设计与交互 |
 | [DEPLOY](docs/DEPLOY.md) · [TROUBLESHOOTING](docs/TROUBLESHOOTING.md) | 长期部署与排错 |
+| [demo/](docs/demo/) | **在线试听**：5 段真实合成样本 + 复现命令 |
 | [overview/](docs/overview/) | 全功能总览图（5 张横屏） |
 
 界面内还内置了 **21 章教程页**（五分钟跑通 → 运行模式 → 云端与隧道 → 语音识别 → 引擎与预热 → 质检 / 文本 / 后期 → 导出与时长 → 批量 → MCP → 常见错误速查）。
@@ -332,6 +341,20 @@ QWENTTS/
 可以：`run.mode: cloud` 时本机只做界面与调度，推理在云端 GPU；`cloud/` 里有 Dockerfile 与 compose。
 </details>
 
+## 许可与第三方
+
+本项目采用**双轨许可**（source-available + 商业授权）：
+
+| 使用场景 | 适用许可 | 费用 |
+| --- | --- | --- |
+| 个人学习、研究、非商业自用；修改与非商业分发 | **[LICENSE](LICENSE)**（PolyForm Noncommercial 1.0.0） | 免费 |
+| 商业使用（企业内部生产、接单交付、集成进商业产品、对外提供服务） | **[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)** + [legal/LICENSE-EULA.txt](legal/LICENSE-EULA.txt) | 一次买断 |
+
+- 商业授权为**一次性买断的使用权**，不转让著作权与源码所有权；不得基于本软件制作并公开发布新版本。
+- 各模型权重由发布方授权（Qwen3-TTS / CosyVoice / VoxCPM / IndexTTS / Whisper / CAM++），商用以模型仓库页面为准；每个引擎卡片内标注了许可与来源。
+- 第三方组件声明见 **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**。
+- 数据默认全部留在本机 `data/`；密钥写入 `data/runtime.json`（SSH 密码 DPAPI 加密，界面脱敏）。
+
 ## 路线图
 
 - [ ] 引擎插件化：第三方适配器按目录加载，不改主仓库
@@ -339,13 +362,6 @@ QWENTTS/
 - [ ] CI 门禁：pytest + `tsc` + 前端构建（当前为本地脚本）
 - [ ] 多用户与权限（工作室场景）
 - [ ] 内置音色清单的更新机制
-
-## 许可与第三方
-
-- 本仓库代码为**专有软件**，仅授予使用许可；请阅读 **[LICENSE](LICENSE)**（买断制 EULA：不得基于本软件制作并公开发布新版本）。
-- 各模型权重由发布方授权，商用以模型仓库页面为准；每个引擎卡片内标注了许可与来源。
-- 第三方组件声明见 **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**。
-- 数据默认全部留在本机 `data/`；密钥写入 `data/runtime.json`（SSH 密码 DPAPI 加密，界面脱敏）。
 
 ---
 
@@ -365,12 +381,13 @@ QWENTTS/
 
 **VoiceSmith — a local-first TTS / ASR workbench that can borrow a cloud GPU**
 
-[![version](https://img.shields.io/badge/version-1.1.62-4C8DFF?style=flat-square)](VERSION.json)
+[![version](https://img.shields.io/badge/version-1.1.63-4C8DFF?style=flat-square)](VERSION.json)
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-2DD4BF?style=flat-square)](#english)
 [![engines](https://img.shields.io/badge/engines-13-8B5CF6?style=flat-square)](#supported-engines)
 [![mcp](https://img.shields.io/badge/MCP-9%20tools-111827?style=flat-square)](#mcp-server)
+[![license](https://img.shields.io/badge/license-PolyForm%20NC%201.0.0%20%2B%20commercial-1f6feb?style=flat-square)](LICENSE)
 
-[中文](#这是什么) · [Quick start](#english-quick-start) · [Docs](#english-docs)
+[🔊 Listen to real samples](docs/demo/) · [中文](#这是什么) · [Quick start](#english-quick-start) · [Docs](#english-docs)
 
 </div>
 
@@ -485,10 +502,17 @@ React 19 UI  ──REST / WS──▶  FastAPI
 
 ## English docs
 
-[QUICKSTART](docs/QUICKSTART.md) · [MODELS](docs/MODELS.md) · [CONFIG](docs/CONFIG.md) · [API](docs/API.md) · [MCP](docs/MCP.md) · [CLOUD_SETUP](docs/CLOUD_SETUP.md) · [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) · [LAUNCHER](docs/LAUNCHER.md) · [DEPLOY](docs/DEPLOY.md) · [TROUBLESHOOTING](docs/TROUBLESHOOTING.md) · [Overview posters](docs/overview/)
+[QUICKSTART](docs/QUICKSTART.md) · [MODELS](docs/MODELS.md) · [CONFIG](docs/CONFIG.md) · [API](docs/API.md) · [MCP](docs/MCP.md) · [CLOUD_SETUP](docs/CLOUD_SETUP.md) · [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) · [LAUNCHER](docs/LAUNCHER.md) · [DEPLOY](docs/DEPLOY.md) · [TROUBLESHOOTING](docs/TROUBLESHOOTING.md) · [Demo samples](docs/demo/) · [Overview posters](docs/overview/)
 
 Most documents are written in Chinese and the interface is Chinese-first; issues and PRs in English are welcome.
 
 ## License
 
-Proprietary. The code is licensed for use only — see **[LICENSE](LICENSE)** (buyout EULA: you may not build and publicly distribute new versions based on this software). Model weights remain under their publishers' licenses; see **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**. All data stays in local `data/`; secrets live in `data/runtime.json` (SSH passwords encrypted with Windows DPAPI).
+**Dual licensing (source-available + commercial):**
+
+| Use case | License | Cost |
+| --- | --- | --- |
+| Personal, educational, research and other **noncommercial** use, including modification and noncommercial redistribution | **[LICENSE](LICENSE)** — PolyForm Noncommercial 1.0.0 | Free |
+| **Commercial use** (in-house production, client work, embedding into a product or service, paid hosting) | **[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)** + [legal/LICENSE-EULA.txt](legal/LICENSE-EULA.txt) | One-time buyout |
+
+The commercial license grants a perpetual **right to use** only; it transfers neither copyright nor source ownership, and you may not publicly distribute new versions built from this software. Model weights remain under their publishers' licenses; see **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**. All data stays in local `data/`; secrets live in `data/runtime.json` (SSH passwords encrypted with Windows DPAPI).

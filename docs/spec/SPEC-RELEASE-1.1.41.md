@@ -28,7 +28,7 @@ UI 重构是否伤到既有功能；确认无损伤后产出可交付的 zip 包
 ### 技术约束
 - 打包工具沿用 `python .cache/make_backup.py` / `... portable`
 - 打包必须排除：`node_modules`、`__pycache__`、`.venv`、`data`、`models`、`.cache`、`.git`、`launcher/build`、`config/config.yaml`
-- 产物落在 `E:\trae_projects\QWENTTS-backups\`，不删除历史包
+- 产物落在 `<项目根目录>-backups\`，不删除历史包
 
 ---
 
@@ -79,7 +79,7 @@ UI 重构是否伤到既有功能；确认无损伤后产出可交付的 zip 包
 | 源码包 | `python .cache/make_backup.py` | 全部源码，不含 `frontend/dist`、`data`、`models`、`config/config.yaml` |
 | 便携包 | `python .cache/make_backup.py portable` | 同上 + `frontend/dist`（用户免装 Node） |
 
-命名：`QWENTTS-{src|portable}-v{版本}-{时间戳}.zip`，输出到 `E:\trae_projects\QWENTTS-backups\`。
+命名：`QWENTTS-{src|portable}-v{版本}-{时间戳}.zip`，输出到 `<项目根目录>-backups\`。
 
 ---
 

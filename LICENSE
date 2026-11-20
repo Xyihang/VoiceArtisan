@@ -1,110 +1,147 @@
-﻿# Qwen3-TTS 语音生成系统 · 专有软件许可协议
+# 许可 · License
 
-**Proprietary Software License — All Rights Reserved**
+本仓库**源码可见（source-available）**，以 **PolyForm Noncommercial License 1.0.0** 授权：
+**个人学习、研究、非商业自用免费**，可修改、可按同一许可再分发（非商业用途）。
 
-版权所有 © 2026 xiyihang（以下称"版权所有人"）。保留所有权利。
+**商业使用（含企业内部使用、对外提供服务、集成进商业产品）需要另行取得商业授权**，
+一次买断、永久可用，见 **[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)** 与
+[legal/LICENSE-EULA.txt](legal/LICENSE-EULA.txt)。联系：xiyihang360@163.com。
 
-> 使用本软件前请完整阅读本协议。**下载、安装、复制、运行或以任何方式使用本软件，即视为您已阅读并同意受本协议约束。**
-> 若不同意，请立即停止使用并删除本软件的全部副本。
+商业交付物（便携包 / 安装器 / 官方构建）适用 EULA，不得公开发布基于本软件的修改版。
 
----
-
-## 一、定义
-
-1. **"本软件"**：指本仓库（含 `backend/`、`frontend/`、`scripts/`、`cloud/`、`config/`、`docs/` 等目录）中的全部源代码、
-   配置文件、脚本、文档、界面设计、设计令牌与其它随附材料。
-2. **"衍生物"**：指对本软件全部或部分进行修改、改编、翻译、拆解、重组、合并，或基于其全部/部分内容创作的作品。
-3. **"授权使用方"**：指获得版权所有人**书面授权**（含加盖公章的授权书、正式签署的许可合同或书面邮件确认）的自然人或法人。
-4. **"内部使用"**：指在授权使用方自有的设备上、为其自身业务运行本软件，且不向第三方提供本软件或其功能。
-
-## 二、权利保留
-
-本软件为**专有软件**，不是开源软件。除本协议明确授予的权利外，版权所有人保留全部权利，
-包括但不限于著作权、修改权、发行权、复制权、信息网络传播权及许可权。
-
-## 三、授予的有限权利
-
-在不违反本协议的前提下，**仅授权使用方**享有下列非独占、不可转让、不可再许可的权利：
-
-1. 为自身业务在自有设备上安装、运行本软件；
-2. 为本软件正常运行所必需的、限于自有环境的配置调整（修改 `config/` 下的配置文件与 `data/` 下的运行期数据）；
-3. 制作**仅供自身灾备用途**的备份副本（须完整保留本协议与版权声明）。
-
-## 四、禁止行为
-
-未取得版权所有人书面授权，任何人均**不得**：
-
-1. **使用**：运行、部署、演示、对外提供服务（含 SaaS、API 转售、代运营）本软件或其衍生物；
-2. **复制与分发**：以任何形式复制、上传、公开、发布、分发、转售、出租、出借本软件或其任何部分（含源代码、文档、界面）；
-3. **修改与衍生**：修改、改编、翻译、反编译、反汇编、逆向工程，或创作衍生物；
-4. **去除标识**：删除、隐藏或篡改任何版权声明、许可声明、作者标识、界面品牌或水印；
-5. **商用**：将本软件或其衍生物用于任何商业目的（含内部创收业务、客户交付、外包项目），除非另有书面许可；
-6. **规避限制**：绕过本软件的技术限制、鉴权机制或使用次数/范围限制；
-7. **再许可**：将本协议授予的权利转让、再许可或允许第三方以任何方式使用。
-
-## 五、第三方组件与模型（重要）
-
-本软件**包含或依赖**第三方开源组件与模型，它们受各自许可约束，**本协议不改变、也不得被解释为限制**这些第三方权利：
-
-- 依赖库（如 PyTorch、Transformers、FastAPI、React 等）：详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；
-- **Qwen3-TTS 模型权重**：由第三方以 **Apache-2.0** 许可发布，**不包含在本软件中**，需使用者自行下载。
-  模型的使用、商用范围以模型官方许可为准，与本协议无关；版权所有人不对模型许可作任何担保。
-
-因此：第三方可依其自身许可使用第三方组件与模型；但**不得据此使用本软件的源代码、界面与文档**。
-
-## 六、无担保
-
-本软件按**"现状"**提供，不附带任何明示或默示的担保，包括但不限于适销性、特定用途适用性、
-不侵权、以及不间断或无错误运行的担保。使用本软件产生的全部风险由使用者自行承担。
-
-## 七、责任限制
-
-在适用法律允许的最大范围内，版权所有人不对因使用或无法使用本软件而产生的任何直接、间接、偶然、
-特殊、惩罚性或后果性损害（包括但不限于数据丢失、业务中断、利润损失、第三方索赔）承担责任，
-无论其是否已被告知该等损害的可能性。
-
-## 八、违约与终止
-
-1. 违反本协议任何条款，本协议授予的权利**立即自动终止**，无需另行通知；
-2. 终止后，您须立即停止使用并销毁本软件及其全部副本与衍生物；
-3. 版权所有人保留追究法律责任、要求赔偿损失的权利。
-
-## 九、授权申请
-
-如需商业使用、二次开发、分发或对外提供服务，请通过以下方式取得书面授权：
-
-- 联系人：xiyihang
-- 邮箱：xiyihang360@163.com
-- 说明：请注明主体名称、使用场景、部署规模与期限。
-
-## 十、适用法律与争议解决
-
-本协议适用**中华人民共和国**法律（不含冲突法规则）。因本协议产生的争议，双方应友好协商；
-协商不成的，提交版权所有人住所地有管辖权的人民法院诉讼解决。
-
-## 十一、其他
-
-1. 本协议部分条款被认定无效或不可执行时，不影响其余条款的效力；
-2. 版权所有人对本协议的修改以书面形式发布为准，修改后继续使用视为接受新条款；
-3. 本协议以中文版本为准，英文摘要仅供理解参考。
+以下为 PolyForm Noncommercial License 1.0.0 全文（英文为準）。
 
 ---
+# PolyForm Noncommercial License 1.0.0
 
-## English Summary (for reference only — the Chinese text prevails)
+<https://polyformproject.org/licenses/noncommercial/1.0.0>
 
-Copyright © 2026 xiyihang. **All rights reserved.**
+## Acceptance
 
-This is **proprietary software**, not open source. No one may use, copy, modify, merge, publish,
-distribute, sublicense, sell, reverse-engineer, or create derivative works from this software —
-in whole or in part — without prior **written permission** from the copyright holder.
-Use is permitted only for parties holding such written authorization, on their own devices,
-for their own internal business, and only in accordance with this license.
+In order to get any license under these terms, you must agree
+to them as both strict obligations and conditions to all
+your licenses.
 
-Third-party libraries and the **Qwen3-TTS model weights** (released separately under Apache-2.0,
-not bundled here) remain governed by their own licenses; this license does not restrict them, and
-this license grants no rights to use this project's source code, UI, or documentation.
+## Copyright License
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
+The licensor grants you a copyright license for the
+software to do everything you might do with the software
+that would otherwise infringe the licensor's copyright
+in it for any permitted purpose.  However, you may
+only distribute the software according to [Distribution
+License](#distribution-license) and make changes or new works
+based on the software according to [Changes and New Works
+License](#changes-and-new-works-license).
 
-Violation terminates all rights immediately. For licensing inquiries, contact xiyihang360@163.com.
+## Distribution License
+
+The licensor grants you an additional copyright license
+to distribute copies of the software.  Your license
+to distribute covers distributing the software with
+changes and new works permitted by [Changes and New Works
+License](#changes-and-new-works-license).
+
+## Notices
+
+You must ensure that anyone who gets a copy of any part of
+the software from you also gets a copy of these terms or the
+URL for them above, as well as copies of any plain-text lines
+beginning with `Required Notice:` that the licensor provided
+with the software.  For example:
+
+> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
+
+## Changes and New Works License
+
+The licensor grants you an additional copyright license to
+make changes and new works based on the software for any
+permitted purpose.
+
+## Patent License
+
+The licensor grants you a patent license for the software that
+covers patent claims the licensor can license, or becomes able
+to license, that you would infringe by using the software.
+
+## Noncommercial Purposes
+
+Any noncommercial purpose is a permitted purpose.
+
+## Personal Uses
+
+Personal use for research, experiment, and testing for
+the benefit of public knowledge, personal study, private
+entertainment, hobby projects, amateur pursuits, or religious
+observance, without any anticipated commercial application,
+is use for a permitted purpose.
+
+## Noncommercial Organizations
+
+Use by any charitable organization, educational institution,
+public research organization, public safety or health
+organization, environmental protection organization,
+or government institution is use for a permitted purpose
+regardless of the source of funding or obligations resulting
+from the funding.
+
+## Fair Use
+
+You may have "fair use" rights for the software under the
+law. These terms do not limit them.
+
+## No Other Rights
+
+These terms do not allow you to sublicense or transfer any of
+your licenses to anyone else, or prevent the licensor from
+granting licenses to anyone else.  These terms do not imply
+any other licenses.
+
+## Patent Defense
+
+If you make any written claim that the software infringes or
+contributes to infringement of any patent, your patent license
+for the software granted under these terms ends immediately. If
+your company makes such a claim, your patent license ends
+immediately for work on behalf of your company.
+
+## Violations
+
+The first time you are notified in writing that you have
+violated any of these terms, or done anything with the software
+not covered by your licenses, your licenses can nonetheless
+continue if you come into full compliance with these terms,
+and take practical steps to correct past violations, within
+32 days of receiving notice.  Otherwise, all your licenses
+end immediately.
+
+## No Liability
+
+***As far as the law allows, the software comes as is, without
+any warranty or condition, and the licensor will not be liable
+to you for any damages arising out of these terms or the use
+or nature of the software, under any kind of legal claim.***
+
+## Definitions
+
+The **licensor** is the individual or entity offering these
+terms, and the **software** is the software the licensor makes
+available under these terms.
+
+**You** refers to the individual or entity agreeing to these
+terms.
+
+**Your company** is any legal entity, sole proprietorship,
+or other kind of organization that you work for, plus all
+organizations that have control over, are under the control of,
+or are under common control with that organization.  **Control**
+means ownership of substantially all the assets of an entity,
+or the power to direct its management and policies by vote,
+contract, or otherwise.  Control can be direct or indirect.
+
+**Your licenses** are all the licenses granted to you for the
+software under these terms.
+
+**Use** means anything you do with the software requiring one
+of your licenses.
+
+

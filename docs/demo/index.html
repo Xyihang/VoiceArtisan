@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>声匠 · VoiceSmith — 在线试听（真实合成样本）</title>
+<meta name="description" content="声匠 VoiceSmith 的真实合成样本：中文旁白、指令控制、英文、四川话方言、音色设计。音频由本机 GPU 直接生成，未做后期。">
+<style>
+  :root{
+    --bg:#070b12; --ink:#e9eff8; --dim:#8fa0b7; --line:rgba(140,172,212,.16);
+    --pri:#4c8dff; --acc:#2dd4bf;
+    --mono:'Cascadia Mono',Consolas,monospace;
+    --sans:'Segoe UI','Microsoft YaHei','PingFang SC',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 8% -10%,rgba(76,141,255,.20),transparent 60%),
+      radial-gradient(900px 480px at 100% -6%,rgba(45,212,191,.13),transparent 58%),
+      linear-gradient(178deg,#080d16,#060a11 60%,#05080e);
+    color:var(--ink);font:16px/1.6 var(--sans);min-height:100vh;padding:48px 20px 64px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{display:flex;gap:16px;align-items:center;margin-bottom:10px}
+  .mark{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;
+        background:linear-gradient(140deg,var(--pri),var(--acc));color:#04121f;
+        font-weight:700;font-size:22px;box-shadow:0 0 26px rgba(76,141,255,.32)}
+  h1{font-size:26px;letter-spacing:.02em}
+  h1 small{display:block;font-size:12px;letter-spacing:.22em;color:var(--dim);font-weight:600;margin-top:3px}
+  .lead{color:#c3d0e2;margin:14px 0 6px;font-size:15px}
+  .facts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 26px}
+  .chip{border:1px solid rgba(76,141,255,.32);background:rgba(76,141,255,.10);color:#a9c7ff;
+        border-radius:999px;padding:4px 11px;font-size:12.5px}
+  .chip.a{border-color:rgba(45,212,191,.32);background:rgba(45,212,191,.10);color:#8ee9dc}
+  .chip.m{border-color:var(--line);background:rgba(255,255,255,.03);color:var(--dim)}
+  .grid{display:grid;gap:14px}
+  @media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
+  .card{border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;
+        background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014))}
+  .card h2{font-size:16px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .no{font:600 11px/1 var(--mono);color:var(--pri);letter-spacing:.1em}
+  .txt{color:#dbe6f4;font-size:15px;margin-bottom:10px}
+  .note{color:var(--dim);font-size:12.5px;margin-bottom:10px}
+  audio{width:100%;height:38px;filter:invert(.92) hue-rotate(180deg)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;color:var(--dim);
+      margin-top:10px;border-top:1px solid var(--line);padding-top:9px;font-family:var(--mono)}
+  .kv b{color:#b9c8db;font-weight:600}
+  h3{font-size:17px;margin:34px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  code,pre{font-family:var(--mono);font-size:12.5px}
+  pre{background:rgba(2,6,12,.6);border:1px solid rgba(45,212,191,.22);border-radius:10px;
+      padding:12px 14px;overflow:auto;color:#9fdcca}
+  a{color:#8fb6ff}
+  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:14px;color:var(--dim);font-size:12.5px}
+  .warn{border:1px solid rgba(232,180,92,.32);background:rgba(232,180,92,.08);color:#ecc98b;
+        border-radius:10px;padding:10px 12px;font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">匠</div>
+    <h1>声匠 · VoiceSmith<small>REAL SAMPLES · 真实合成样本</small></h1>
+  </header>
+
+  <p class="lead">下面每一段音频都是<strong>当场生成</strong>的原文件：没有修音、没有降噪、没有后期处理链 —— 你在产品里听到的就是这个样子。</p>
+  <div class="facts">
+    <span class="chip">云端 RTX 2080 Ti · 经 SSH 隧道</span>
+    <span class="chip">Qwen3-TTS 1.7B · CustomVoice / VoiceDesign</span>
+    <span class="chip a">流式分块合成</span>
+    <span class="chip m">WAV · 模型原生采样率</span>
+    <span class="chip m">无后期处理</span>
+  </div>
+
+  <div class="grid" id="cards"></div>
+
+  <h3>这些样本是怎么来的</h3>
+  <table>
+    <thead><tr><th>项</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>生成方式</td><td>走产品自己的 HTTP 接口 <code>POST /api/tasks</code>，与界面点「开始生成」完全同一条链路</td></tr>
+      <tr><td>推理设备</td><td>云端 NVIDIA RTX 2080 Ti（21.5GB），经 SSH 隧道 <code>127.0.0.1:18443 → 127.0.0.1:8443</code>，延迟约 300ms；本机 4GB 的 RTX 3050 Laptop 同样验证可跑 1.7B（<code>dtype=float16</code> + <code>vram_reserve_gb=0.1</code> + 允许超额）</td></tr>
+      <tr><td>导出档位</td><td><code>Original</code>（模型原生 WAV，不重编码）</td></tr>
+      <tr><td>后期处理</td><td>关闭（低切 / 高架 / 压缩 / 峰值归一化全部不启用）</td></tr>
+      <tr><td>文本规范化</td><td>开启（数字、单位、日期转中文读法）</td></tr>
+      <tr><td>可复现</td><td>文本、音色 id、指令与语言都列在每张卡片下方，同一台机器上可直接复跑</td></tr>
+    </tbody>
+  </table>
+
+  <h3>用自己的机器复现</h3>
+  <pre>curl -k https://localhost:8443/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"type":"tts","text":"深夜十一点，录音棚里只剩一盏灯。","voice_id":"builtin-vivian","language":"chinese"}'</pre>
+
+  <div class="warn">听不到声音？音频文件保存在本页面同目录的 <code>audio/</code> 下，可直接点击下载；若通过 <code>file://</code> 打开本页，浏览器可能限制本地资源，请用 <code>python -m http.server</code> 或直接看仓库里的文件。</div>
+
+  <footer>
+    声匠 · VoiceSmith —— 本地 + 云端语音工作台 · <a href="../README.md">返回仓库 README</a> ·
+    样本清单：<a href="manifest.json">manifest.json</a>
+  </footer>
+</div>
+
+<script>
+fetch('manifest.json').then(r => r.json()).then(items => {
+  const box = document.getElementById('cards');
+  if (!items.length) { box.innerHTML = '<div class="card">暂无样本</div>'; return; }
+  box.innerHTML = items.map((it, i) => `
+    <div class="card">
+      <h2><span class="no">${String(i + 1).padStart(2, '0')}</span>${it.note}</h2>
+      <p class="txt">${it.text}</p>
+      <audio controls preload="none" src="audio/${it.file}"></audio>
+      <div class="kv">
+        <span>音色</span><b>${it.voice_id || '—（音色设计）'}</b>
+        ${it.instruct ? `<span>指令</span><b>${it.instruct}</b>` : ''}
+        ${it.design ? `<span>设计描述</span><b>${it.design}</b>` : ''}
+        <span>语言</span><b>${it.language || 'Auto'}</b>
+        <span>引擎</span><b>${it.engine || 'qwen3-tts'}</b>
+        <span>首包 / RTF</span><b>${it.first_packet_ms ?? '—'} ms / ${it.rtf != null ? it.rtf : '—'}</b>
+      </div>
+    </div>`).join('');
+}).catch(() => {
+  document.getElementById('cards').innerHTML =
+    '<div class="card">样本清单读取失败：请用 http 服务打开本页（例如在仓库根目录运行 <code>python -m http.server</code>）。</div>';
+});
+</script>
+</body>
+</html>

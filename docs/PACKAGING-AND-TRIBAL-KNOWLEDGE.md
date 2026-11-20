@@ -46,7 +46,7 @@
 
 | 规则 | 原因 |
 | --- | --- |
-| **产物只增不删**：`E:\trae_projects\QWENTTS-backups` 里的旧 zip 永远不删 | 用户明确要求；出问题时能回退到任意历史版本 |
+| **产物只增不删**：`<项目根目录>-backups` 里的旧 zip 永远不删 | 用户明确要求；出问题时能回退到任意历史版本 |
 | **不要用 `Compress-Archive`** | 会写入 Windows 反斜杠路径，解压到 Linux/云主机时目录结构错乱；脚本用 zipfile + POSIX 路径 |
 | `SKIP_REL_PREFIX = {"launcher/build"}` | PyInstaller 工作目录漏进去时包会从 13MB 涨到 13.23MB+ |
 | `SKIP_REL = {"launcher/QWENTTS-Setup.spec", "config/config.yaml"}` | `config.yaml` 含**云端地址和 API Key**，绝对不能进包 |
@@ -165,7 +165,7 @@ python .cache/verify_1121_zips.py   # 按版本复制改名，检查：
 ## 8. 不要做的事
 
 - ❌ 不要用 `Compress-Archive` 打包
-- ❌ 不要删 `E:\trae_projects\QWENTTS-backups` 里的历史 zip
+- ❌ 不要删 `<项目根目录>-backups` 里的历史 zip
 - ❌ 不要只改 `VERSION.json` 不改 `app/__init__.py`（测试会红）
 - ❌ 不要在没有重启后端的情况下用浏览器验证后端改动（旧进程跑旧代码）
 - ❌ 不要把 `config/config.yaml`、`data/`、`models/` 打进包

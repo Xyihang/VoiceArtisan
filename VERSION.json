@@ -1,11 +1,11 @@
 {
   "name": "声匠 · VoiceSmith —— 多引擎语音工作台（本地 + 云 GPU）",
-  "version": "1.1.62",
-  "release_date": "2026-10-21",
+  "version": "1.1.63",
+  "release_date": "2026-11-18",
   "author": "xiyihang",
   "contact": "xiyihang360@163.com",
   "copyright": "© 2026 xiyihang. All rights reserved. 保留所有权利。",
-  "license": "Proprietary (see LICENSE)",
+  "license": "Source-available: PolyForm Noncommercial 1.0.0 (see LICENSE); commercial use requires a paid license (see LICENSE-COMMERCIAL.md)",
   "verified_environment": {
     "os": "Windows 11",
     "python": "3.10.8",
@@ -43,6 +43,7 @@
     "frontend_dist_kb": 280
   },
   "notes": [
+    "v1.1.63：许可改为「源码可见」双轨——仓库以 PolyForm Noncommercial 1.0.0 授权（个人/非商业免费，可改可非商业分发），商业使用需买断授权；新增 LICENSE-COMMERCIAL.md；README 双语重做 + 实机截图 + 架构图 + 在线 Demo 页与演示 GIF",
     "v1.1.62：PySide6 启动器出 EXE（onedir 106MB，exe 1.5MB）；start.bat 优先拉起 Qt 版；主按钮禁回车误触、体检后焦点给表格；打包排除 dist-qt",
     "v1.1.61：图形启动器改用 PySide6 重构（新布局：左步骤栏 + 单一主行动 + 可收起日志抽屉），深浅双主题、屏幕自适应、体检结果自动跳过已满足步骤；附 build-qt.ps1 打包脚本",
     "v1.1.60：start.bat 改为纯 ASCII、只负责拉起图形启动器 QWENTTS-Setup.exe（彻底解决 cmd 中文乱码）；运行教程第 3 章改为「图形启动器优先」",

@@ -1,7 +1,7 @@
 # 功能差距报告：VOICESTUDIO vs. 本项目（QWENTTS）
 
 > 调研时间：2026-10-19 · 调研方式：`web search` + GitHub REST API（`/repos`、`/git/trees`、`/contents`）实读 README 与 docs/代码路径
-> 基准项目：`E:\trae_projects\QWENTTS`（本仓库，专有许可）
+> 基准项目：`<项目根目录>`（本仓库，专有许可）
 > 规则：**凡未在本次调研中实际读到的内容，一律标注「未核实」**；不推测、不补全功能。
 
 ---

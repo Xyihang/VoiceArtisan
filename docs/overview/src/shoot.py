@@ -3,7 +3,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent
 HTML = (ROOT / "poster.html").as_uri()
-OUT = pathlib.Path(r"E:\trae_projects\QWENTTS\docs\overview")
+OUT = pathlib.Path(r"<项目根目录>\docs\overview")
 OUT.mkdir(parents=True, exist_ok=True)
 
 names = {1: "01-overview", 2: "02-workbench-voices", 3: "03-tasks",

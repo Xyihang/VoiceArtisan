@@ -201,10 +201,10 @@ Linux 用上文 systemd；Windows 想开机自启、后台常驻可以用 NSSM�
 ```powershell
 # 安装 NSSM 后
 nssm install QWENTTS "C:\Users\<你>\AppData\Local\Programs\Python\Python310\python.exe" "-m app.main --no-browser"
-nssm set QWENTTS AppDirectory "E:\trae_projects\QWENTTS\backend"
-nssm set QWENTTS AppEnvironmentExtra "PYTHONPATH=E:\trae_projects\QWENTTS\backend" "QWENTTS_CONFIG=E:\trae_projects\QWENTTS\config\config.yaml"
-nssm set QWENTTS AppStdout "E:\trae_projects\QWENTTS\data\logs\service.out.log"
-nssm set QWENTTS AppStderr "E:\trae_projects\QWENTTS\data\logs\service.err.log"
+nssm set QWENTTS AppDirectory "<项目根目录>\backend"
+nssm set QWENTTS AppEnvironmentExtra "PYTHONPATH=<项目根目录>\backend" "QWENTTS_CONFIG=<项目根目录>\config\config.yaml"
+nssm set QWENTTS AppStdout "<项目根目录>\data\logs\service.out.log"
+nssm set QWENTTS AppStderr "<项目根目录>\data\logs\service.err.log"
 nssm start QWENTTS
 ```
 
