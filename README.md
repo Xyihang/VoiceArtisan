@@ -13,7 +13,7 @@
 [![tests](https://img.shields.io/badge/tests-114%20passed-57D68B?style=flat-square)](#验证与数字)
 [![license](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-1f6feb?style=flat-square)](LICENSE)
 
-[🔊 在线试听真实样本](docs/demo/) · [中文](#这是什么) · [English](#english) · [快速开始](#快速开始) · [文档](#文档索引) · [常见问题](#常见问题)
+[🔊 在线试听真实样本](https://xyihang.github.io/VoiceArtisan/demo/) · [中文](#这是什么) · [English](#english) · [快速开始](#快速开始) · [文档](#文档索引) · [常见问题](#常见问题)
 
 </div>
 
@@ -38,7 +38,7 @@
 <br><sub>真机流程：选音色 → 输入文本 → 生成（进度回传）→ 波形与首包 / RTF / 显存</sub>
 </div>
 
-> **不想装？先听**：**[在线试听 5 段真实合成样本](docs/demo/)**（中文旁白、指令控制、英文、四川话、音色设计）——本机 GPU 直接生成，无后期处理。
+> **不想装？先听**：**[在线试听 5 段真实合成样本](https://xyihang.github.io/VoiceArtisan/demo/)**（中文旁白、指令控制、英文、四川话、音色设计）——本机 GPU 直接生成，无后期处理。
 
 <table>
 <tr>
@@ -66,7 +66,7 @@
 </tr>
 </table>
 
-> 想一张图看懂全部功能？见 **[全功能总览图（5 张连续横屏）](docs/overview/)**。
+> 想一张图看懂全部功能？见 **[全功能总览图（5 张连续横屏）](https://xyihang.github.io/VoiceArtisan/overview/)**。
 
 ## 亮点
 
@@ -309,8 +309,8 @@ QWENTTS/
 | [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) | 每引擎独立 venv 的原因与实现 |
 | [LAUNCHER](docs/LAUNCHER.md) | 图形启动器的设计与交互 |
 | [DEPLOY](docs/DEPLOY.md) · [TROUBLESHOOTING](docs/TROUBLESHOOTING.md) | 长期部署与排错 |
-| [demo/](docs/demo/) | **在线试听**：5 段真实合成样本 + 复现命令 |
-| [overview/](docs/overview/) | 全功能总览图（5 张横屏） |
+| [在线试听（Pages）](https://xyihang.github.io/VoiceArtisan/demo/) | **在线试听**：5 段真实合成样本 + 复现命令 |
+| [总览图（Pages）](https://xyihang.github.io/VoiceArtisan/overview/) | 全功能总览图（5 张横屏） |
 
 界面内还内置了 **21 章教程页**（五分钟跑通 → 运行模式 → 云端与隧道 → 语音识别 → 引擎与预热 → 质检 / 文本 / 后期 → 导出与时长 → 批量 → MCP → 常见错误速查）。
 
@@ -387,7 +387,7 @@ QWENTTS/
 [![mcp](https://img.shields.io/badge/MCP-9%20tools-111827?style=flat-square)](#mcp-server)
 [![license](https://img.shields.io/badge/license-PolyForm%20NC%201.0.0%20%2B%20commercial-1f6feb?style=flat-square)](LICENSE)
 
-[🔊 Listen to real samples](docs/demo/) · [中文](#这是什么) · [Quick start](#english-quick-start) · [Docs](#english-docs)
+[🔊 Listen to real samples](https://xyihang.github.io/VoiceArtisan/demo/) · [中文](#这是什么) · [Quick start](#english-quick-start) · [Docs](#english-docs)
 
 </div>
 
@@ -502,7 +502,7 @@ React 19 UI  ──REST / WS──▶  FastAPI
 
 ## English docs
 
-[QUICKSTART](docs/QUICKSTART.md) · [MODELS](docs/MODELS.md) · [CONFIG](docs/CONFIG.md) · [API](docs/API.md) · [MCP](docs/MCP.md) · [CLOUD_SETUP](docs/CLOUD_SETUP.md) · [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) · [LAUNCHER](docs/LAUNCHER.md) · [DEPLOY](docs/DEPLOY.md) · [TROUBLESHOOTING](docs/TROUBLESHOOTING.md) · [Demo samples](docs/demo/) · [Overview posters](docs/overview/)
+[QUICKSTART](docs/QUICKSTART.md) · [MODELS](docs/MODELS.md) · [CONFIG](docs/CONFIG.md) · [API](docs/API.md) · [MCP](docs/MCP.md) · [CLOUD_SETUP](docs/CLOUD_SETUP.md) · [ENGINE_ISOLATION](docs/ENGINE_ISOLATION.md) · [LAUNCHER](docs/LAUNCHER.md) · [DEPLOY](docs/DEPLOY.md) · [TROUBLESHOOTING](docs/TROUBLESHOOTING.md) · [Demo samples](https://xyihang.github.io/VoiceArtisan/demo/) · [Overview posters](https://xyihang.github.io/VoiceArtisan/overview/)
 
 Most documents are written in Chinese and the interface is Chinese-first; issues and PRs in English are welcome.
 
