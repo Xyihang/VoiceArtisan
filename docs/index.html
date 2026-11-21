@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>声匠 · VoiceArtisan — 先听，再装</title>
+<meta name="description" content="声匠 VoiceArtisan：本地 + 云端语音工作台。先听 5 段真实合成样本，再决定要不要装。">
+<style>
+  :root{
+    --bg:#070b12; --ink:#e9eff8; --dim:#8fa0b7; --line:rgba(140,172,212,.16);
+    --pri:#4c8dff; --acc:#2dd4bf;
+    --sans:'Segoe UI','Microsoft YaHei','PingFang SC',system-ui,sans-serif;
+    --mono:'Cascadia Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 8% -10%,rgba(76,141,255,.20),transparent 60%),
+      radial-gradient(900px 480px at 100% -6%,rgba(45,212,191,.13),transparent 58%),
+      linear-gradient(178deg,#080d16,#060a11 60%,#05080e);
+    color:var(--ink);font:16px/1.65 var(--sans);min-height:100vh;
+    display:flex;align-items:center;justify-content:center;padding:40px 20px;
+  }
+  .wrap{max-width:880px;width:100%}
+  header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+  .mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
+        background:linear-gradient(140deg,var(--pri),var(--acc));color:#04121f;
+        font-weight:700;font-size:24px;box-shadow:0 0 28px rgba(76,141,255,.34)}
+  h1{font-size:28px;letter-spacing:.02em}
+  h1 small{display:block;font-size:12px;letter-spacing:.24em;color:var(--dim);font-weight:600;margin-top:4px}
+  .lead{color:#c3d0e2;font-size:16px;margin-bottom:8px}
+  .facts{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 26px}
+  .chip{border:1px solid rgba(76,141,255,.32);background:rgba(76,141,255,.10);color:#a9c7ff;
+        border-radius:999px;padding:4px 11px;font-size:12.5px}
+  .chip.a{border-color:rgba(45,212,191,.32);background:rgba(45,212,191,.10);color:#8ee9dc}
+  .chip.m{border-color:var(--line);background:rgba(255,255,255,.03);color:var(--dim)}
+  .grid{display:grid;gap:12px;margin-bottom:26px}
+  @media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
+  a.card{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:16px;
+         padding:18px 18px 16px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014));
+         transition:transform .18s ease,border-color .18s ease}
+  a.card:hover{transform:translateY(-2px);border-color:rgba(76,141,255,.5)}
+  a.card .t{font-size:16px;font-weight:650;margin-bottom:4px}
+  a.card .d{font-size:13px;color:var(--dim);line-height:1.55}
+  a.card .n{font:600 10px/1 var(--mono);letter-spacing:.12em;color:var(--pri);display:block;margin-bottom:8px}
+  footer{border-top:1px solid var(--line);padding-top:14px;color:var(--dim);font-size:12.5px}
+  a{color:#8fb6ff}
+  code{font-family:var(--mono);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">匠</div>
+    <h1>声匠 · VoiceArtisan<small>LOCAL + CLOUD TTS / ASR WORKBENCH</small></h1>
+  </header>
+
+  <p class="lead"><strong>先听，再装。</strong>下面这 5 段音频是这台机器当场生成的原文件——没有修音、没有降噪、没有后期处理。听完觉得行，再去装。</p>
+  <div class="facts">
+    <span class="chip">13 个引擎</span>
+    <span class="chip">13 种语言 / 口音</span>
+    <span class="chip a">4GB 显存可跑</span>
+    <span class="chip m">Windows 一键安装</span>
+    <span class="chip m">MCP · 9 个工具</span>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="demo/">
+      <span class="n">01</span>
+      <div class="t">🔊 在线试听（5 段真实样本）</div>
+      <div class="d">中文旁白 · 指令控制 · 英文 · 四川话 · 音色设计。每段都标了文本、音色 id、首包延迟与 RTF。</div>
+    </a>
+    <a class="card" href="overview/">
+      <span class="n">02</span>
+      <div class="t">🗺 全功能总览图（5 张）</div>
+      <div class="d">一张图看完：六个页面、13 个引擎、设置 13 分区、任务中心、云端与 MCP。</div>
+    </a>
+    <a class="card" href="https://github.com/Xyihang/VoiceArtisan/blob/main/README.md">
+      <span class="n">03</span>
+      <div class="t">📘 README（中文 / English）</div>
+      <div class="d">能力清单、快速开始、4GB 实测数据、MCP 接入、架构与验证数字。</div>
+    </a>
+    <a class="card" href="https://github.com/Xyihang/VoiceArtisan/releases">
+      <span class="n">04</span>
+      <div class="t">⬇️ 下载（便携包，免装 Python）</div>
+      <div class="d">解压 → 双击 start.bat → 图形启动器体检、装依赖、下模型、起服务。</div>
+    </a>
+  </div>
+
+  <footer>
+    源码可见：个人 / 非商业使用免费（PolyForm Noncommercial 1.0.0），商业使用需买断授权 ·
+    <a href="https://github.com/Xyihang/VoiceArtisan">仓库</a> ·
+    <a href="https://github.com/Xyihang/VoiceArtisan/releases/tag/v1.1.64">v1.1.64 发布说明</a>
+  </footer>
+</div>
+</body>
+</html>
